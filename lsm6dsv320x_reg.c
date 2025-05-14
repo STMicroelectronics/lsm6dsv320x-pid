@@ -5370,11 +5370,11 @@ int32_t lsm6dsv320x_fifo_out_raw_get(const stmdev_ctx_t *ctx,
       break;
 
     case 3:
-      val->tag = LSM6DSV320X_TIMESTAMP_TAG;
+      val->tag = LSM6DSV320X_TEMPERATURE_TAG;
       break;
 
     case 4:
-      val->tag = LSM6DSV320X_TEMPERATURE_TAG;
+      val->tag = LSM6DSV320X_TIMESTAMP_TAG;
       break;
 
     case 5:

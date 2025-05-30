@@ -5569,9 +5569,9 @@ int32_t lsm6dsv320x_fifo_fsm_batch_set(const stmdev_ctx_t *ctx, uint8_t val)
     return ret;
   }
 
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_FIFO_EN_A, (uint8_t *)&emb_func_fifo_en_b, 1);
+  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_FIFO_EN_B, (uint8_t *)&emb_func_fifo_en_b, 1);
   emb_func_fifo_en_b.fsm_fifo_en = val;
-  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_EMB_FUNC_FIFO_EN_A, (uint8_t *)&emb_func_fifo_en_b,
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_EMB_FUNC_FIFO_EN_B, (uint8_t *)&emb_func_fifo_en_b,
                                1);
 
   ret += lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_MAIN_MEM_BANK);
@@ -5598,7 +5598,7 @@ int32_t lsm6dsv320x_fifo_fsm_batch_get(const stmdev_ctx_t *ctx, uint8_t *val)
     return ret;
   }
 
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_FIFO_EN_A, (uint8_t *)&emb_func_fifo_en_b, 1);
+  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_FIFO_EN_B, (uint8_t *)&emb_func_fifo_en_b, 1);
   *val = emb_func_fifo_en_b.fsm_fifo_en;
 
   ret += lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_MAIN_MEM_BANK);

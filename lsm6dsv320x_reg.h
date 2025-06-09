@@ -3038,7 +3038,7 @@ typedef struct
 #endif /* DRV_BYTE_ORDER */
 } lsm6dsv320x_emb_func_init_b_t;
 
-#define LSM6DSV320X_EMB_FUNC_SENSOR_CONV_EN        0x67U
+#define LSM6DSV320X_EMB_FUNC_SENSOR_CONV_EN        0x6EU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN

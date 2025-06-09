@@ -225,6 +225,19 @@ float_t lsm6dsv320x_from_quaternion_lsb_to_float(uint16_t lsb)
   return npy_half_to_float(lsb);
 }
 
+static uint32_t npy_halfbits_to_floatbits(uint16_t h);
+/**
+  * @brief  Convert from 16-bit to 32-bit float number
+  *
+  * @param  val      Batching in FIFO buffer of SFLP values.
+  * @retval          interface status (MANDATORY: return 0 -> no Error)
+  *
+  */
+uint32_t lsm6dsv320x_from_f16_to_f32(uint16_t val)
+{
+  return npy_halfbits_to_floatbits(val);
+}
+
 /**
   * @}
   *

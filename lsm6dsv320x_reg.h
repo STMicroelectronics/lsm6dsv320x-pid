@@ -4341,6 +4341,8 @@ float_t lsm6dsv320x_from_gbias_lsb_to_mdps(int16_t lsb);
 float_t lsm6dsv320x_from_gravity_lsb_to_mg(int16_t lsb);
 float_t lsm6dsv320x_from_quaternion_lsb_to_float(uint16_t lsb);
 
+uint32_t lsm6dsv320x_from_f16_to_f32(uint16_t val);
+
 int32_t lsm6dsv320x_xl_offset_on_out_set(const stmdev_ctx_t *ctx, uint8_t val);
 int32_t lsm6dsv320x_xl_offset_on_out_get(const stmdev_ctx_t *ctx, uint8_t *val);
 

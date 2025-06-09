@@ -5981,6 +5981,7 @@ int32_t lsm6dsv320x_filt_settling_mask_get(const stmdev_ctx_t *ctx,
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL4, (uint8_t *)&ctrl4, 1);
   ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_CFG, (uint8_t *)&emb_func_cfg, 1);
   ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_UI_INT_OIS, (uint8_t *)&ui_int_ois, 1);
+  val->ois_drdy = ui_int_ois.drdy_mask_ois;
 
   val->irq_xl = emb_func_cfg.emb_func_irq_mask_xl_settl;
   val->irq_g = emb_func_cfg.emb_func_irq_mask_g_settl;

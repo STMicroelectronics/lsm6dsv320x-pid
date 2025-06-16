@@ -2974,23 +2974,6 @@ int32_t lsm6dsv320x_pin_int1_route_embedded_set(const stmdev_ctx_t *ctx,
   lsm6dsv320x_mlc_int1_t            mlc_int1;
   int32_t ret;
 
-  /* Embedded Functions */
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_INT1, (uint8_t *)&emb_func_int1, 1);
-  if (ret != 0)
-  {
-    return ret;
-  }
-
-  emb_func_int1.int1_step_detector = val->step_detector;
-  emb_func_int1.int1_tilt = val->tilt;
-  emb_func_int1.int1_sig_mot = val->sig_mot;
-
-  ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_EMB_FUNC_INT1, (uint8_t *)&emb_func_int1, 1);
-  if (ret != 0)
-  {
-    return ret;
-  }
-
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_MD1_CFG, (uint8_t *)&md1_cfg, 1);
   if (ret != 0)
   {
@@ -3005,11 +2988,34 @@ int32_t lsm6dsv320x_pin_int1_route_embedded_set(const stmdev_ctx_t *ctx,
     return ret;
   }
 
-  /* FSM */
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_FSM_INT1, (uint8_t *)&fsm_int1, 1);
+  /* Embedded Functions */
+  ret = lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_EMBED_FUNC_MEM_BANK);
   if (ret != 0)
   {
     return ret;
+  }
+
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_INT1, (uint8_t *)&emb_func_int1, 1);
+  if (ret != 0)
+  {
+    goto exit;
+  }
+
+  emb_func_int1.int1_step_detector = val->step_detector;
+  emb_func_int1.int1_tilt = val->tilt;
+  emb_func_int1.int1_sig_mot = val->sig_mot;
+
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_EMB_FUNC_INT1, (uint8_t *)&emb_func_int1, 1);
+  if (ret != 0)
+  {
+    goto exit;
+  }
+
+  /* FSM */
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_FSM_INT1, (uint8_t *)&fsm_int1, 1);
+  if (ret != 0)
+  {
+    goto exit;
   }
 
   fsm_int1.int1_fsm1 = val->fsm1;
@@ -3021,17 +3027,17 @@ int32_t lsm6dsv320x_pin_int1_route_embedded_set(const stmdev_ctx_t *ctx,
   fsm_int1.int1_fsm7 = val->fsm7;
   fsm_int1.int1_fsm8 = val->fsm8;
 
-  ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_FSM_INT1, (uint8_t *)&fsm_int1, 1);
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_FSM_INT1, (uint8_t *)&fsm_int1, 1);
   if (ret != 0)
   {
-    return ret;
+    goto exit;
   }
 
   /* MLC */
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_MLC_INT1, (uint8_t *)&mlc_int1, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_MLC_INT1, (uint8_t *)&mlc_int1, 1);
   if (ret != 0)
   {
-    return ret;
+    goto exit;
   }
 
   mlc_int1.int1_mlc1 = val->mlc1;
@@ -3043,11 +3049,14 @@ int32_t lsm6dsv320x_pin_int1_route_embedded_set(const stmdev_ctx_t *ctx,
   mlc_int1.int1_mlc7 = val->mlc7;
   mlc_int1.int1_mlc8 = val->mlc8;
 
-  ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_MLC_INT1, (uint8_t *)&mlc_int1, 1);
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_MLC_INT1, (uint8_t *)&mlc_int1, 1);
   if (ret != 0)
   {
-    return ret;
+    goto exit;
   }
+
+exit:
+  ret += lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_MAIN_MEM_BANK);
 
   return ret;
 }
@@ -3070,10 +3079,16 @@ int32_t lsm6dsv320x_pin_int1_route_embedded_get(const stmdev_ctx_t *ctx,
   int32_t ret;
 
   /* Embedded Functions */
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_INT1, (uint8_t *)&emb_func_int1, 1);
+  ret = lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_EMBED_FUNC_MEM_BANK);
   if (ret != 0)
   {
     return ret;
+  }
+
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_INT1, (uint8_t *)&emb_func_int1, 1);
+  if (ret != 0)
+  {
+    goto exit;
   }
 
   val->step_detector = emb_func_int1.int1_step_detector;
@@ -3081,10 +3096,10 @@ int32_t lsm6dsv320x_pin_int1_route_embedded_get(const stmdev_ctx_t *ctx,
   val->tilt          = emb_func_int1.int1_tilt;
 
   /* FSM */
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_FSM_INT1, (uint8_t *)&fsm_int1, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_FSM_INT1, (uint8_t *)&fsm_int1, 1);
   if (ret != 0)
   {
-    return ret;
+    goto exit;
   }
 
   val->fsm1 = fsm_int1.int1_fsm1;
@@ -3097,10 +3112,10 @@ int32_t lsm6dsv320x_pin_int1_route_embedded_get(const stmdev_ctx_t *ctx,
   val->fsm8 = fsm_int1.int1_fsm8;
 
   /* MLC */
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_MLC_INT1, (uint8_t *)&mlc_int1, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_MLC_INT1, (uint8_t *)&mlc_int1, 1);
   if (ret != 0)
   {
-    return ret;
+    goto exit;
   }
 
   val->mlc1 = mlc_int1.int1_mlc1;
@@ -3111,6 +3126,9 @@ int32_t lsm6dsv320x_pin_int1_route_embedded_get(const stmdev_ctx_t *ctx,
   val->mlc6 = mlc_int1.int1_mlc6;
   val->mlc7 = mlc_int1.int1_mlc7;
   val->mlc8 = mlc_int1.int1_mlc8;
+
+exit:
+  ret += lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_MAIN_MEM_BANK);
 
   return ret;
 }
@@ -3133,23 +3151,6 @@ int32_t lsm6dsv320x_pin_int2_route_embedded_set(const stmdev_ctx_t *ctx,
   lsm6dsv320x_mlc_int2_t            mlc_int2;
   int32_t ret;
 
-  /* Embedded Functions */
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_INT2, (uint8_t *)&emb_func_int2, 1);
-  if (ret != 0)
-  {
-    return ret;
-  }
-
-  emb_func_int2.int2_step_detector = val->step_detector;
-  emb_func_int2.int2_tilt = val->tilt;
-  emb_func_int2.int2_sig_mot = val->sig_mot;
-
-  ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_EMB_FUNC_INT2, (uint8_t *)&emb_func_int2, 1);
-  if (ret != 0)
-  {
-    return ret;
-  }
-
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_MD2_CFG, (uint8_t *)&md2_cfg, 1);
   if (ret != 0)
   {
@@ -3164,11 +3165,34 @@ int32_t lsm6dsv320x_pin_int2_route_embedded_set(const stmdev_ctx_t *ctx,
     return ret;
   }
 
-  /* FSM */
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_FSM_INT2, (uint8_t *)&fsm_int2, 1);
+  /* Embedded Functions */
+  ret = lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_EMBED_FUNC_MEM_BANK);
   if (ret != 0)
   {
     return ret;
+  }
+
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_INT2, (uint8_t *)&emb_func_int2, 1);
+  if (ret != 0)
+  {
+    goto exit;
+  }
+
+  emb_func_int2.int2_step_detector = val->step_detector;
+  emb_func_int2.int2_tilt = val->tilt;
+  emb_func_int2.int2_sig_mot = val->sig_mot;
+
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_EMB_FUNC_INT2, (uint8_t *)&emb_func_int2, 1);
+  if (ret != 0)
+  {
+    goto exit;
+  }
+
+  /* FSM */
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_FSM_INT2, (uint8_t *)&fsm_int2, 1);
+  if (ret != 0)
+  {
+    goto exit;
   }
 
   fsm_int2.int2_fsm1 = val->fsm1;
@@ -3180,17 +3204,17 @@ int32_t lsm6dsv320x_pin_int2_route_embedded_set(const stmdev_ctx_t *ctx,
   fsm_int2.int2_fsm7 = val->fsm7;
   fsm_int2.int2_fsm8 = val->fsm8;
 
-  ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_FSM_INT2, (uint8_t *)&fsm_int2, 1);
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_FSM_INT2, (uint8_t *)&fsm_int2, 1);
   if (ret != 0)
   {
-    return ret;
+    goto exit;
   }
 
   /* MLC */
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_MLC_INT2, (uint8_t *)&mlc_int2, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_MLC_INT2, (uint8_t *)&mlc_int2, 1);
   if (ret != 0)
   {
-    return ret;
+    goto exit;
   }
 
   mlc_int2.int2_mlc1 = val->mlc1;
@@ -3202,11 +3226,14 @@ int32_t lsm6dsv320x_pin_int2_route_embedded_set(const stmdev_ctx_t *ctx,
   mlc_int2.int2_mlc7 = val->mlc7;
   mlc_int2.int2_mlc8 = val->mlc8;
 
-  ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_MLC_INT2, (uint8_t *)&mlc_int2, 1);
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_MLC_INT2, (uint8_t *)&mlc_int2, 1);
   if (ret != 0)
   {
-    return ret;
+    goto exit;
   }
+
+exit:
+  ret += lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_MAIN_MEM_BANK);
 
   return ret;
 }
@@ -3229,10 +3256,16 @@ int32_t lsm6dsv320x_pin_int2_route_embedded_get(const stmdev_ctx_t *ctx,
   int32_t ret;
 
   /* Embedded Functions */
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_INT2, (uint8_t *)&emb_func_int2, 1);
+  ret = lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_EMBED_FUNC_MEM_BANK);
   if (ret != 0)
   {
     return ret;
+  }
+
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_INT2, (uint8_t *)&emb_func_int2, 1);
+  if (ret != 0)
+  {
+    goto exit;
   }
 
   val->step_detector = emb_func_int2.int2_step_detector;
@@ -3240,10 +3273,10 @@ int32_t lsm6dsv320x_pin_int2_route_embedded_get(const stmdev_ctx_t *ctx,
   val->tilt          = emb_func_int2.int2_tilt;
 
   /* FSM */
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_FSM_INT2, (uint8_t *)&fsm_int2, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_FSM_INT2, (uint8_t *)&fsm_int2, 1);
   if (ret != 0)
   {
-    return ret;
+    goto exit;
   }
 
   val->fsm1 = fsm_int2.int2_fsm1;
@@ -3256,10 +3289,10 @@ int32_t lsm6dsv320x_pin_int2_route_embedded_get(const stmdev_ctx_t *ctx,
   val->fsm8 = fsm_int2.int2_fsm8;
 
   /* MLC */
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_MLC_INT2, (uint8_t *)&mlc_int2, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_MLC_INT2, (uint8_t *)&mlc_int2, 1);
   if (ret != 0)
   {
-    return ret;
+    goto exit;
   }
 
   val->mlc1 = mlc_int2.int2_mlc1;
@@ -3270,6 +3303,9 @@ int32_t lsm6dsv320x_pin_int2_route_embedded_get(const stmdev_ctx_t *ctx,
   val->mlc6 = mlc_int2.int2_mlc6;
   val->mlc7 = mlc_int2.int2_mlc7;
   val->mlc8 = mlc_int2.int2_mlc8;
+
+exit:
+  ret += lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_MAIN_MEM_BANK);
 
   return ret;
 }
@@ -3478,7 +3514,9 @@ int32_t lsm6dsv320x_int_ack_mask_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   int32_t ret;
 
+  ret = lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_EMBED_FUNC_MEM_BANK);
   ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_INT_ACK_MASK, &val, 1);
+  ret += lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_MAIN_MEM_BANK);
 
   return ret;
 }
@@ -3495,7 +3533,9 @@ int32_t lsm6dsv320x_int_ack_mask_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   int32_t ret;
 
+  ret = lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_EMBED_FUNC_MEM_BANK);
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_INT_ACK_MASK, val, 1);
+  ret += lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_MAIN_MEM_BANK);
 
   return ret;
 }

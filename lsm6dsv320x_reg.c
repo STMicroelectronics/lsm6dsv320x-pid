@@ -4754,7 +4754,7 @@ int32_t lsm6dsv320x_fifo_compress_algo_real_time_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_stop_on_wtm_set(const stmdev_ctx_t *ctx, uint8_t val)
+int32_t lsm6dsv320x_fifo_stop_on_wtm_set(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_event_t val)
 {
   lsm6dsv320x_fifo_ctrl2_t fifo_ctrl2;
   int32_t ret;
@@ -4762,7 +4762,7 @@ int32_t lsm6dsv320x_fifo_stop_on_wtm_set(const stmdev_ctx_t *ctx, uint8_t val)
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_FIFO_CTRL2, (uint8_t *)&fifo_ctrl2, 1);
   if (ret == 0)
   {
-    fifo_ctrl2.stop_on_wtm = val;
+    fifo_ctrl2.stop_on_wtm = (val == LSM6DSV320X_FIFO_EV_WTM) ? 1 : 0;
     ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_FIFO_CTRL2, (uint8_t *)&fifo_ctrl2, 1);
   }
 
@@ -4777,13 +4777,13 @@ int32_t lsm6dsv320x_fifo_stop_on_wtm_set(const stmdev_ctx_t *ctx, uint8_t val)
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_stop_on_wtm_get(const stmdev_ctx_t *ctx, uint8_t *val)
+int32_t lsm6dsv320x_fifo_stop_on_wtm_get(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_event_t *val)
 {
   lsm6dsv320x_fifo_ctrl2_t fifo_ctrl2;
   int32_t ret;
 
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_FIFO_CTRL2, (uint8_t *)&fifo_ctrl2, 1);
-  *val = fifo_ctrl2.stop_on_wtm;
+  *val = (fifo_ctrl2.stop_on_wtm == 1) ? LSM6DSV320X_FIFO_EV_WTM : LSM6DSV320X_FIFO_EV_FULL;
 
   return ret;
 }

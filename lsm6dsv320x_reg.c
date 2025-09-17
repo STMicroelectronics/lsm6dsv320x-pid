@@ -168,6 +168,10 @@ float_t lsm6dsv320x_from_fs320_to_mg(int16_t lsb)
   return ((float_t)lsb) * 10.417f;
 }
 
+float_t lsm6dsv320x_from_fs125_to_mdps(int16_t lsb)
+{
+  return ((float_t)lsb) * 4.375f;
+}
 float_t lsm6dsv320x_from_fs250_to_mdps(int16_t lsb)
 {
   return ((float_t)lsb) * 8.750f;

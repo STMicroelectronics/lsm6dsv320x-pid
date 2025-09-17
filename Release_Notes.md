@@ -44,7 +44,7 @@ This directory contains the LSM6DSV320X component drivers.
 
 </div>
 
-<input type="checkbox" id="collapse-section2" checked aria-hidden="true">
+<input type="checkbox" id="collapse-section2" aria-hidden="true">
 <label for="collapse-section2" aria-hidden="true">V1.1.0 / 07-Jul-2025</label>
 <div>
 
@@ -59,6 +59,23 @@ This directory contains the LSM6DSV320X component drivers.
 - add from_f16_to_f32 API
 - fix fifo_fsm_batch_set/get APIs
 - Fix typo in fifo_out_raw_get() API
+
+##
+
+</div>
+
+<input type="checkbox" id="collapse-section3" checked aria-hidden="true">
+<label for="collapse-section3" aria-hidden="true">V2.0.0 / 17-Sep-2025</label>
+<div>
+
+## Main changes
+
+- Added from_fs125_to_mdps() conversion API
+- Added checks before writes to avoid random content from being written
+- Fixed reset_set API wrong boot and sw_reset settings
+- Added fifo_event_t enum for stop_on_wtm_set/get functions
+- Fix fifo_batch_counter_threshold_set/get
+- Adding CODE_OF_CONDUCT.md and SECURITY.md
 
 ##
 

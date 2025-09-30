@@ -11257,6 +11257,39 @@ exit:
 }
 
 /**
+  * @brief  Reset SFLP Game Rotation Vector logic (6x).
+  *
+  * @param  ctx      read / write interface definitions
+  * @param  val      1: reset, 0: stop reset procedure
+  * @retval          interface status (MANDATORY: return 0 -> no Error)
+  *
+  */
+int32_t lsm6dsv320x_sflp_game_rotation_reset(const stmdev_ctx_t *ctx, uint8_t val)
+{
+  lsm6dsv320x_emb_func_init_a_t emb_func_init_a;
+  int32_t ret;
+
+  ret = lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_EMBED_FUNC_MEM_BANK);
+  if (ret != 0)
+  {
+    goto exit;
+  }
+
+  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_EMB_FUNC_INIT_A, (uint8_t *)&emb_func_init_a, 1);
+  if (ret != 0)
+  {
+    goto exit;
+  }
+  emb_func_init_a.sflp_game_init = val;
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_EMB_FUNC_INIT_A, (uint8_t *)&emb_func_init_a, 1);
+
+exit:
+  ret += lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_MAIN_MEM_BANK);
+
+  return ret;
+}
+
+/**
   * @brief  SFLP Data Rate (ODR) configuration.[set]
   *
   * @param  ctx      read / write interface definitions

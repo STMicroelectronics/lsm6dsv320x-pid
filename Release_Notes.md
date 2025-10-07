@@ -64,7 +64,7 @@ This directory contains the LSM6DSV320X component drivers.
 
 </div>
 
-<input type="checkbox" id="collapse-section3" checked aria-hidden="true">
+<input type="checkbox" id="collapse-section3" aria-hidden="true">
 <label for="collapse-section3" aria-hidden="true">V2.0.0 / 17-Sep-2025</label>
 <div>
 
@@ -80,8 +80,19 @@ This directory contains the LSM6DSV320X component drivers.
 ##
 
 </div>
-:::
 
+<input type="checkbox" id="collapse-section4" checked aria-hidden="true">
+<label for="collapse-section4" aria-hidden="true">V3.0.0 / 07-Oct-2025</label>
+<div>
+
+## Main changes
+
+- Add routine to reset SFLP game rotation logic
+
+##
+
+</div>
+:::
 
 
 :::

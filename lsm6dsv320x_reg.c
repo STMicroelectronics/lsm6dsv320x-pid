@@ -733,6 +733,273 @@ int32_t lsm6dsv320x_device_id_get(const stmdev_ctx_t *ctx, uint8_t *val)
 }
 
 /**
+  * @brief  Sensor setup.
+  *
+  * @param  ctx        read / write interface definitions
+  * @param  xl_odr     lsm6dsv320x_data_rate_t
+  * @param  xl_mode    lsm6dsv320x_xl_mode_t
+  * @param  gy_odr     lsm6dsv320x_data_rate_t
+  * @param  gy_mode    lsm6dsv320x_gy_mode_t
+  * @param  hg_xl_odr  lsm6dsv320x_hg_xl_data_rate_t
+  * @param  eis_odr    lsm6dsv320x_gy_eis_data_rate_t
+  *
+  * When both gy and low-g xl are on, xl is synchronized with the
+  * gyroscope, and the data rates of the two sensors are integer
+  * multiples of each other.
+  * low-g acc. cannot be set in low-power and normal modes if high-g acc is used.
+  *
+  * @retval            interface status (MANDATORY: return 0 -> no Error)
+  *
+  */
+int32_t lsm6dsv320x_setup(
+    const stmdev_ctx_t *ctx,
+    lsm6dsv320x_data_rate_t xl_odr,
+    lsm6dsv320x_xl_mode_t xl_mode,
+    lsm6dsv320x_data_rate_t gy_odr,
+    lsm6dsv320x_gy_mode_t gy_mode,
+    lsm6dsv320x_hg_xl_data_rate_t hg_xl_odr,
+    lsm6dsv320x_gy_eis_data_rate_t eis_odr,
+    uint8_t reg_out_en)
+{
+  lsm6dsv320x_ctrl1_t ctrl1;
+  lsm6dsv320x_ctrl2_t ctrl2;
+  lsm6dsv320x_haodr_cfg_t haodr;
+  lsm6dsv320x_ctrl1_xl_hg_t ctrl1_xl_hg;
+  lsm6dsv320x_ctrl_eis_t ctrl_eis;
+  lsm6dsv320x_ui_ctrl1_ois_t ctrl1_ois;
+  uint8_t xl_ha;
+  uint8_t gy_ha;
+  int32_t ret;
+
+  if (ctx->mdelay == NULL)
+  {
+    ret = -1;
+    goto exit;
+  }
+
+  // Table 10 of AN6119
+  // 1.875 Hz allowed only in Low-power modes
+  if (xl_odr == LSM6DSV320X_ODR_AT_1Hz875 &&
+      xl_mode != LSM6DSV320X_XL_LOW_POWER_2_AVG_MD &&
+      xl_mode != LSM6DSV320X_XL_LOW_POWER_4_AVG_MD &&
+      xl_mode != LSM6DSV320X_XL_LOW_POWER_8_AVG_MD)
+  {
+    ret = -1;
+    goto exit;
+  }
+  // 7.5 Hz allowed only in normal or high-performance modes
+  else if (xl_odr == LSM6DSV320X_ODR_AT_7Hz5 &&
+      xl_mode != LSM6DSV320X_XL_NORMAL_MD && xl_mode != LSM6DSV320X_XL_HIGH_PERFORMANCE_MD)
+  {
+    ret = -1;
+    goto exit;
+  }
+  // if odr_xl bits has 4th bit enabled, low-power modes are not allowed
+  else if (
+    // odr >= 480 and low-power and normal mode
+    ((uint8_t)xl_odr & 0x8) != 0 && ((uint8_t)xl_mode & 0x4) != 0 &&
+    (xl_mode != LSM6DSV320X_XL_NORMAL_MD || // normal mode is not allowed for some data rates
+     xl_odr == LSM6DSV320X_ODR_AT_3840Hz ||
+     xl_odr == LSM6DSV320X_ODR_AT_7680Hz))
+  {
+    ret = -1;
+    goto exit;
+  }
+
+  // Table 13 of AN6119
+  // 7.5Hz with HAODR mode enable, is already handled by the enum selection
+  if (((uint8_t)gy_odr & 0x8) != 0 && gy_mode == LSM6DSV320X_GY_LOW_POWER_MD)
+  {
+    ret = -1;
+    goto exit;
+  }
+
+  xl_ha = ((uint8_t)xl_odr >> 4) & 0xFU;
+  gy_ha = ((uint8_t)gy_odr >> 4) & 0xFU;
+  uint8_t both_on = xl_odr != LSM6DSV320X_ODR_OFF && gy_odr != LSM6DSV320X_ODR_OFF ? 1 : 0;
+
+  // high-accuracy is a shared configuration (except if one is OFF)
+  if (both_on && xl_ha != gy_ha)
+  {
+    ret = -1;
+    goto exit;
+  }
+
+  // if odr is choosed as an high-accuracy value, both gyro and should sets
+  // both their modes in high-accuracy mode
+  if ((xl_ha != 0 && xl_mode != LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD) ||
+    (xl_mode == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD && xl_ha == 0) ||
+    (gy_ha != 0 && gy_mode != LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD) ||
+    (gy_mode == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD && gy_ha == 0))
+  {
+    ret = -1;
+    goto exit;
+  }
+
+  // When the high-g accelerometer is used, the low-g accelerometer
+  // must be configured in high-performance mode or in high-accuracy ODR mode.
+  // However high-g accelerometer could also be used in standalone mode
+  if(hg_xl_odr != LSM6DSV320X_HG_XL_ODR_OFF &&
+    xl_odr != LSM6DSV320X_ODR_OFF &&
+    xl_mode != LSM6DSV320X_XL_HIGH_PERFORMANCE_MD &&
+    xl_mode != LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD)
+  {
+    ret = -1;
+    goto exit;
+  }
+
+  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_HAODR_CFG, (uint8_t *)&haodr, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_UI_CTRL1_OIS, (uint8_t *)&ctrl1_ois, 1);
+
+  int8_t turn_xl_on = xl_odr != LSM6DSV320X_ODR_OFF &&
+    ctrl1.odr_xl == LSM6DSV320X_ODR_OFF ? 1 : 0;
+
+  int8_t turn_xl_off = xl_odr == LSM6DSV320X_ODR_OFF &&
+    ctrl1.odr_xl != LSM6DSV320X_ODR_OFF ? 1 : 0;
+
+  int8_t turn_hg_on = hg_xl_odr != LSM6DSV320X_HG_XL_ODR_OFF &&
+      ctrl1_xl_hg.odr_xl_hg == LSM6DSV320X_HG_XL_ODR_OFF ? 1 : 0;
+
+  int8_t turn_hg_off = hg_xl_odr == LSM6DSV320X_HG_XL_ODR_OFF &&
+      ctrl1_xl_hg.odr_xl_hg != LSM6DSV320X_HG_XL_ODR_OFF ? 1 : 0;
+
+  lsm6dsv320x_xl_mode_t prev_mode = ctrl1.op_mode_xl;
+
+  if (ret != 0)
+  {
+    goto exit;
+  }
+
+  // ensure HAODR switch (enable/disable) is required
+  if ((ctrl1.op_mode_xl != xl_mode && // check if previous mode is different
+       (xl_mode == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD || // check if mode to set is haodr
+        ctrl1.op_mode_xl == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD // check if prev.mode was haodr
+       )) ||
+       (ctrl2.op_mode_g != gy_mode && // same checks made prev. but for gy
+        (gy_mode == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD ||
+         ctrl2.op_mode_g == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD)
+       )
+    ) {
+
+    // To enable/disable HAODR mode all the sensors must be in power-down mode
+    ctrl1.odr_xl = LSM6DSV320X_ODR_OFF;
+    ctrl2.odr_g = LSM6DSV320X_ODR_OFF;
+    ctrl1_xl_hg.odr_xl_hg = LSM6DSV320X_HG_XL_ODR_OFF;
+    ctrl1_xl_hg.xl_hg_regout_en = 0;
+    ctrl_eis.odr_g_eis = LSM6DSV320X_EIS_ODR_OFF;
+    ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
+
+    if (ret != 0)
+    {
+      goto exit;
+    }
+
+    // enable HAODR
+    haodr.haodr_sel = xl_ha | gy_ha;
+    ctrl1.op_mode_xl = xl_mode;
+    ctrl2.op_mode_g = gy_mode;
+
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_HAODR_CFG, (uint8_t *)&haodr, 1);
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
+
+    if (prev_mode == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD)
+    {
+      ctx->mdelay(1); // should be at least 500 us; AN6119, section 3.4
+    }
+  } else if (haodr.haodr_sel != (xl_ha | gy_ha)) {
+    haodr.haodr_sel = xl_ha | gy_ha;
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_HAODR_CFG, (uint8_t *)&haodr, 1);
+  }
+
+  //Handle EIS+UI/OIS in HAODR mode: must power down all gyros, wait 90 ms, then enable
+  uint8_t eis_haodr = ((eis_odr != LSM6DSV320X_EIS_ODR_OFF) && (gy_mode == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD) ? 1 : 0);
+  uint8_t ui_haodr  = ((gy_odr != LSM6DSV320X_ODR_OFF) && (gy_mode == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD)) ? 1 : 0;
+  uint8_t ois_haodr = (ctrl1_ois.ois_g_en == 1 || ctrl1_ois.ois_xl_en == 1) ? 1 : 0;
+  if (eis_haodr && (ui_haodr || ois_haodr)) {
+    lsm6dsv320x_ui_ctrl1_ois_t prev_ctrl1_ois = ctrl1_ois;
+
+    // Power down all gyroscope channels
+    ctrl2.odr_g = LSM6DSV320X_ODR_OFF;
+    ctrl_eis.odr_g_eis = LSM6DSV320X_EIS_ODR_OFF;
+    ctrl1_ois.ois_g_en = 0;
+    ctrl1_ois.ois_xl_en = 0;
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_UI_CTRL1_OIS, (uint8_t *)&ctrl1_ois, 1);
+    ctx->mdelay(90); // Wait 90 ms
+    // Restore ctrl1 ois, other sensors will be enable at the end if needed
+    ctrl1_ois = prev_ctrl1_ois;
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_UI_CTRL1_OIS, (uint8_t *)&ctrl1_ois, 1);
+  }
+
+  ctrl1.odr_xl = (uint8_t)xl_odr & 0x0FU;
+  ctrl1.op_mode_xl = (uint8_t)xl_mode & 0x07U;
+  ctrl2.odr_g = (uint8_t)gy_odr & 0x0FU;
+  ctrl2.op_mode_g = (uint8_t)gy_mode & 0x07U;
+  ctrl1_xl_hg.odr_xl_hg = (uint8_t)hg_xl_odr & 0x07U;
+  ctrl1_xl_hg.xl_hg_regout_en = reg_out_en & 0x1U;
+  ctrl_eis.odr_g_eis = (uint8_t)eis_odr & 0x03U;
+
+  if (turn_xl_on == 1 && turn_hg_off == 1)
+  {
+    // if 3-th bit is enabled: low power or normal mode
+    if (((uint8_t)xl_mode & 0x4) != 0)
+    {
+      ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
+      ctx->mdelay(1); // should be 300 us
+      ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
+    }
+    else
+    {
+      ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
+      ctx->mdelay(1); // should be 300 us
+      ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
+    }
+  }
+  else if (turn_hg_on == 1 && turn_xl_off == 1)
+  {
+    // if 3-th bit is enabled: low power or normal mode
+    if (((uint8_t)prev_mode & 0x4) != 0)
+    {
+      ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
+      ctx->mdelay(5); // should be 4.5 ms
+      ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
+    }
+    else
+    {
+      ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
+      ctx->mdelay(1); // should be 300 us
+      ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
+    }
+  }
+  else
+  {
+    ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
+  }
+
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
+
+  // if low-g acc and gyro is off, the data-ready frequency is correct after 70ms settling period
+  if (xl_odr == LSM6DSV320X_ODR_OFF && gy_odr == LSM6DSV320X_ODR_OFF)
+  {
+    ctx->mdelay(70);
+  }
+
+exit:
+  return ret;
+}
+
+/**
   * @brief  Accelerometer output data rate (ODR) selection.[set]
   *
   * @param  ctx      read / write interface definitions
@@ -740,6 +1007,7 @@ int32_t lsm6dsv320x_device_id_get(const stmdev_ctx_t *ctx, uint8_t *val)
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
+[[deprecated("Use setup function")]]
 int32_t lsm6dsv320x_xl_data_rate_set(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_data_rate_t val)
 {
@@ -1021,6 +1289,7 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
+[[deprecated("Use setup function")]]
 int32_t lsm6dsv320x_hg_xl_data_rate_set(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_hg_xl_data_rate_t val,
                                         uint8_t reg_out_en)
@@ -1106,6 +1375,7 @@ int32_t lsm6dsv320x_hg_xl_data_rate_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
+[[deprecated("Use setup function")]]
 int32_t lsm6dsv320x_xl_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t val)
 {
   lsm6dsv320x_ctrl1_t ctrl1;
@@ -1187,6 +1457,7 @@ int32_t lsm6dsv320x_xl_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t *
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
+[[deprecated("Use setup function")]]
 int32_t lsm6dsv320x_gy_data_rate_set(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_data_rate_t val)
 {
@@ -1468,6 +1739,7 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
+[[deprecated("Use setup function")]]
 int32_t lsm6dsv320x_gy_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t val)
 {
   lsm6dsv320x_ctrl2_t ctrl2;
@@ -4635,6 +4907,7 @@ int32_t lsm6dsv320x_eis_gy_on_if2_get(const stmdev_ctx_t *ctx, uint8_t *val)
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
+[[deprecated("Use setup function")]]
 int32_t lsm6dsv320x_gy_eis_data_rate_set(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_gy_eis_data_rate_t val)
 {

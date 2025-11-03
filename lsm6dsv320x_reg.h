@@ -4841,6 +4841,15 @@ int32_t lsm6dsv320x_gy_eis_data_rate_set(const stmdev_ctx_t *ctx,
 int32_t lsm6dsv320x_gy_eis_data_rate_get(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_gy_eis_data_rate_t *val);
 
+int32_t lsm6dsv320x_setup(const stmdev_ctx_t *ctx,
+    lsm6dsv320x_data_rate_t xl_odr,
+    lsm6dsv320x_xl_mode_t xl_mode,
+    lsm6dsv320x_data_rate_t gy_odr,
+    lsm6dsv320x_gy_mode_t gy_mode,
+    lsm6dsv320x_hg_xl_data_rate_t hg_xl_odr,
+    lsm6dsv320x_gy_eis_data_rate_t eis_odr,
+    uint8_t reg_out_en);
+
 int32_t lsm6dsv320x_fifo_watermark_set(const stmdev_ctx_t *ctx, uint8_t val);
 int32_t lsm6dsv320x_fifo_watermark_get(const stmdev_ctx_t *ctx, uint8_t *val);
 

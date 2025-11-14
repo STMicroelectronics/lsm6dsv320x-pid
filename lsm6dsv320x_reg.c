@@ -321,6 +321,7 @@ int32_t lsm6dsv320x_xl_offset_mg_set(const stmdev_ctx_t *ctx,
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_Z_OFS_USR, (uint8_t *)&z_ofs_usr, 1);
   ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_Y_OFS_USR, (uint8_t *)&y_ofs_usr, 1);
   ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_X_OFS_USR, (uint8_t *)&x_ofs_usr, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL9, (uint8_t *)&ctrl9, 1);
   if (ret != 0)
   {
     return ret;
@@ -733,43 +734,24 @@ int32_t lsm6dsv320x_device_id_get(const stmdev_ctx_t *ctx, uint8_t *val)
 }
 
 /**
-  * @brief  Sensor setup.
+  * @brief Sensor xl setup
+  *        To switch HAODR mode, lsm6dsv320x_haodr_set should be called first
+  *        lsm6dsv320x_haodr_set if xl and gy are already both ON
   *
   * @param  ctx        read / write interface definitions
   * @param  xl_odr     lsm6dsv320x_data_rate_t
   * @param  xl_mode    lsm6dsv320x_xl_mode_t
-  * @param  gy_odr     lsm6dsv320x_data_rate_t
-  * @param  gy_mode    lsm6dsv320x_gy_mode_t
-  * @param  hg_xl_odr  lsm6dsv320x_hg_xl_data_rate_t
-  * @param  eis_odr    lsm6dsv320x_gy_eis_data_rate_t
-  *
-  * When both gy and low-g xl are on, xl is synchronized with the
-  * gyroscope, and the data rates of the two sensors are integer
-  * multiples of each other.
-  * low-g acc. cannot be set in low-power and normal modes if high-g acc is used.
-  *
-  * @retval            interface status (MANDATORY: return 0 -> no Error)
-  *
   */
-int32_t lsm6dsv320x_setup(
-    const stmdev_ctx_t *ctx,
-    lsm6dsv320x_data_rate_t xl_odr,
-    lsm6dsv320x_xl_mode_t xl_mode,
-    lsm6dsv320x_data_rate_t gy_odr,
-    lsm6dsv320x_gy_mode_t gy_mode,
-    lsm6dsv320x_hg_xl_data_rate_t hg_xl_odr,
-    lsm6dsv320x_gy_eis_data_rate_t eis_odr,
-    uint8_t reg_out_en)
+int32_t lsm6dsv320x_xl_setup(
+  const stmdev_ctx_t *ctx,
+  lsm6dsv320x_data_rate_t xl_odr,
+  lsm6dsv320x_xl_mode_t xl_mode)
 {
+  int32_t ret;
   lsm6dsv320x_ctrl1_t ctrl1;
   lsm6dsv320x_ctrl2_t ctrl2;
   lsm6dsv320x_haodr_cfg_t haodr;
-  lsm6dsv320x_ctrl1_xl_hg_t ctrl1_xl_hg;
-  lsm6dsv320x_ctrl_eis_t ctrl_eis;
-  lsm6dsv320x_ui_ctrl1_ois_t ctrl1_ois;
-  uint8_t xl_ha;
-  uint8_t gy_ha;
-  int32_t ret;
+  uint8_t xl_ha = ((uint8_t) xl_odr >> 4) & 0xFU;
 
   if (ctx->mdelay == NULL)
   {
@@ -806,6 +788,100 @@ int32_t lsm6dsv320x_setup(
     goto exit;
   }
 
+  if (xl_mode == LSM6DSV320X_XL_ODR_TRIGGERED_MD &&
+      (xl_odr == LSM6DSV320X_ODR_AT_1Hz875 ||
+       xl_odr == LSM6DSV320X_ODR_AT_7Hz5 ||
+       xl_odr == LSM6DSV320X_ODR_AT_7680Hz))
+  {
+      ret = -1;
+      goto exit;
+  }
+
+  // if odr is choosed as high-accuracy value, mode should also be set in HAODR mode
+  if ((xl_ha != 0 && xl_mode != LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD) ||
+      (xl_ha == 0 && xl_mode == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD))
+  {
+    ret = -1;
+    goto exit;
+  }
+
+  uint8_t buff[2];
+  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL1, buff, 2);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_HAODR_CFG, (uint8_t *)&haodr, 1);
+
+  bytecpy((uint8_t *)&ctrl1, &buff[0]);
+  bytecpy((uint8_t *)&ctrl2, &buff[1]);
+
+  if (ret != 0)
+  {
+    goto exit;
+  }
+
+  // cross-checking haodr mode
+  uint8_t both_on = ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
+    ctrl2.odr_g != LSM6DSV320X_ODR_OFF ? 1 : 0;
+
+  if (both_on && ctrl2.op_mode_g == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD && xl_ha != haodr.haodr_sel)
+  {
+    ret = -1;
+    goto exit;
+  }
+
+  // if odr is choosed as an high-accuracy value, mode should be set in high-accuracy
+  if ((xl_ha != 0 && xl_mode != LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD)) {
+    ret = -1;
+    goto exit;
+  }
+
+  // Switching (enable/disable) HAODR mode require that all sensors must be in power-down mode.
+  // Note: lsm6dsv320x_haodr_set function should be called first.
+  if (haodr.haodr_sel != xl_ha &&
+      ctrl1.op_mode_xl != xl_mode && // check if mode switch is required
+      (xl_mode == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD || // check if mode to set is HAODR
+       ctrl1.op_mode_xl == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD)) // check if previous mode was HAODR
+  {
+    ret += lsm6dsv320x_haodr_set(ctx, xl_odr, xl_mode, ctrl2.odr_g, ctrl2.op_mode_g);
+  }
+  else
+  {
+    // if HAODR switch is not required, just set ctrl1 settings
+    ctrl1.op_mode_xl = xl_mode;
+    ctrl1.odr_xl = xl_odr;
+    haodr.haodr_sel = xl_ha;
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_HAODR_CFG, (uint8_t *)&haodr, 1);
+  }
+
+exit:
+  return ret;
+}
+
+/**
+  * @brief Sensor gy setup
+  *        To switch HAODR mode, lsm6dsv320x_haodr_set should be called first.
+  *        lsm6dsv320x_haodr_set if xl and gy are already both ON
+  *
+  * @param  ctx        read / write interface definitions
+  * @param  gy_odr     lsm6dsv320x_data_rate_t
+  * @param  gy_mode    lsm6dsv320x_xl_mode_t
+  */
+int32_t lsm6dsv320x_gy_setup(
+  const stmdev_ctx_t *ctx,
+  lsm6dsv320x_data_rate_t gy_odr,
+  lsm6dsv320x_gy_mode_t gy_mode)
+{
+  int32_t ret;
+  lsm6dsv320x_ctrl1_t ctrl1;
+  lsm6dsv320x_ctrl2_t ctrl2;
+  lsm6dsv320x_haodr_cfg_t haodr;
+  uint8_t gy_ha = ((uint8_t) gy_odr >> 4) & 0xFU;
+
+  if (ctx->mdelay == NULL)
+  {
+    ret = -1;
+    goto exit;
+  }
+
   // Table 13 of AN6119
   // 7.5Hz with HAODR mode enable, is already handled by the enum selection
   if (((uint8_t)gy_odr & 0x8) != 0 && gy_mode == LSM6DSV320X_GY_LOW_POWER_MD)
@@ -814,73 +890,96 @@ int32_t lsm6dsv320x_setup(
     goto exit;
   }
 
-  xl_ha = ((uint8_t)xl_odr >> 4) & 0xFU;
-  gy_ha = ((uint8_t)gy_odr >> 4) & 0xFU;
+  if (gy_mode == LSM6DSV320X_GY_ODR_TRIGGERED_MD &&
+      (gy_odr == LSM6DSV320X_ODR_AT_7Hz5 ||
+       gy_odr == LSM6DSV320X_ODR_AT_7680Hz))
+  {
+      ret = -1;
+      goto exit;
+  }
+
+  // if odr is choosed as high-accuracy value, mode should also be set in HAODR mode
+  if ((gy_ha != 0 && gy_mode != LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD) ||
+      (gy_ha == 0 && gy_mode == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD))
+  {
+    ret = -1;
+    goto exit;
+  }
+
+  uint8_t buff[2];
+  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL1, buff, 2);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_HAODR_CFG, (uint8_t *)&haodr, 1);
+
+  bytecpy((uint8_t *)&ctrl1, &buff[0]);
+  bytecpy((uint8_t *)&ctrl2, &buff[1]);
+
+  if (ret != 0)
+  {
+    goto exit;
+  }
+
+  // cross-checking haodr mode
+  uint8_t both_on = ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
+    ctrl2.odr_g != LSM6DSV320X_ODR_OFF ? 1 : 0;
+
+  if (both_on && ctrl1.op_mode_xl == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD && gy_ha != haodr.haodr_sel)
+  {
+    ret = -1;
+    goto exit;
+  }
+
+  // if odr is choosed as an high-accuracy value, mode should be set in high-accuracy
+  if ((gy_ha != 0 && gy_mode != LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD)) {
+    ret = -1;
+    goto exit;
+  }
+
+  // Switching (enable/disable) HAODR mode require that all sensors must be in power-down mode.
+  // Note: lsm6dsv320x_haodr_set function should be called first.
+  if (haodr.haodr_sel != gy_ha &&
+      ctrl2.op_mode_g != gy_mode && // check if mode switch is required (prev. != new)
+      (gy_mode == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD || // check if mode to set is HAODR
+       ctrl2.op_mode_g == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD)) // check if previous mode was HAODR
+  {
+    ret += lsm6dsv320x_haodr_set(ctx, ctrl1.odr_xl, ctrl1.op_mode_xl, gy_odr, gy_mode);
+  }
+  else
+  {
+    // if HAODR switch is not required, just set ctrl2 settings
+    ctrl2.op_mode_g = gy_mode;
+    ctrl2.odr_g = gy_odr;
+    haodr.haodr_sel = gy_ha;
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_HAODR_CFG, (uint8_t *)&haodr, 1);
+  }
+
+exit:
+  return ret;
+}
+
+int32_t lsm6dsv320x_haodr_set(
+  const stmdev_ctx_t *ctx,
+  lsm6dsv320x_data_rate_t xl_odr,
+  lsm6dsv320x_xl_mode_t xl_mode,
+  lsm6dsv320x_data_rate_t gy_odr,
+  lsm6dsv320x_gy_mode_t gy_mode)
+{
+  lsm6dsv320x_ctrl1_t ctrl1;
+  lsm6dsv320x_ctrl2_t ctrl2;
+  lsm6dsv320x_haodr_cfg_t haodr;
+  lsm6dsv320x_ctrl1_xl_hg_t ctrl1_xl_hg;
+  lsm6dsv320x_ctrl_eis_t ctrl_eis;
+  lsm6dsv320x_ui_ctrl1_ois_t ctrl1_ois;
+  int32_t ret;
+
+  uint8_t xl_ha = (((uint8_t)xl_odr) >> 4) & 0xFU;
+  uint8_t gy_ha = (((uint8_t)gy_odr) >> 4) & 0xFU;
   uint8_t both_on = xl_odr != LSM6DSV320X_ODR_OFF && gy_odr != LSM6DSV320X_ODR_OFF ? 1 : 0;
 
-  // high-accuracy is a shared configuration (except if one is OFF)
   if (both_on && xl_ha != gy_ha)
   {
     ret = -1;
     goto exit;
-  }
-
-  // if odr is choosed as an high-accuracy value, both gyro and should sets
-  // both their modes in high-accuracy mode
-  if ((xl_ha != 0 && xl_mode != LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD) ||
-    (xl_mode == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD && xl_ha == 0) ||
-    (gy_ha != 0 && gy_mode != LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD) ||
-    (gy_mode == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD && gy_ha == 0))
-  {
-    ret = -1;
-    goto exit;
-  }
-
-  // When the high-g accelerometer is used, the low-g accelerometer
-  // must be configured in high-performance mode or in high-accuracy ODR mode.
-  // However high-g accelerometer could also be used in standalone mode
-  if(hg_xl_odr != LSM6DSV320X_HG_XL_ODR_OFF &&
-    xl_odr != LSM6DSV320X_ODR_OFF &&
-    xl_mode != LSM6DSV320X_XL_HIGH_PERFORMANCE_MD &&
-    xl_mode != LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD)
-  {
-    ret = -1;
-    goto exit;
-  }
-
-  // ODR-triggered mode
-  // support only low-g and gyroscope, if one is enabled the other should be put
-  // in the same mode or power-down mode
-  if (xl_mode == LSM6DSV320X_XL_ODR_TRIGGERED_MD || gy_mode == LSM6DSV320X_GY_ODR_TRIGGERED_MD) {
-    if ((xl_mode != LSM6DSV320X_XL_ODR_TRIGGERED_MD && xl_odr != LSM6DSV320X_ODR_OFF) ||
-        (gy_mode != LSM6DSV320X_GY_ODR_TRIGGERED_MD && gy_odr != LSM6DSV320X_ODR_OFF))
-    {
-        ret = -1;
-        goto exit;
-    }
-
-    if(hg_xl_odr != LSM6DSV320X_HG_XL_ODR_OFF || eis_odr != LSM6DSV320X_EIS_ODR_OFF)
-    {
-        ret = -1;
-        goto exit;
-    }
-
-    if (xl_mode == LSM6DSV320X_XL_ODR_TRIGGERED_MD &&
-        (xl_odr == LSM6DSV320X_ODR_AT_1Hz875 ||
-         xl_odr == LSM6DSV320X_ODR_AT_7Hz5 ||
-         xl_odr == LSM6DSV320X_ODR_AT_7680Hz))
-    {
-        ret = -1;
-        goto exit;
-    }
-
-    if (gy_mode == LSM6DSV320X_GY_ODR_TRIGGERED_MD &&
-        (gy_odr == LSM6DSV320X_ODR_AT_7Hz5 ||
-         gy_odr == LSM6DSV320X_ODR_AT_7680Hz))
-    {
-        ret = -1;
-        goto exit;
-    }
   }
 
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_HAODR_CFG, (uint8_t *)&haodr, 1);
@@ -888,183 +987,66 @@ int32_t lsm6dsv320x_setup(
   ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
   ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
   ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
-  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_UI_CTRL1_OIS, (uint8_t *)&ctrl1_ois, 1);
-
-  int8_t turn_xl_on = xl_odr != LSM6DSV320X_ODR_OFF &&
-    ctrl1.odr_xl == LSM6DSV320X_ODR_OFF ? 1 : 0;
-
-  int8_t turn_xl_off = xl_odr == LSM6DSV320X_ODR_OFF &&
-    ctrl1.odr_xl != LSM6DSV320X_ODR_OFF ? 1 : 0;
-
-  int8_t turn_hg_on = hg_xl_odr != LSM6DSV320X_HG_XL_ODR_OFF &&
-      ctrl1_xl_hg.odr_xl_hg == LSM6DSV320X_HG_XL_ODR_OFF ? 1 : 0;
-
-  int8_t turn_hg_off = hg_xl_odr == LSM6DSV320X_HG_XL_ODR_OFF &&
-      ctrl1_xl_hg.odr_xl_hg != LSM6DSV320X_HG_XL_ODR_OFF ? 1 : 0;
 
   lsm6dsv320x_xl_mode_t prev_mode = ctrl1.op_mode_xl;
+  lsm6dsv320x_ctrl1_xl_hg_t ctrl1_xl_hg_prev = ctrl1_xl_hg;
+  lsm6dsv320x_ctrl_eis_t ctrl_eis_prev = ctrl_eis;
 
   if (ret != 0)
   {
     goto exit;
   }
 
-  // ensure ODR-triggered mode switch (enable/disable) is required
-  if ((ctrl1.op_mode_xl != xl_mode &&
-        (xl_mode == LSM6DSV320X_XL_ODR_TRIGGERED_MD ||
-         ctrl1.op_mode_xl == LSM6DSV320X_XL_ODR_TRIGGERED_MD)) ||
-      (ctrl2.op_mode_g != gy_mode &&
-         (gy_mode == LSM6DSV320X_GY_ODR_TRIGGERED_MD ||
-          ctrl2.op_mode_g == LSM6DSV320X_GY_ODR_TRIGGERED_MD)))
-  {
-    // To enable/disable ODR-triggered mode all the sensors must be in power-down mode
-    ctrl1.odr_xl = LSM6DSV320X_ODR_OFF;
-    ctrl2.odr_g = LSM6DSV320X_ODR_OFF;
-    ctrl1_xl_hg.odr_xl_hg = LSM6DSV320X_HG_XL_ODR_OFF;
-    ctrl1_xl_hg.xl_hg_regout_en = 0;
-    ctrl_eis.odr_g_eis = LSM6DSV320X_EIS_ODR_OFF;
-    ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
-
-    if (ret != 0)
-    {
-        goto exit;
-    }
-
-    // set new odr mode
-    ctrl1.op_mode_xl = xl_mode;
-    ctrl2.op_mode_g = gy_mode;
-
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
-  }
-
-  // ensure HAODR switch (enable/disable) is required
-  if ((ctrl1.op_mode_xl != xl_mode && // check if previous mode is different
-        (xl_mode == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD || // check if mode to set is haodr
-          ctrl1.op_mode_xl == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD // check if prev.mode was haodr
-      )) ||
-      (ctrl2.op_mode_g != gy_mode && // same checks made prev. but for gy
-        (gy_mode == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD ||
-          ctrl2.op_mode_g == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD)
-      )
-    )
-  {
-
-    // To enable/disable HAODR mode all the sensors must be in power-down mode
-    ctrl1.odr_xl = LSM6DSV320X_ODR_OFF;
-    ctrl2.odr_g = LSM6DSV320X_ODR_OFF;
-    ctrl1_xl_hg.odr_xl_hg = LSM6DSV320X_HG_XL_ODR_OFF;
-    ctrl1_xl_hg.xl_hg_regout_en = 0;
-    ctrl_eis.odr_g_eis = LSM6DSV320X_EIS_ODR_OFF;
-    ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
-
-    if (ret != 0)
-    {
-      goto exit;
-    }
-
-    // enable HAODR
-    haodr.haodr_sel = xl_ha | gy_ha;
-    ctrl1.op_mode_xl = xl_mode;
-    ctrl2.op_mode_g = gy_mode;
-
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_HAODR_CFG, (uint8_t *)&haodr, 1);
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
-
-    if (prev_mode == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD)
-    {
-      ctx->mdelay(1); // should be at least 500 us; AN6119, section 3.4
-    }
-  } else if (haodr.haodr_sel != (xl_ha | gy_ha)) {
-    haodr.haodr_sel = xl_ha | gy_ha;
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_HAODR_CFG, (uint8_t *)&haodr, 1);
-  }
-
-  //Handle EIS+UI/OIS in HAODR mode: must power down all gyros, wait 90 ms, then enable
-  uint8_t eis_haodr = ((eis_odr != LSM6DSV320X_EIS_ODR_OFF) && (gy_mode == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD) ? 1 : 0);
-  uint8_t ui_haodr  = ((gy_odr != LSM6DSV320X_ODR_OFF) && (gy_mode == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD)) ? 1 : 0;
-  uint8_t ois_haodr = (ctrl1_ois.ois_g_en == 1 || ctrl1_ois.ois_xl_en == 1) ? 1 : 0;
-  if (eis_haodr && (ui_haodr || ois_haodr)) {
-    lsm6dsv320x_ui_ctrl1_ois_t prev_ctrl1_ois = ctrl1_ois;
-
-    // Power down all gyroscope channels
-    ctrl2.odr_g = LSM6DSV320X_ODR_OFF;
-    ctrl_eis.odr_g_eis = LSM6DSV320X_EIS_ODR_OFF;
-    ctrl1_ois.ois_g_en = 0;
-    ctrl1_ois.ois_xl_en = 0;
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_UI_CTRL1_OIS, (uint8_t *)&ctrl1_ois, 1);
-    ctx->mdelay(90); // Wait 90 ms
-    // Restore ctrl1 ois, other sensors will be enable at the end if needed
-    ctrl1_ois = prev_ctrl1_ois;
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_UI_CTRL1_OIS, (uint8_t *)&ctrl1_ois, 1);
-  }
-
-  ctrl1.odr_xl = (uint8_t)xl_odr & 0x0FU;
-  ctrl1.op_mode_xl = (uint8_t)xl_mode & 0x07U;
-  ctrl2.odr_g = (uint8_t)gy_odr & 0x0FU;
-  ctrl2.op_mode_g = (uint8_t)gy_mode & 0x07U;
-  ctrl1_xl_hg.odr_xl_hg = (uint8_t)hg_xl_odr & 0x07U;
-  ctrl1_xl_hg.xl_hg_regout_en = reg_out_en & 0x1U;
-  ctrl_eis.odr_g_eis = (uint8_t)eis_odr & 0x03U;
-
-  if (turn_xl_on == 1 && turn_hg_off == 1)
-  {
-    // if 3-th bit is enabled: low power or normal mode
-    if (((uint8_t)xl_mode & 0x4) != 0)
-    {
-      ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
-      ctx->mdelay(1); // should be 300 us
-      ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
-    }
-    else
-    {
-      ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
-      ctx->mdelay(1); // should be 300 us
-      ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
-    }
-  }
-  else if (turn_hg_on == 1 && turn_xl_off == 1)
-  {
-    // if 3-th bit is enabled: low power or normal mode
-    if (((uint8_t)prev_mode & 0x4) != 0)
-    {
-      ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
-      ctx->mdelay(5); // should be 4.5 ms
-      ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
-    }
-    else
-    {
-      ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
-      ctx->mdelay(1); // should be 300 us
-      ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
-    }
-  }
-  else
-  {
-    ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
-    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
-  }
-
+  // Enabling/disabling HAODR mode require to have all sensors in power-down mode
+  ctrl1.odr_xl = LSM6DSV320X_ODR_OFF;
+  ctrl2.odr_g = LSM6DSV320X_ODR_OFF;
+  ctrl1_xl_hg.odr_xl_hg = LSM6DSV320X_HG_XL_ODR_OFF;
+  ctrl1_xl_hg.xl_hg_regout_en = 0;
+  ctrl_eis.odr_g_eis = LSM6DSV320X_EIS_ODR_OFF;
+  ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
   ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
-  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
-
-  // if low-g acc and gyro is off, the data-ready frequency is correct after 70ms settling period
-  if (xl_odr == LSM6DSV320X_ODR_OFF && gy_odr == LSM6DSV320X_ODR_OFF)
+  // avoid turn off if already off
+  if (ctrl1_xl_hg_prev.odr_xl_hg != LSM6DSV320X_HG_XL_ODR_OFF)
   {
-    ctx->mdelay(70);
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
+  }
+  if (ctrl_eis_prev.odr_g_eis != LSM6DSV320X_EIS_ODR_OFF)
+  {
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
+  }
+
+  // set HAODR
+  haodr.haodr_sel = xl_ha | gy_ha;
+  ctrl1.op_mode_xl = xl_mode;
+  ctrl2.op_mode_g = gy_mode;
+
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_HAODR_CFG, (uint8_t *)&haodr, 1);
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
+
+  if (prev_mode == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD)
+  {
+    ctx->mdelay(1); // should be at least 500 us; AN6119, section 3.4
+  }
+
+  // set xl and gy data rates and restore high-g xl and eis to previous data rates
+  ctrl1.odr_xl = xl_odr;
+  ctrl2.odr_g = gy_odr;
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
+  // if off, there is no need to turn them on
+  if (ctrl1_xl_hg_prev.odr_xl_hg != LSM6DSV320X_HG_XL_ODR_OFF)
+  {
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg_prev, 1);
+  }
+  if (ctrl_eis_prev.odr_g_eis != LSM6DSV320X_EIS_ODR_OFF)
+  {
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis_prev, 1);
   }
 
 exit:
   return ret;
+
 }
 
 /**
@@ -1075,7 +1057,7 @@ exit:
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-[[deprecated("Use setup function")]]
+[[deprecated("Use xl_setup function")]]
 int32_t lsm6dsv320x_xl_data_rate_set(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_data_rate_t val)
 {
@@ -1354,27 +1336,50 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
   *
   * @param  ctx      read / write interface definitions
   * @param  val      lsm6dsv320x_hg_xl_data_rate_t enum
+  * @param  uint8_t  reg_out_en
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-[[deprecated("Use setup function")]]
 int32_t lsm6dsv320x_hg_xl_data_rate_set(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_hg_xl_data_rate_t val,
                                         uint8_t reg_out_en)
 {
+  lsm6dsv320x_ctrl1_t ctrl1;
+  lsm6dsv320x_ctrl2_t ctrl2;
   lsm6dsv320x_ctrl1_xl_hg_t ctrl1_xl_hg;
   int32_t ret;
 
-  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
+  ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
   if (ret != 0)
   {
-    return ret;
+    goto exit;
+  }
+
+  if (val != LSM6DSV320X_HG_XL_ODR_OFF && ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
+      ctrl1.op_mode_xl != LSM6DSV320X_XL_HIGH_PERFORMANCE_MD &&
+      ctrl1.op_mode_xl != LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD)
+  {
+    ret = -1;
+    goto exit;
+  }
+
+  // if xl or gy are ON in odr triggered mode, high-g xl cannot be turned on
+  if ((ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
+       ctrl1.op_mode_xl == LSM6DSV320X_XL_ODR_TRIGGERED_MD) ||
+      (ctrl2.odr_g != LSM6DSV320X_ODR_OFF &&
+       ctrl2.op_mode_g == LSM6DSV320X_GY_ODR_TRIGGERED_MD))
+  {
+    ret = -1;
+    goto exit;
   }
 
   ctrl1_xl_hg.odr_xl_hg = (uint8_t)val & 0x07U;
   ctrl1_xl_hg.xl_hg_regout_en = reg_out_en & 0x1U;
   ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
 
+exit:
   return ret;
 }
 
@@ -1443,7 +1448,7 @@ int32_t lsm6dsv320x_hg_xl_data_rate_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-[[deprecated("Use setup function")]]
+[[deprecated("Use xl_setup function")]]
 int32_t lsm6dsv320x_xl_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t val)
 {
   lsm6dsv320x_ctrl1_t ctrl1;
@@ -1525,7 +1530,7 @@ int32_t lsm6dsv320x_xl_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t *
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-[[deprecated("Use setup function")]]
+[[deprecated("Use gy_setup function")]]
 int32_t lsm6dsv320x_gy_data_rate_set(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_data_rate_t val)
 {
@@ -1807,7 +1812,7 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-[[deprecated("Use setup function")]]
+[[deprecated("Use gy_setup function")]]
 int32_t lsm6dsv320x_gy_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t val)
 {
   lsm6dsv320x_ctrl2_t ctrl2;
@@ -4975,14 +4980,35 @@ int32_t lsm6dsv320x_eis_gy_on_if2_get(const stmdev_ctx_t *ctx, uint8_t *val)
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-[[deprecated("Use setup function")]]
 int32_t lsm6dsv320x_gy_eis_data_rate_set(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_gy_eis_data_rate_t val)
 {
   lsm6dsv320x_ctrl_eis_t ctrl_eis;
+  lsm6dsv320x_ctrl1_t ctrl1;
+  lsm6dsv320x_ctrl2_t ctrl2;
   int32_t ret;
+  uint8_t buff[2];
 
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL1, buff, 2);
+
+  if (ret != 0)
+  {
+    goto exit;
+  }
+
+  bytecpy((uint8_t *)&ctrl1, &buff[0]);
+  bytecpy((uint8_t *)&ctrl2, &buff[0]);
+
+  // if xl or gy are ON in odr triggered mode, eis cannot be turned on
+  if ((ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
+       ctrl1.op_mode_xl == LSM6DSV320X_XL_ODR_TRIGGERED_MD) ||
+      (ctrl2.odr_g != LSM6DSV320X_ODR_OFF &&
+       ctrl2.op_mode_g == LSM6DSV320X_GY_ODR_TRIGGERED_MD))
+  {
+    ret = -1;
+    goto exit;
+  }
 
   if (ret == 0)
   {
@@ -4990,6 +5016,7 @@ int32_t lsm6dsv320x_gy_eis_data_rate_set(const stmdev_ctx_t *ctx,
     ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
   }
 
+exit:
   return ret;
 }
 

@@ -1592,9 +1592,9 @@ typedef struct
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
-  uint8_t xl_hg_x_ofs_usr              : 8;
+  int8_t xl_hg_x_ofs_usr              : 8;
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
-  uint8_t xl_hg_x_ofs_usr              : 8;
+  int8_t xl_hg_x_ofs_usr              : 8;
 #endif /* DRV_BYTE_ORDER */
 } lsm6dsv320x_hg_x_ofs_usr_t;
 
@@ -1602,9 +1602,9 @@ typedef struct
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
-  uint8_t xl_hg_y_ofs_usr              : 8;
+  int8_t xl_hg_y_ofs_usr              : 8;
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
-  uint8_t xl_hg_y_ofs_usr              : 8;
+  int8_t xl_hg_y_ofs_usr              : 8;
 #endif /* DRV_BYTE_ORDER */
 } lsm6dsv320x_hg_y_ofs_usr_t;
 
@@ -1612,9 +1612,9 @@ typedef struct
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
-  uint8_t xl_hg_z_ofs_usr              : 8;
+  int8_t xl_hg_z_ofs_usr              : 8;
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
-  uint8_t xl_hg_z_ofs_usr              : 8;
+  int8_t xl_hg_z_ofs_usr              : 8;
 #endif /* DRV_BYTE_ORDER */
 } lsm6dsv320x_hg_z_ofs_usr_t;
 
@@ -1690,9 +1690,9 @@ typedef struct
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
-  uint8_t x_ofs_usr                    : 8;
+  int8_t x_ofs_usr                    : 8;
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
-  uint8_t x_ofs_usr                    : 8;
+  int8_t x_ofs_usr                    : 8;
 #endif /* DRV_BYTE_ORDER */
 } lsm6dsv320x_x_ofs_usr_t;
 
@@ -1700,9 +1700,9 @@ typedef struct
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
-  uint8_t y_ofs_usr                    : 8;
+  int8_t y_ofs_usr                    : 8;
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
-  uint8_t y_ofs_usr                    : 8;
+  int8_t y_ofs_usr                    : 8;
 #endif /* DRV_BYTE_ORDER */
 } lsm6dsv320x_y_ofs_usr_t;
 
@@ -1710,9 +1710,9 @@ typedef struct
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
-  uint8_t z_ofs_usr                    : 8;
+  int8_t z_ofs_usr                    : 8;
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
-  uint8_t z_ofs_usr                    : 8;
+  int8_t z_ofs_usr                    : 8;
 #endif /* DRV_BYTE_ORDER */
 } lsm6dsv320x_z_ofs_usr_t;
 
@@ -4841,14 +4841,22 @@ int32_t lsm6dsv320x_gy_eis_data_rate_set(const stmdev_ctx_t *ctx,
 int32_t lsm6dsv320x_gy_eis_data_rate_get(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_gy_eis_data_rate_t *val);
 
-int32_t lsm6dsv320x_setup(const stmdev_ctx_t *ctx,
-    lsm6dsv320x_data_rate_t xl_odr,
-    lsm6dsv320x_xl_mode_t xl_mode,
-    lsm6dsv320x_data_rate_t gy_odr,
-    lsm6dsv320x_gy_mode_t gy_mode,
-    lsm6dsv320x_hg_xl_data_rate_t hg_xl_odr,
-    lsm6dsv320x_gy_eis_data_rate_t eis_odr,
-    uint8_t reg_out_en);
+int32_t lsm6dsv320x_haodr_set(
+  const stmdev_ctx_t *ctx,
+  lsm6dsv320x_data_rate_t xl_odr,
+  lsm6dsv320x_xl_mode_t xl_mode,
+  lsm6dsv320x_data_rate_t gy_odr,
+  lsm6dsv320x_gy_mode_t gy_mode);
+
+int32_t lsm6dsv320x_xl_setup(
+  const stmdev_ctx_t *ctx,
+  lsm6dsv320x_data_rate_t xl_odr,
+  lsm6dsv320x_xl_mode_t xl_mode);
+
+int32_t lsm6dsv320x_gy_setup(
+  const stmdev_ctx_t *ctx,
+  lsm6dsv320x_data_rate_t gy_odr,
+  lsm6dsv320x_gy_mode_t gy_mode);
 
 int32_t lsm6dsv320x_fifo_watermark_set(const stmdev_ctx_t *ctx, uint8_t val);
 int32_t lsm6dsv320x_fifo_watermark_get(const stmdev_ctx_t *ctx, uint8_t *val);

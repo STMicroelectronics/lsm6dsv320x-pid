@@ -735,8 +735,9 @@ int32_t lsm6dsv320x_device_id_get(const stmdev_ctx_t *ctx, uint8_t *val)
 
 /**
   * @brief Sensor xl setup
-  *        To switch HAODR mode, lsm6dsv320x_haodr_set should be called first
-  *        lsm6dsv320x_haodr_set if xl and gy are already both ON
+  *        If both accelerometer and gyroscope are ON, `lsm6dsv320x_haodr_set` should
+  *        be used to change HAODR mode; otherwise, this function will fail since
+  *        HAODR is a shared bit.
   *
   * @param  ctx        read / write interface definitions
   * @param  xl_odr     lsm6dsv320x_data_rate_t
@@ -752,12 +753,6 @@ int32_t lsm6dsv320x_xl_setup(
   lsm6dsv320x_ctrl2_t ctrl2;
   lsm6dsv320x_haodr_cfg_t haodr;
   uint8_t xl_ha = ((uint8_t) xl_odr >> 4) & 0xFU;
-
-  if (ctx->mdelay == NULL)
-  {
-    ret = -1;
-    goto exit;
-  }
 
   // Table 10 of AN6119
   // 1.875 Hz allowed only in Low-power modes
@@ -821,7 +816,8 @@ int32_t lsm6dsv320x_xl_setup(
   uint8_t both_on = ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
     ctrl2.odr_g != LSM6DSV320X_ODR_OFF ? 1 : 0;
 
-  if (both_on && ctrl2.op_mode_g == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD && xl_ha != haodr.haodr_sel)
+  // if both on, then haodr_sel is a shared bit
+  if (both_on && (xl_ha != haodr.haodr_sel))
   {
     ret = -1;
     goto exit;
@@ -858,12 +854,13 @@ exit:
 
 /**
   * @brief Sensor gy setup
-  *        To switch HAODR mode, lsm6dsv320x_haodr_set should be called first.
-  *        lsm6dsv320x_haodr_set if xl and gy are already both ON
+  *        If both accelerometer and gyroscope are ON, `lsm6dsv320x_haodr_set` should
+  *        be used to change HAODR mode; otherwise, this function will fail since
+  *        HAODR is a shared bit.
   *
   * @param  ctx        read / write interface definitions
   * @param  gy_odr     lsm6dsv320x_data_rate_t
-  * @param  gy_mode    lsm6dsv320x_xl_mode_t
+  * @param  gy_mode    lsm6dsv320x_gy_mode_t
   */
 int32_t lsm6dsv320x_gy_setup(
   const stmdev_ctx_t *ctx,
@@ -875,12 +872,6 @@ int32_t lsm6dsv320x_gy_setup(
   lsm6dsv320x_ctrl2_t ctrl2;
   lsm6dsv320x_haodr_cfg_t haodr;
   uint8_t gy_ha = ((uint8_t) gy_odr >> 4) & 0xFU;
-
-  if (ctx->mdelay == NULL)
-  {
-    ret = -1;
-    goto exit;
-  }
 
   // Table 13 of AN6119
   // 7.5Hz with HAODR mode enable, is already handled by the enum selection
@@ -922,14 +913,16 @@ int32_t lsm6dsv320x_gy_setup(
   uint8_t both_on = ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
     ctrl2.odr_g != LSM6DSV320X_ODR_OFF ? 1 : 0;
 
-  if (both_on && ctrl1.op_mode_xl == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD && gy_ha != haodr.haodr_sel)
+  // if both on, then haodr_sel is a shared bit
+  if (both_on && (gy_ha != haodr.haodr_sel))
   {
     ret = -1;
     goto exit;
   }
 
   // if odr is choosed as an high-accuracy value, mode should be set in high-accuracy
-  if ((gy_ha != 0 && gy_mode != LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD)) {
+  if ((gy_ha != 0 && gy_mode != LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD))
+  {
     ret = -1;
     goto exit;
   }
@@ -957,6 +950,17 @@ exit:
   return ret;
 }
 
+/**
+  * @brief HAODR set
+  *        Allow changing the HAODR mode, which is a shared bit between the accelerometer and gyroscope.
+  *        Both settings are required; this function should be used only if both sensors are already ON.
+  *
+  * @param  ctx        read / write interface definitions
+  * @param  xl_odr     lsm6dsv320x_data_rate_t
+  * @param  xl_mode    lsm6dsv320x_xl_mode_t
+  * @param  gy_odr     lsm6dsv320x_data_rate_t
+  * @param  gy_mode    lsm6dsv320x_gy_mode_t
+  */
 int32_t lsm6dsv320x_haodr_set(
   const stmdev_ctx_t *ctx,
   lsm6dsv320x_data_rate_t xl_odr,
@@ -975,6 +979,12 @@ int32_t lsm6dsv320x_haodr_set(
   uint8_t xl_ha = (((uint8_t)xl_odr) >> 4) & 0xFU;
   uint8_t gy_ha = (((uint8_t)gy_odr) >> 4) & 0xFU;
   uint8_t both_on = xl_odr != LSM6DSV320X_ODR_OFF && gy_odr != LSM6DSV320X_ODR_OFF ? 1 : 0;
+
+  if (ctx->mdelay == NULL)
+  {
+    ret = -1;
+    goto exit;
+  }
 
   if (both_on && xl_ha != gy_ha)
   {

@@ -816,7 +816,7 @@ int32_t lsm6dsv320x_xl_setup(
   uint8_t both_on = ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
     ctrl2.odr_g != LSM6DSV320X_ODR_OFF ? 1 : 0;
 
-  // if both on, then haodr_sel is a shared bit
+  // if both on, then haodr_sel is a shared bit. Could be changed through haodr_set API
   if (both_on && (xl_ha != haodr.haodr_sel))
   {
     ret = -1;
@@ -830,7 +830,7 @@ int32_t lsm6dsv320x_xl_setup(
   }
 
   // Switching (enable/disable) HAODR mode require that all sensors must be in power-down mode.
-  // Note: lsm6dsv320x_haodr_set function should be called first.
+  // Note: if both sensors are ON, lsm6dsv320x_haodr_set function must be used.
   if (haodr.haodr_sel != xl_ha &&
       ctrl1.op_mode_xl != xl_mode && // check if mode switch is required
       (xl_mode == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD || // check if mode to set is HAODR
@@ -986,7 +986,7 @@ int32_t lsm6dsv320x_haodr_set(
     goto exit;
   }
 
-  if (both_on && xl_ha != gy_ha)
+  if (both_on && (xl_ha != gy_ha))
   {
     ret = -1;
     goto exit;
@@ -1015,7 +1015,7 @@ int32_t lsm6dsv320x_haodr_set(
   ctrl_eis.odr_g_eis = LSM6DSV320X_EIS_ODR_OFF;
   ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);
   ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
-  // avoid turn off if already off
+  // avoid turning off if already off
   if (ctrl1_xl_hg_prev.odr_xl_hg != LSM6DSV320X_HG_XL_ODR_OFF)
   {
     ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
@@ -1039,7 +1039,7 @@ int32_t lsm6dsv320x_haodr_set(
     ctx->mdelay(1); // should be at least 500 us; AN6119, section 3.4
   }
 
-  // set xl and gy data rates and restore high-g xl and eis to previous data rates
+  // set xl and gy data rates and restore high-g xl and eis to their previous data rates
   ctrl1.odr_xl = xl_odr;
   ctrl2.odr_g = gy_odr;
   ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL1, (uint8_t *)&ctrl1, 1);

@@ -303,6 +303,12 @@ int32_t lsm6dsv320x_xl_offset_on_out_get(const stmdev_ctx_t *ctx, uint8_t *val)
 /**
   * @brief  Accelerometer user offset correction values in mg.[set]
   *
+  * Value ranges depend on the USR_OFF_W bit in CTRL9:
+  *   - If USR_OFF_W = 1: range is ±15.875 mg with 0.125 mg precision.
+  *   - If USR_OFF_W = 0: range is ±0.9921875 mg with 0.0078125 mg precision.
+  * The USR_OFF_W bit is automatically enabled based on the input values
+  * (precision is shared across all axes).
+  *
   * @param  ctx      read / write interface definitions
   * @param  val      Accelerometer user offset correction values in mg.
   * @retval          interface status (MANDATORY: return 0 -> no Error)

@@ -535,6 +535,11 @@ int32_t lsm6dsv320x_reboot(const stmdev_ctx_t *ctx)
 {
   lsm6dsv320x_ctrl3_t ctrl3;
   int32_t ret;
+  /* configuration to restore after reboot */
+  lsm6dsv320x_data_rate_t xl;
+  lsm6dsv320x_data_rate_t gy;
+  lsm6dsv320x_hg_xl_data_rate_t hg_xl;
+  uint8_t reg_out_en;
 
   if (ctx->mdelay == NULL)
   {
@@ -543,6 +548,15 @@ int32_t lsm6dsv320x_reboot(const stmdev_ctx_t *ctx)
   }
 
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL3, (uint8_t *)&ctrl3, 1);
+  if (ret != 0)
+  {
+    goto exit;
+  }
+
+  /* Save current data rates */
+  ret = lsm6dsv320x_xl_data_rate_get(ctx, &xl);
+  ret += lsm6dsv320x_gy_data_rate_get(ctx, &gy);
+  ret += lsm6dsv320x_hg_xl_data_rate_get(ctx, &hg_xl, &reg_out_en);
   if (ret != 0)
   {
     goto exit;
@@ -567,6 +581,11 @@ int32_t lsm6dsv320x_reboot(const stmdev_ctx_t *ctx)
 
   /* 3. Wait 30 ms. */
   ctx->mdelay(30);
+
+  /* Restore data rates */
+  ret = lsm6dsv320x_xl_data_rate_set(ctx, xl);
+  ret += lsm6dsv320x_gy_data_rate_set(ctx, gy);
+  ret += lsm6dsv320x_hg_xl_data_rate_set(ctx, hg_xl, reg_out_en);
 
 exit:
   return ret;
@@ -772,7 +791,7 @@ int32_t lsm6dsv320x_xl_setup(
   }
   // 7.5 Hz allowed only in normal or high-performance modes
   else if (xl_odr == LSM6DSV320X_ODR_AT_7Hz5 &&
-      xl_mode != LSM6DSV320X_XL_NORMAL_MD && xl_mode != LSM6DSV320X_XL_HIGH_PERFORMANCE_MD)
+           xl_mode != LSM6DSV320X_XL_NORMAL_MD && xl_mode != LSM6DSV320X_XL_HIGH_PERFORMANCE_MD)
   {
     ret = -1;
     goto exit;
@@ -794,8 +813,8 @@ int32_t lsm6dsv320x_xl_setup(
        xl_odr == LSM6DSV320X_ODR_AT_7Hz5 ||
        xl_odr == LSM6DSV320X_ODR_AT_7680Hz))
   {
-      ret = -1;
-      goto exit;
+    ret = -1;
+    goto exit;
   }
 
   // if odr is choosed as high-accuracy value, mode should also be set in HAODR mode
@@ -820,7 +839,7 @@ int32_t lsm6dsv320x_xl_setup(
 
   // cross-checking haodr mode
   uint8_t both_on = ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
-    ctrl2.odr_g != LSM6DSV320X_ODR_OFF ? 1 : 0;
+                    ctrl2.odr_g != LSM6DSV320X_ODR_OFF ? 1 : 0;
 
   // if both on, then haodr_sel is a shared bit. Could be changed through haodr_set API
   if (both_on && (xl_ha != haodr.haodr_sel))
@@ -830,7 +849,8 @@ int32_t lsm6dsv320x_xl_setup(
   }
 
   // if odr is choosed as an high-accuracy value, mode should be set in high-accuracy
-  if ((xl_ha != 0 && xl_mode != LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD)) {
+  if ((xl_ha != 0 && xl_mode != LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD))
+  {
     ret = -1;
     goto exit;
   }
@@ -891,8 +911,8 @@ int32_t lsm6dsv320x_gy_setup(
       (gy_odr == LSM6DSV320X_ODR_AT_7Hz5 ||
        gy_odr == LSM6DSV320X_ODR_AT_7680Hz))
   {
-      ret = -1;
-      goto exit;
+    ret = -1;
+    goto exit;
   }
 
   // if odr is choosed as high-accuracy value, mode should also be set in HAODR mode
@@ -917,7 +937,7 @@ int32_t lsm6dsv320x_gy_setup(
 
   // cross-checking haodr mode
   uint8_t both_on = ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
-    ctrl2.odr_g != LSM6DSV320X_ODR_OFF ? 1 : 0;
+                    ctrl2.odr_g != LSM6DSV320X_ODR_OFF ? 1 : 0;
 
   // if both on, then haodr_sel is a shared bit
   if (both_on && (gy_ha != haodr.haodr_sel))

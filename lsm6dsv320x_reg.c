@@ -6544,6 +6544,11 @@ int32_t lsm6dsv320x_fifo_sh_batch_target_set(const stmdev_ctx_t *ctx, uint8_t id
   lsm6dsv320x_tgt0_config_t tgt_config;
   int32_t ret;
 
+  if (idx > 3)
+  {
+    return -1;
+  }
+
   ret = lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_SENSOR_HUB_MEM_BANK);
   if (ret != 0)
   {
@@ -6576,6 +6581,11 @@ int32_t lsm6dsv320x_fifo_sh_batch_target_get(const stmdev_ctx_t *ctx, uint8_t id
 {
   lsm6dsv320x_tgt0_config_t tgt_config;
   int32_t ret;
+
+  if (idx > 3)
+  {
+    return -1;
+  }
 
   ret = lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_SENSOR_HUB_MEM_BANK);
   if (ret != 0)
@@ -10969,6 +10979,11 @@ int32_t lsm6dsv320x_sh_tgt_cfg_read(const stmdev_ctx_t *ctx, uint8_t idx,
   lsm6dsv320x_tgt0_add_t tgt_add;
   lsm6dsv320x_tgt0_config_t tgt_config;
   int32_t ret;
+
+  if (idx > 3)
+  {
+    return -1;
+  }
 
   ret = lsm6dsv320x_mem_bank_set(ctx, LSM6DSV320X_SENSOR_HUB_MEM_BANK);
   if (ret != 0)

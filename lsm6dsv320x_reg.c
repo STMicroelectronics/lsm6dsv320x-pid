@@ -5062,27 +5062,22 @@ int32_t lsm6dsv320x_gy_eis_data_rate_set(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_gy_eis_data_rate_t val)
 {
   lsm6dsv320x_ctrl_eis_t ctrl_eis;
-  lsm6dsv320x_ctrl1_t ctrl1;
   lsm6dsv320x_ctrl2_t ctrl2;
   int32_t ret;
-  uint8_t buff[2];
 
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
-  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL1, buff, 2);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
 
   if (ret != 0)
   {
     goto exit;
   }
 
-  bytecpy((uint8_t *)&ctrl1, &buff[0]);
-  bytecpy((uint8_t *)&ctrl2, &buff[0]);
-
-  // if xl or gy are ON in odr triggered mode, eis cannot be turned on
-  if ((ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
-       ctrl1.op_mode_xl == LSM6DSV320X_XL_ODR_TRIGGERED_MD) ||
-      (ctrl2.odr_g != LSM6DSV320X_ODR_OFF &&
-       ctrl2.op_mode_g == LSM6DSV320X_GY_ODR_TRIGGERED_MD))
+  // eis odr can be changed only if gy ui is set in high-performance or
+  // high-accuracy modes
+  if (val != 0x00 &&
+      ctrl2.op_mode_g != LSM6DSV320X_GY_HIGH_PERFORMANCE_MD &&
+      ctrl2.op_mode_g != LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD)
   {
     ret = -1;
     goto exit;

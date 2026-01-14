@@ -9977,7 +9977,7 @@ int32_t lsm6dsv320x_ois_gy_full_scale_set(const stmdev_ctx_t *ctx,
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_UI_CTRL2_OIS, (uint8_t *)&ui_ctrl2_ois, 1);
   if (ret == 0)
   {
-    ui_ctrl2_ois.fs_g_ois = (uint8_t)val & 0x03U;
+    ui_ctrl2_ois.fs_g_ois = (uint8_t)val & 0x07U;
     ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_UI_CTRL2_OIS, (uint8_t *)&ui_ctrl2_ois, 1);
   }
 

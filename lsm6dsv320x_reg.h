@@ -4691,13 +4691,10 @@ typedef struct
 {
   uint8_t drdy_xl                      : 1;
   uint8_t drdy_g                       : 1;
-  uint8_t drdy_g_eis                   : 1;
-  uint8_t drdy_temp                    : 1;
   uint8_t fifo_th                      : 1;
   uint8_t fifo_ovr                     : 1;
   uint8_t fifo_full                    : 1;
   uint8_t cnt_bdr                      : 1;
-  uint8_t timestamp                    : 1;
   uint8_t shub                         : 1;
   uint8_t sixd                         : 1;
   uint8_t single_tap                   : 1;
@@ -4705,13 +4702,40 @@ typedef struct
   uint8_t wakeup                       : 1;
   uint8_t freefall                     : 1;
   uint8_t sleep_change                 : 1;
+} lsm6dsv320x_pin_int1_route_t;
+
+typedef struct
+{
+  uint8_t drdy_xl                      : 1;
+  uint8_t drdy_g                       : 1;
+  uint8_t drdy_g_eis                   : 1;
+  uint8_t drdy_temp                    : 1;
+  uint8_t fifo_th                      : 1;
+  uint8_t fifo_ovr                     : 1;
+  uint8_t fifo_full                    : 1;
+  uint8_t cnt_bdr                      : 1;
+  uint8_t timestamp                    : 1;
+  uint8_t sixd                         : 1;
+  uint8_t single_tap                   : 1;
+  uint8_t double_tap                   : 1;
+  uint8_t wakeup                       : 1;
+  uint8_t freefall                     : 1;
+  uint8_t sleep_change                 : 1;
+  uint8_t emb_func_endop               : 1;
+} lsm6dsv320x_pin_int2_route_t;
+
+typedef struct
+{
   uint8_t drdy_hg_xl                   : 1; /* High-g */
   uint8_t hg_wakeup                    : 1;
   uint8_t hg_shock_change              : 1;
+} lsm6dsv320x_pin_int_route_hg_t;
+
+typedef struct
+{
   uint8_t step_detector                : 1; /* Embedded Functions */
   uint8_t tilt                         : 1;
   uint8_t sig_mot                      : 1;
-  uint8_t emb_func_endop               : 1;
   uint8_t fsm1                         : 1; /* FSM */
   uint8_t fsm2                         : 1;
   uint8_t fsm3                         : 1;
@@ -4728,30 +4752,30 @@ typedef struct
   uint8_t mlc6                         : 1;
   uint8_t mlc7                         : 1;
   uint8_t mlc8                         : 1;
-} lsm6dsv320x_pin_int_route_t;
+} lsm6dsv320x_pin_int_route_emb_t;
 
-int32_t lsm6dsv320x_pin_int1_route_set(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
-int32_t lsm6dsv320x_pin_int1_route_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
-int32_t lsm6dsv320x_pin_int2_route_set(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
-int32_t lsm6dsv320x_pin_int2_route_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
+int32_t lsm6dsv320x_pin_int1_route_set(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int1_route_t *val);
+int32_t lsm6dsv320x_pin_int1_route_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int1_route_t *val);
+int32_t lsm6dsv320x_pin_int2_route_set(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int2_route_t *val);
+int32_t lsm6dsv320x_pin_int2_route_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int2_route_t *val);
 
 int32_t lsm6dsv320x_pin_int1_route_hg_set(const stmdev_ctx_t *ctx,
-                                          lsm6dsv320x_pin_int_route_t *val);
+                                          lsm6dsv320x_pin_int_route_hg_t *val);
 int32_t lsm6dsv320x_pin_int1_route_hg_get(const stmdev_ctx_t *ctx,
-                                          lsm6dsv320x_pin_int_route_t *val);
+                                          lsm6dsv320x_pin_int_route_hg_t *val);
 int32_t lsm6dsv320x_pin_int2_route_hg_set(const stmdev_ctx_t *ctx,
-                                          lsm6dsv320x_pin_int_route_t *val);
+                                          lsm6dsv320x_pin_int_route_hg_t *val);
 int32_t lsm6dsv320x_pin_int2_route_hg_get(const stmdev_ctx_t *ctx,
-                                          lsm6dsv320x_pin_int_route_t *val);
+                                          lsm6dsv320x_pin_int_route_hg_t *val);
 
 int32_t lsm6dsv320x_pin_int1_route_embedded_set(const stmdev_ctx_t *ctx,
-                                                lsm6dsv320x_pin_int_route_t *val);
+                                                lsm6dsv320x_pin_int_route_emb_t *val);
 int32_t lsm6dsv320x_pin_int1_route_embedded_get(const stmdev_ctx_t *ctx,
-                                                lsm6dsv320x_pin_int_route_t *val);
+                                                lsm6dsv320x_pin_int_route_emb_t *val);
 int32_t lsm6dsv320x_pin_int2_route_embedded_set(const stmdev_ctx_t *ctx,
-                                                lsm6dsv320x_pin_int_route_t *val);
+                                                lsm6dsv320x_pin_int_route_emb_t *val);
 int32_t lsm6dsv320x_pin_int2_route_embedded_get(const stmdev_ctx_t *ctx,
-                                                lsm6dsv320x_pin_int_route_t *val);
+                                                lsm6dsv320x_pin_int_route_emb_t *val);
 
 typedef struct
 {

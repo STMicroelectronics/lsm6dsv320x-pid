@@ -3049,17 +3049,11 @@ int32_t lsm6dsv320x_hg_event_get(const stmdev_ctx_t *ctx, lsm6dsv320x_hg_event_t
   *
   */
 int32_t lsm6dsv320x_pin_int1_route_set(const stmdev_ctx_t *ctx,
-                                       lsm6dsv320x_pin_int_route_t *val)
+                                       lsm6dsv320x_pin_int1_route_t *val)
 {
   lsm6dsv320x_int1_ctrl_t           int1_ctrl;
   lsm6dsv320x_md1_cfg_t             md1_cfg;
   int32_t ret;
-
-  /* not available on INT1 */
-  if (val->drdy_temp == 1)
-  {
-    return -1;
-  }
 
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_INT1_CTRL, (uint8_t *)&int1_ctrl, 1);
   if (ret != 0)
@@ -3109,7 +3103,7 @@ int32_t lsm6dsv320x_pin_int1_route_set(const stmdev_ctx_t *ctx,
   *
   */
 int32_t lsm6dsv320x_pin_int1_route_get(const stmdev_ctx_t *ctx,
-                                       lsm6dsv320x_pin_int_route_t *val)
+                                       lsm6dsv320x_pin_int1_route_t *val)
 {
   lsm6dsv320x_int1_ctrl_t           int1_ctrl;
   lsm6dsv320x_md1_cfg_t             md1_cfg;
@@ -3155,7 +3149,7 @@ int32_t lsm6dsv320x_pin_int1_route_get(const stmdev_ctx_t *ctx,
   *
   */
 int32_t lsm6dsv320x_pin_int2_route_set(const stmdev_ctx_t *ctx,
-                                       lsm6dsv320x_pin_int_route_t *val)
+                                       lsm6dsv320x_pin_int2_route_t *val)
 {
   lsm6dsv320x_int2_ctrl_t           int2_ctrl;
   lsm6dsv320x_ctrl4_t               ctrl4;
@@ -3224,7 +3218,7 @@ int32_t lsm6dsv320x_pin_int2_route_set(const stmdev_ctx_t *ctx,
   *
   */
 int32_t lsm6dsv320x_pin_int2_route_get(const stmdev_ctx_t *ctx,
-                                       lsm6dsv320x_pin_int_route_t *val)
+                                       lsm6dsv320x_pin_int2_route_t *val)
 {
   lsm6dsv320x_int2_ctrl_t           int2_ctrl;
   lsm6dsv320x_ctrl4_t               ctrl4;
@@ -3281,7 +3275,7 @@ int32_t lsm6dsv320x_pin_int2_route_get(const stmdev_ctx_t *ctx,
   *
   */
 int32_t lsm6dsv320x_pin_int1_route_hg_set(const stmdev_ctx_t *ctx,
-                                          lsm6dsv320x_pin_int_route_t *val)
+                                          lsm6dsv320x_pin_int_route_hg_t *val)
 {
   lsm6dsv320x_ctrl7_t               ctrl7;
   lsm6dsv320x_hg_functions_enable_t hg_func;
@@ -3332,7 +3326,7 @@ int32_t lsm6dsv320x_pin_int1_route_hg_set(const stmdev_ctx_t *ctx,
   *
   */
 int32_t lsm6dsv320x_pin_int1_route_hg_get(const stmdev_ctx_t *ctx,
-                                          lsm6dsv320x_pin_int_route_t *val)
+                                          lsm6dsv320x_pin_int_route_hg_t *val)
 {
   lsm6dsv320x_ctrl7_t               ctrl7;
   lsm6dsv320x_hg_functions_enable_t hg_func;
@@ -3376,7 +3370,7 @@ int32_t lsm6dsv320x_pin_int1_route_hg_get(const stmdev_ctx_t *ctx,
   *
   */
 int32_t lsm6dsv320x_pin_int2_route_hg_set(const stmdev_ctx_t *ctx,
-                                          lsm6dsv320x_pin_int_route_t *val)
+                                          lsm6dsv320x_pin_int_route_hg_t *val)
 {
   lsm6dsv320x_ctrl7_t               ctrl7;
   lsm6dsv320x_hg_functions_enable_t hg_func;
@@ -3423,7 +3417,7 @@ int32_t lsm6dsv320x_pin_int2_route_hg_set(const stmdev_ctx_t *ctx,
   *
   */
 int32_t lsm6dsv320x_pin_int2_route_hg_get(const stmdev_ctx_t *ctx,
-                                          lsm6dsv320x_pin_int_route_t *val)
+                                          lsm6dsv320x_pin_int_route_hg_t *val)
 {
   lsm6dsv320x_ctrl7_t               ctrl7;
   lsm6dsv320x_hg_functions_enable_t hg_func;
@@ -3467,7 +3461,7 @@ int32_t lsm6dsv320x_pin_int2_route_hg_get(const stmdev_ctx_t *ctx,
   *
   */
 int32_t lsm6dsv320x_pin_int1_route_embedded_set(const stmdev_ctx_t *ctx,
-                                                lsm6dsv320x_pin_int_route_t *val)
+                                                lsm6dsv320x_pin_int_route_emb_t *val)
 {
   lsm6dsv320x_md1_cfg_t             md1_cfg;
   lsm6dsv320x_emb_func_int1_t       emb_func_int1;
@@ -3572,7 +3566,7 @@ exit:
   *
   */
 int32_t lsm6dsv320x_pin_int1_route_embedded_get(const stmdev_ctx_t *ctx,
-                                                lsm6dsv320x_pin_int_route_t *val)
+                                                lsm6dsv320x_pin_int_route_emb_t *val)
 {
   lsm6dsv320x_emb_func_int1_t       emb_func_int1;
   lsm6dsv320x_fsm_int1_t            fsm_int1;
@@ -3644,7 +3638,7 @@ exit:
   *
   */
 int32_t lsm6dsv320x_pin_int2_route_embedded_set(const stmdev_ctx_t *ctx,
-                                                lsm6dsv320x_pin_int_route_t *val)
+                                                lsm6dsv320x_pin_int_route_emb_t *val)
 {
   lsm6dsv320x_md2_cfg_t             md2_cfg;
   lsm6dsv320x_emb_func_int2_t       emb_func_int2;
@@ -3749,7 +3743,7 @@ exit:
   *
   */
 int32_t lsm6dsv320x_pin_int2_route_embedded_get(const stmdev_ctx_t *ctx,
-                                                lsm6dsv320x_pin_int_route_t *val)
+                                                lsm6dsv320x_pin_int_route_emb_t *val)
 {
   lsm6dsv320x_emb_func_int2_t       emb_func_int2;
   lsm6dsv320x_fsm_int2_t            fsm_int2;

@@ -5179,7 +5179,7 @@ typedef enum
 {
   LSM6DSV320X_WK_FEED_SLOPE          = 0x0,
   LSM6DSV320X_WK_FEED_HIGH_PASS      = 0x1,
-  LSM6DSV320X_WK_FEED_LP_WITH_OFFSET = 0x2,
+  LSM6DSV320X_WK_FEED_LP_WITH_OFFSET = 0x3,
 } lsm6dsv320x_filt_wkup_act_feed_t;
 int32_t lsm6dsv320x_filt_wkup_act_feed_set(const stmdev_ctx_t *ctx,
                                            lsm6dsv320x_filt_wkup_act_feed_t val);

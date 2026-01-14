@@ -2198,17 +2198,38 @@ int32_t lsm6dsv320x_interrupt_enable_get(const stmdev_ctx_t *ctx,
 int32_t lsm6dsv320x_gy_full_scale_set(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_gy_full_scale_t val)
 {
+  lsm6dsv320x_ctrl2_t ctrl2;
+  lsm6dsv320x_ctrl2_t prev_ctrl2;
   lsm6dsv320x_ctrl6_t ctrl6;
   int32_t ret;
 
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL6, (uint8_t *)&ctrl6, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
+  prev_ctrl2 = ctrl2;
 
-  if (ret == 0)
+  if (ret != 0)
   {
-    ctrl6.fs_g = (uint8_t)val & 0xfu;
-    ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL6, (uint8_t *)&ctrl6, 1);
+    goto exit;
   }
 
+  // For the correct operation of the device, the user must set a
+  // configuration from 001 to 101 when the gyroscope is in power-down mode.
+  if (ctrl2.odr_g != LSM6DSV320X_ODR_OFF)
+  {
+    ctrl2.odr_g = LSM6DSV320X_ODR_OFF;
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
+  }
+
+  ctrl6.fs_g = (uint8_t)val & 0xfu;
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL6, (uint8_t *)&ctrl6, 1);
+
+  // restore previous odr set
+  if (prev_ctrl2.odr_g != LSM6DSV320X_ODR_OFF)
+  {
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&prev_ctrl2, 1);
+  }
+
+exit:
   return ret;
 }
 
@@ -4897,17 +4918,38 @@ int32_t lsm6dsv320x_den_polarity_get(const stmdev_ctx_t *ctx,
 int32_t lsm6dsv320x_eis_gy_full_scale_set(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_eis_gy_full_scale_t val)
 {
+  lsm6dsv320x_ctrl2_t ctrl2;
+  lsm6dsv320x_ctrl2_t prev_ctrl2;
   lsm6dsv320x_ctrl_eis_t ctrl_eis;
   int32_t ret;
 
   ret = lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
+  ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
+  prev_ctrl2 = ctrl2;
 
-  if (ret == 0)
+  if (ret != 0)
   {
-    ctrl_eis.fs_g_eis = (uint8_t)val & 0x7U;
-    ret = lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
+    goto exit;
   }
 
+  // For the correct operation of the device, the user must set a
+  // configuration from 001 to 101 when the gyroscope is in power-down mode.
+  if (ctrl2.odr_g != LSM6DSV320X_ODR_OFF)
+  {
+    ctrl2.odr_g = LSM6DSV320X_ODR_OFF;
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&ctrl2, 1);
+  }
+
+  ctrl_eis.fs_g_eis = (uint8_t)val & 0x7U;
+  ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
+
+  // restore previous odr set
+  if (prev_ctrl2.odr_g != LSM6DSV320X_ODR_OFF)
+  {
+    ret += lsm6dsv320x_write_reg(ctx, LSM6DSV320X_CTRL2, (uint8_t *)&prev_ctrl2, 1);
+  }
+
+exit:
   return ret;
 }
 

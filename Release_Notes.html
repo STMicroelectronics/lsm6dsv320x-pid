@@ -103,7 +103,7 @@ written</li>
 </ul>
 <h2 id="section-3"></h2>
 </div>
-<input type="checkbox" id="collapse-section5" checked aria-hidden="true">
+<input type="checkbox" id="collapse-section5" aria-hidden="true">
 <label for="collapse-section5" aria-hidden="true">V4.0.0 /
 05-Nov-2025</label>
 <div>
@@ -112,6 +112,37 @@ written</li>
 <li>Upgrade reset APIs</li>
 </ul>
 <h2 id="section-4"></h2>
+</div>
+<input type="checkbox" id="collapse-section6" checked aria-hidden="true">
+<label for="collapse-section6" aria-hidden="true">V5.0.0 /
+15-Jan-2026</label>
+<div>
+<h2 id="main-changes-5">Main changes</h2>
+<ul>
+<li>Removed useless constraints in gy_setup and a declaration in
+haodr_set</li>
+<li>Fix gy_eis_data_rate_set</li>
+<li>Improved documentation</li>
+<li>Converted I2C address representation from 7-bit to 8-bit in
+sensor-hub</li>
+<li>Improved xl_setup and hg_xl_data_rate_set docs</li>
+<li>Split pin_int for clearer configuration.</li>
+<li>Fix pad_strength values</li>
+<li>Add missing variant (1.875Hz) for sh_data_rate enum</li>
+<li>Add constraints while changing eis odr</li>
+<li>Fix bit masking in ois_gy_full_scale_set API</li>
+<li>Fix filt_wkup_act_feed enum values</li>
+<li>Add checks on idx for sensorhub target</li>
+<li>Add constraints while changing eis odr</li>
+<li>Add filt_xl_setup API to handle filter lpf2 settings</li>
+<li>Add power-off gyro when changing the full-scale (ui and eis)</li>
+<li>Fix reboot by restoring previous data rates after reboot</li>
+<li>Add read for ctrl9 in xl_offset_mg_set and improved doc</li>
+<li>Fix review comments, added deprecated comments in header file</li>
+<li>Add xl_setup, gy_setup and haodr_set to include constraints of AN
+and DS</li>
+</ul>
+<h2 id="section-5"></h2>
 </div>
 </div>
 </section>

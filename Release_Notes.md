@@ -93,13 +93,43 @@ This directory contains the LSM6DSV320X component drivers.
 
 </div>
 
-<input type="checkbox" id="collapse-section5" checked aria-hidden="true">
+<input type="checkbox" id="collapse-section5" aria-hidden="true">
 <label for="collapse-section5" aria-hidden="true">V4.0.0 / 05-Nov-2025</label>
 <div>
 
 ## Main changes
 
 - Upgrade reset APIs
+
+##
+
+</div>
+
+<input type="checkbox" id="collapse-section6" checked aria-hidden="true">
+<label for="collapse-section6" aria-hidden="true">V5.0.0 / 15-Jan-2026</label>
+<div>
+
+## Main changes
+
+- Removed useless constraints in gy_setup and a declaration in haodr_set
+- Fix gy_eis_data_rate_set
+- Improved documentation
+- Converted I2C address representation from 7-bit to 8-bit in sensor-hub
+- Improved xl_setup and hg_xl_data_rate_set docs
+- Split pin_int for clearer configuration.
+- Fix pad_strength values
+- Add missing variant (1.875Hz) for sh_data_rate enum
+- Add constraints while changing eis odr
+- Fix bit masking in ois_gy_full_scale_set API
+- Fix filt_wkup_act_feed enum values
+- Add checks on idx for sensorhub target
+- Add constraints while changing eis odr
+- Add filt_xl_setup API to handle filter lpf2 settings
+- Add power-off gyro when changing the full-scale (ui and eis)
+- Fix reboot by restoring previous data rates after reboot
+- Add read for ctrl9 in xl_offset_mg_set and improved doc
+- Fix review comments, added deprecated comments in header file
+- Add xl_setup, gy_setup and haodr_set to include constraints of AN and DS
 
 ##
 

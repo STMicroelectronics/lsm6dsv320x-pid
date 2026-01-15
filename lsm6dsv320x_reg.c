@@ -948,13 +948,6 @@ int32_t lsm6dsv320x_gy_setup(
     goto exit;
   }
 
-  // if odr is choosed as an high-accuracy value, mode should be set in high-accuracy
-  if ((gy_ha != 0 && gy_mode != LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD))
-  {
-    ret = -1;
-    goto exit;
-  }
-
   // Switching (enable/disable) HAODR mode require that all sensors must be in power-down mode.
   // Note: lsm6dsv320x_haodr_set function should be called first.
   if (haodr.haodr_sel != gy_ha &&
@@ -1003,7 +996,6 @@ int32_t lsm6dsv320x_haodr_set(
   lsm6dsv320x_haodr_cfg_t haodr;
   lsm6dsv320x_ctrl1_xl_hg_t ctrl1_xl_hg;
   lsm6dsv320x_ctrl_eis_t ctrl_eis;
-  lsm6dsv320x_ui_ctrl1_ois_t ctrl1_ois;
   int32_t ret;
 
   uint8_t xl_ha = (((uint8_t)xl_odr) >> 4) & 0xFU;

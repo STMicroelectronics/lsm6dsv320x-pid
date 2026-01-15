@@ -5074,13 +5074,15 @@ int32_t lsm6dsv320x_gy_eis_data_rate_set(const stmdev_ctx_t *ctx,
   }
 
   bytecpy((uint8_t *)&ctrl1, &buff[0]);
-  bytecpy((uint8_t *)&ctrl2, &buff[0]);
+  bytecpy((uint8_t *)&ctrl2, &buff[1]);
 
   // if xl or gy are ON in odr triggered mode, eis cannot be turned on
-  if ((ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
-       ctrl1.op_mode_xl == LSM6DSV320X_XL_ODR_TRIGGERED_MD) ||
-      (ctrl2.odr_g != LSM6DSV320X_ODR_OFF &&
-       ctrl2.op_mode_g == LSM6DSV320X_GY_ODR_TRIGGERED_MD))
+  if (val != LSM6DSV320X_EIS_ODR_OFF &&
+      ((ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
+        ctrl1.op_mode_xl == LSM6DSV320X_XL_ODR_TRIGGERED_MD) ||
+       (ctrl2.odr_g != LSM6DSV320X_ODR_OFF &&
+        ctrl2.op_mode_g == LSM6DSV320X_GY_ODR_TRIGGERED_MD))
+     )
   {
     ret = -1;
     goto exit;

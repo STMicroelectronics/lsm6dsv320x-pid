@@ -4426,12 +4426,12 @@ typedef enum
   LSM6DSV320X_ODR_HA03_AT_3333Hz   = 0x3B,
   LSM6DSV320X_ODR_HA03_AT_6667Hz   = 0x3C,
 } lsm6dsv320x_data_rate_t;
-// Deprecated: Use xl_setup function instead
+// Deprecated: use xl_setup function instead
 int32_t lsm6dsv320x_xl_data_rate_set(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_data_rate_t val);
 int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_data_rate_t *val);
-// Deprecated: Use gy_setup function instead
+// Deprecated: use gy_setup function instead
 int32_t lsm6dsv320x_gy_data_rate_set(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_data_rate_t val);
 int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
@@ -4463,7 +4463,7 @@ typedef enum
   LSM6DSV320X_XL_LOW_POWER_8_AVG_MD    = 0x6,
   LSM6DSV320X_XL_NORMAL_MD             = 0x7,
 } lsm6dsv320x_xl_mode_t;
-// Deprecated: Use xl_setup function instead
+// Deprecated: use xl_setup function instead
 int32_t lsm6dsv320x_xl_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t val);
 int32_t lsm6dsv320x_xl_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t *val);
 
@@ -4475,7 +4475,7 @@ typedef enum
   LSM6DSV320X_GY_SLEEP_MD              = 0x4,
   LSM6DSV320X_GY_LOW_POWER_MD          = 0x5,
 } lsm6dsv320x_gy_mode_t;
-// Deprecated: Use gy_setup function instead
+// Deprecated: use gy_setup function instead
 int32_t lsm6dsv320x_gy_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t val);
 int32_t lsm6dsv320x_gy_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t *val);
 

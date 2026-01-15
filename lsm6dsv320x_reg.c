@@ -760,9 +760,9 @@ int32_t lsm6dsv320x_device_id_get(const stmdev_ctx_t *ctx, uint8_t *val)
 
 /**
   * @brief Sensor xl setup
-  *        If both accelerometer and gyroscope are ON, `lsm6dsv320x_haodr_set` should
-  *        be used to change HAODR mode; otherwise, this function will fail since
-  *        HAODR is a shared bit.
+  *        If both accelerometer and gyroscope are ON and HAODR mode needs
+  *        to be changed, `lsm6dsv320x_haodr_set` must be used; otherwise,
+  *        this function will fail since HAODR is a shared bit.
   *
   * @param  ctx        read / write interface definitions
   * @param  xl_odr     lsm6dsv320x_data_rate_t
@@ -808,6 +808,7 @@ int32_t lsm6dsv320x_xl_setup(
     goto exit;
   }
 
+  // Section 3.5 of AN6119
   if (xl_mode == LSM6DSV320X_XL_ODR_TRIGGERED_MD &&
       (xl_odr == LSM6DSV320X_ODR_AT_1Hz875 ||
        xl_odr == LSM6DSV320X_ODR_AT_7Hz5 ||
@@ -880,9 +881,9 @@ exit:
 
 /**
   * @brief Sensor gy setup
-  *        If both accelerometer and gyroscope are ON, `lsm6dsv320x_haodr_set` should
-  *        be used to change HAODR mode; otherwise, this function will fail since
-  *        HAODR is a shared bit.
+  *        If both accelerometer and gyroscope are ON and HAODR mode needs
+  *        to be changed, `lsm6dsv320x_haodr_set` must be used; otherwise,
+  *        this function will fail since HAODR is a shared bit.
   *
   * @param  ctx        read / write interface definitions
   * @param  gy_odr     lsm6dsv320x_data_rate_t
@@ -907,6 +908,7 @@ int32_t lsm6dsv320x_gy_setup(
     goto exit;
   }
 
+  // Section 3.5 of AN6119
   if (gy_mode == LSM6DSV320X_GY_ODR_TRIGGERED_MD &&
       (gy_odr == LSM6DSV320X_ODR_AT_7Hz5 ||
        gy_odr == LSM6DSV320X_ODR_AT_7680Hz))
@@ -978,8 +980,10 @@ exit:
 
 /**
   * @brief HAODR set
-  *        Allow changing the HAODR mode, which is a shared bit between the accelerometer and gyroscope.
-  *        Both settings are required; this function should be used only if both sensors are already ON.
+  *        Allow changing the HAODR mode, which is a shared bit between the accelerometer
+  *        and gyroscope. This function must be used if both sensors are already ON and a
+  *        different HAODR mode is requested.
+  *        Both data rates should use the same HAODR configuration.
   *
   * @param  ctx        read / write interface definitions
   * @param  xl_odr     lsm6dsv320x_data_rate_t

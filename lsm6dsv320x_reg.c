@@ -539,6 +539,8 @@ int32_t lsm6dsv320x_reboot(const stmdev_ctx_t *ctx)
   lsm6dsv320x_data_rate_t xl;
   lsm6dsv320x_data_rate_t gy;
   lsm6dsv320x_hg_xl_data_rate_t hg_xl;
+  lsm6dsv320x_xl_mode_t xlm;
+  lsm6dsv320x_gy_mode_t gym;
   uint8_t reg_out_en;
 
   if (ctx->mdelay == NULL)
@@ -562,9 +564,17 @@ int32_t lsm6dsv320x_reboot(const stmdev_ctx_t *ctx)
     goto exit;
   }
 
+  /* Save XL/GY current modes */
+  ret = lsm6dsv320x_xl_mode_get(ctx, &xlm);
+  ret += lsm6dsv320x_gy_mode_get(ctx, &gym);
+  if (ret != 0)
+  {
+    goto exit;
+  }
+
   /* 1. Set the low-g accelerometer, high-g accelerometer, and gyroscope in power-down mode */
-  ret = lsm6dsv320x_xl_data_rate_set(ctx, LSM6DSV320X_ODR_OFF);
-  ret += lsm6dsv320x_gy_data_rate_set(ctx, LSM6DSV320X_ODR_OFF);
+  ret = lsm6dsv320x_xl_setup(ctx, LSM6DSV320X_ODR_OFF, LSM6DSV320X_XL_HIGH_PERFORMANCE_MD);
+  ret += lsm6dsv320x_gy_setup(ctx, LSM6DSV320X_ODR_OFF, LSM6DSV320X_GY_HIGH_PERFORMANCE_MD);
   ret += lsm6dsv320x_hg_xl_data_rate_set(ctx, LSM6DSV320X_HG_XL_ODR_OFF, 0);
   if (ret != 0)
   {
@@ -583,8 +593,8 @@ int32_t lsm6dsv320x_reboot(const stmdev_ctx_t *ctx)
   ctx->mdelay(30);
 
   /* Restore data rates */
-  ret = lsm6dsv320x_xl_data_rate_set(ctx, xl);
-  ret += lsm6dsv320x_gy_data_rate_set(ctx, gy);
+  ret = lsm6dsv320x_xl_setup(ctx, xl, xlm);
+  ret += lsm6dsv320x_gy_setup(ctx, gy, gym);
   ret += lsm6dsv320x_hg_xl_data_rate_set(ctx, hg_xl, reg_out_en);
 
 exit:
@@ -644,8 +654,8 @@ int32_t lsm6dsv320x_sw_reset(const stmdev_ctx_t *ctx)
   }
 
   /* 1. Set the low-g accelerometer, high-g accelerometer, and gyroscope in power-down mode */
-  ret = lsm6dsv320x_xl_data_rate_set(ctx, LSM6DSV320X_ODR_OFF);
-  ret += lsm6dsv320x_gy_data_rate_set(ctx, LSM6DSV320X_ODR_OFF);
+  ret = lsm6dsv320x_xl_setup(ctx, LSM6DSV320X_ODR_OFF, LSM6DSV320X_XL_HIGH_PERFORMANCE_MD);
+  ret += lsm6dsv320x_gy_setup(ctx, LSM6DSV320X_ODR_OFF, LSM6DSV320X_GY_HIGH_PERFORMANCE_MD);
   ret += lsm6dsv320x_hg_xl_data_rate_set(ctx, LSM6DSV320X_HG_XL_ODR_OFF, 0);
   if (ret != 0)
   {
@@ -1089,7 +1099,6 @@ exit:
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-[[deprecated("Use xl_setup function")]]
 int32_t lsm6dsv320x_xl_data_rate_set(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_data_rate_t val)
 {
@@ -1480,7 +1489,6 @@ int32_t lsm6dsv320x_hg_xl_data_rate_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-[[deprecated("Use xl_setup function")]]
 int32_t lsm6dsv320x_xl_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t val)
 {
   lsm6dsv320x_ctrl1_t ctrl1;
@@ -1562,7 +1570,6 @@ int32_t lsm6dsv320x_xl_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t *
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-[[deprecated("Use gy_setup function")]]
 int32_t lsm6dsv320x_gy_data_rate_set(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_data_rate_t val)
 {
@@ -1844,7 +1851,6 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-[[deprecated("Use gy_setup function")]]
 int32_t lsm6dsv320x_gy_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t val)
 {
   lsm6dsv320x_ctrl2_t ctrl2;

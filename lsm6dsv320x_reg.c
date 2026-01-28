@@ -18,33 +18,6 @@
 
 #include "lsm6dsv320x_reg.h"
 
-/**
-  * @defgroup  LSM6DSV320X
-  * @brief     This file provides a set of functions needed to drive the
-  *            lsm6dsv320x enhanced inertial module.
-  * @{
-  *
-  */
-
-/**
-  * @defgroup  Interfaces functions
-  * @brief     This section provide a set of functions used to read and
-  *            write a generic register of the device.
-  *            MANDATORY: return 0 -> no Error.
-  * @{
-  *
-  */
-
-/**
-  * @brief  Read generic device register
-  *
-  * @param  ctx   communication interface handler.(ptr)
-  * @param  reg   first register address to read.
-  * @param  data  buffer for data read.(ptr)
-  * @param  len   number of consecutive register to read.
-  * @retval       interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t __weak lsm6dsv320x_read_reg(const stmdev_ctx_t *ctx, uint8_t reg,
                                     uint8_t *data,
                                     uint16_t len)
@@ -61,16 +34,6 @@ int32_t __weak lsm6dsv320x_read_reg(const stmdev_ctx_t *ctx, uint8_t reg,
   return ret;
 }
 
-/**
-  * @brief  Write generic device register
-  *
-  * @param  ctx   communication interface handler.(ptr)
-  * @param  reg   first register address to write.
-  * @param  data  the buffer contains data to be written.(ptr)
-  * @param  len   number of consecutive register to write.
-  * @retval       interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t __weak lsm6dsv320x_write_reg(const stmdev_ctx_t *ctx, uint8_t reg,
                                      uint8_t *data,
                                      uint16_t len)
@@ -87,18 +50,6 @@ int32_t __weak lsm6dsv320x_write_reg(const stmdev_ctx_t *ctx, uint8_t reg,
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
-
-/**
-  * @defgroup  Private functions
-  * @brief     Section collect all the utility functions needed by APIs.
-  * @{
-  *
-  */
-
 static void bytecpy(uint8_t *target, uint8_t *source)
 {
   if ((target != NULL) && (source != NULL))
@@ -107,17 +58,6 @@ static void bytecpy(uint8_t *target, uint8_t *source)
   }
 }
 
-/**
-  * @}
-  *
-  */
-
-/**
-  * @defgroup  Sensitivity
-  * @brief     These functions convert raw-data into engineering units.
-  * @{
-  *
-  */
 float_t lsm6dsv320x_from_sflp_to_mg(int16_t lsb)
 {
   return ((float_t)lsb) * 0.061f;
@@ -207,11 +147,6 @@ uint64_t lsm6dsv320x_from_lsb_to_nsec(uint32_t lsb)
   return ((uint64_t)lsb * 21700);
 }
 
-float_t lsm6dsv320x_from_lsb_to_mv(int16_t lsb)
-{
-  return ((float_t)lsb) / 78.0f;
-}
-
 float_t lsm6dsv320x_from_gbias_lsb_to_mdps(int16_t lsb)
 {
   return ((float_t)lsb) * 4.375f;
@@ -229,39 +164,12 @@ float_t lsm6dsv320x_from_quaternion_lsb_to_float(uint16_t lsb)
 }
 
 static uint32_t npy_halfbits_to_floatbits(uint16_t h);
-/**
-  * @brief  Convert from 16-bit to 32-bit float number
-  *
-  * @param  val      Batching in FIFO buffer of SFLP values.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 uint32_t lsm6dsv320x_from_f16_to_f32(uint16_t val)
 {
   return npy_halfbits_to_floatbits(val);
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Accelerometer user offset correction
-  * @brief      This section groups all the functions concerning the
-  *             usage of Accelerometer user offset correction
-  * @{
-  *
-  */
-
-/**
-  * @brief  Enables accelerometer user offset correction block; it is valid for the low-pass path.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables accelerometer user offset correction block; it is valid for the low-pass path.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_xl_offset_on_out_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_ctrl9_t ctrl9;
@@ -277,14 +185,6 @@ int32_t lsm6dsv320x_xl_offset_on_out_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Enables accelerometer user offset correction block; it is valid for the low-pass path.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables accelerometer user offset correction block; it is valid for the low-pass path.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_xl_offset_on_out_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_ctrl9_t ctrl9;
@@ -300,20 +200,7 @@ int32_t lsm6dsv320x_xl_offset_on_out_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Accelerometer user offset correction values in mg.[set]
-  *
-  * Value ranges depend on the USR_OFF_W bit in CTRL9:
-  *   - If USR_OFF_W = 1: range is ±15.875 mg with 0.125 mg precision.
-  *   - If USR_OFF_W = 0: range is ±0.9921875 mg with 0.0078125 mg precision.
-  * The USR_OFF_W bit is automatically enabled based on the input values
-  * (precision is shared across all axes).
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Accelerometer user offset correction values in mg.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_xl_offset_mg_set(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_xl_offset_mg_t val)
 {
@@ -380,14 +267,7 @@ int32_t lsm6dsv320x_xl_offset_mg_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Accelerometer user offset correction values in mg.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Accelerometer user offset correction values in mg.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_xl_offset_mg_get(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_xl_offset_mg_t *val)
 {
@@ -422,14 +302,7 @@ int32_t lsm6dsv320x_xl_offset_mg_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  HG Accelerometer user offset correction values in mg.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Accelerometer user offset correction values in mg.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_hg_xl_offset_mg_set(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_xl_offset_mg_t val)
 {
@@ -477,14 +350,7 @@ int32_t lsm6dsv320x_hg_xl_offset_mg_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  HG Accelerometer user offset correction values in mg.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Accelerometer user offset correction values in mg.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_hg_xl_offset_mg_get(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_xl_offset_mg_t *val)
 {
@@ -519,18 +385,7 @@ int32_t lsm6dsv320x_hg_xl_offset_mg_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @brief  Perform reboot of the device.
-  *
-  * @param  ctx      read / write interface definitions
-  * @retval          0: reboot has been performed, -1: error
-  *
-  */
 int32_t lsm6dsv320x_reboot(const stmdev_ctx_t *ctx)
 {
   lsm6dsv320x_ctrl3_t ctrl3;
@@ -601,13 +456,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Perform power-on-reset of the device.
-  *
-  * @param  ctx      read / write interface definitions
-  * @retval          0: power-on-reset has been performed, -1: error
-  *
-  */
+
 int32_t lsm6dsv320x_sw_por(const stmdev_ctx_t *ctx)
 {
   lsm6dsv320x_func_cfg_access_t func_cfg_access = {0};
@@ -634,13 +483,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Perform s/w reset of the device.
-  *
-  * @param  ctx      read / write interface definitions
-  * @retval          0: s/w reset has been performed, -1: error
-  *
-  */
+
 int32_t lsm6dsv320x_sw_reset(const stmdev_ctx_t *ctx)
 {
   lsm6dsv320x_ctrl3_t ctrl3 = {0};
@@ -684,14 +527,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Change memory bank.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      MAIN_MEM_BANK, EMBED_FUNC_MEM_BANK,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_mem_bank_set(const stmdev_ctx_t *ctx, lsm6dsv320x_mem_bank_t val)
 {
   lsm6dsv320x_func_cfg_access_t func_cfg_access;
@@ -710,14 +546,7 @@ int32_t lsm6dsv320x_mem_bank_set(const stmdev_ctx_t *ctx, lsm6dsv320x_mem_bank_t
   return ret;
 }
 
-/**
-  * @brief  Change memory bank.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      MAIN_MEM_BANK, SENSOR_HUB_MEM_BANK, EMBED_FUNC_MEM_BANK,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_mem_bank_get(const stmdev_ctx_t *ctx, lsm6dsv320x_mem_bank_t *val)
 {
   lsm6dsv320x_func_cfg_access_t func_cfg_access;
@@ -751,14 +580,7 @@ int32_t lsm6dsv320x_mem_bank_get(const stmdev_ctx_t *ctx, lsm6dsv320x_mem_bank_t
   return ret;
 }
 
-/**
-  * @brief  Device ID.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Device ID.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_device_id_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   int32_t ret;
@@ -768,16 +590,6 @@ int32_t lsm6dsv320x_device_id_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief Sensor xl setup
-  *        If both accelerometer and gyroscope are ON and HAODR mode needs
-  *        to be changed, `lsm6dsv320x_haodr_set` must be used; otherwise,
-  *        this function will fail since HAODR is a shared bit.
-  *
-  * @param  ctx        read / write interface definitions
-  * @param  xl_odr     lsm6dsv320x_data_rate_t
-  * @param  xl_mode    lsm6dsv320x_xl_mode_t
-  */
 int32_t lsm6dsv320x_xl_setup(
   const stmdev_ctx_t *ctx,
   lsm6dsv320x_data_rate_t xl_odr,
@@ -889,16 +701,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief Sensor gy setup
-  *        If both accelerometer and gyroscope are ON and HAODR mode needs
-  *        to be changed, `lsm6dsv320x_haodr_set` must be used; otherwise,
-  *        this function will fail since HAODR is a shared bit.
-  *
-  * @param  ctx        read / write interface definitions
-  * @param  gy_odr     lsm6dsv320x_data_rate_t
-  * @param  gy_mode    lsm6dsv320x_gy_mode_t
-  */
+
 int32_t lsm6dsv320x_gy_setup(
   const stmdev_ctx_t *ctx,
   lsm6dsv320x_data_rate_t gy_odr,
@@ -981,19 +784,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief HAODR set
-  *        Allow changing the HAODR mode, which is a shared bit between the accelerometer
-  *        and gyroscope. This function must be used if both sensors are already ON and a
-  *        different HAODR mode is requested.
-  *        Both data rates should use the same HAODR configuration.
-  *
-  * @param  ctx        read / write interface definitions
-  * @param  xl_odr     lsm6dsv320x_data_rate_t
-  * @param  xl_mode    lsm6dsv320x_xl_mode_t
-  * @param  gy_odr     lsm6dsv320x_data_rate_t
-  * @param  gy_mode    lsm6dsv320x_gy_mode_t
-  */
+
 int32_t lsm6dsv320x_haodr_set(
   const stmdev_ctx_t *ctx,
   lsm6dsv320x_data_rate_t xl_odr,
@@ -1091,14 +882,6 @@ exit:
 
 }
 
-/**
-  * @brief  Accelerometer output data rate (ODR) selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      lsm6dsv320x_data_rate_t enum
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_xl_data_rate_set(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_data_rate_t val)
 {
@@ -1135,14 +918,7 @@ int32_t lsm6dsv320x_xl_data_rate_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Accelerometer output data rate (ODR) selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      lsm6dsv320x_data_rate_t enum
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_data_rate_t *val)
 {
@@ -1372,15 +1148,7 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  HG Accelerometer output data rate (ODR) selection.[set]
-  *
-  * @param  ctx         read / write interface definitions
-  * @param  val         lsm6dsv320x_hg_xl_data_rate_t enum
-  * @param  reg_out_en  enables read of high-g accelerometer channel
-  * @retval             interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_hg_xl_data_rate_set(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_hg_xl_data_rate_t val,
                                         uint8_t reg_out_en)
@@ -1424,14 +1192,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Accelerometer output data rate (ODR) selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      lsm6dsv320x_hg_xl_data_rate_t enum
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_hg_xl_data_rate_get(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_hg_xl_data_rate_t *val,
                                         uint8_t *reg_out_en)
@@ -1481,14 +1242,6 @@ int32_t lsm6dsv320x_hg_xl_data_rate_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Accelerometer operating mode selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      XL_HIGH_PERFORMANCE_MD, XL_HIGH_ACCURACY_ODR_MD, XL_LOW_POWER_2_AVG_MD, XL_LOW_POWER_4_AVG_MD, XL_LOW_POWER_8_AVG_MD, XL_NORMAL_MD,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_xl_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t val)
 {
   lsm6dsv320x_ctrl1_t ctrl1;
@@ -1505,14 +1258,7 @@ int32_t lsm6dsv320x_xl_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t v
   return ret;
 }
 
-/**
-  * @brief  Accelerometer operating mode selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      XL_HIGH_PERFORMANCE_MD, XL_HIGH_ACCURACY_ODR_MD, XL_LOW_POWER_2_AVG_MD, XL_LOW_POWER_4_AVG_MD, XL_LOW_POWER_8_AVG_MD, XL_NORMAL_MD,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_xl_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t *val)
 {
   lsm6dsv320x_ctrl1_t ctrl1;
@@ -1605,14 +1351,7 @@ int32_t lsm6dsv320x_gy_data_rate_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Gyroscope output data rate (ODR) selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      lsm6dsv320x_data_rate_t enum
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_data_rate_t *val)
 {
@@ -1843,14 +1582,6 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Gyroscope operating mode selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      GY_HIGH_PERFORMANCE_MD, GY_HIGH_ACCURACY_ODR_MD, GY_SLEEP_MD, GY_LOW_POWER_MD,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_gy_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t val)
 {
   lsm6dsv320x_ctrl2_t ctrl2;
@@ -1866,14 +1597,7 @@ int32_t lsm6dsv320x_gy_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t v
   return ret;
 }
 
-/**
-  * @brief  Gyroscope operating mode selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      GY_HIGH_PERFORMANCE_MD, GY_HIGH_ACCURACY_ODR_MD, GY_SLEEP_MD, GY_LOW_POWER_MD,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_gy_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t *val)
 {
   lsm6dsv320x_ctrl2_t ctrl2;
@@ -1915,14 +1639,7 @@ int32_t lsm6dsv320x_gy_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t *
   return ret;
 }
 
-/**
-  * @brief  Register address automatically incremented during a multiple byte access with a serial interface (enable by default).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Register address automatically incremented during a multiple byte access with a serial interface (enable by default).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_auto_increment_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_ctrl3_t ctrl3;
@@ -1938,14 +1655,6 @@ int32_t lsm6dsv320x_auto_increment_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Register address automatically incremented during a multiple byte access with a serial interface (enable by default).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Register address automatically incremented during a multiple byte access with a serial interface (enable by default).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_auto_increment_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_ctrl3_t ctrl3;
@@ -1962,14 +1671,7 @@ int32_t lsm6dsv320x_auto_increment_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Block Data Update (BDU): output registers are not updated until LSB and MSB have been read). [set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Block Data Update (BDU): output registers are not updated until LSB and MSB have been read).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_block_data_update_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_ctrl3_t ctrl3;
@@ -1986,14 +1688,6 @@ int32_t lsm6dsv320x_block_data_update_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Block Data Update (BDU): output registers are not updated until LSB and MSB have been read). [get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Block Data Update (BDU): output registers are not updated until LSB and MSB have been read).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_block_data_update_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_ctrl3_t ctrl3;
@@ -2010,14 +1704,7 @@ int32_t lsm6dsv320x_block_data_update_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Configure ODR trigger. [set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      number of data in the reference period.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_odr_trig_cfg_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_odr_trig_cfg_t odr_trig;
@@ -2039,14 +1726,7 @@ int32_t lsm6dsv320x_odr_trig_cfg_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Configure ODR trigger. [get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      number of data in the reference period.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_odr_trig_cfg_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_odr_trig_cfg_t odr_trig;
@@ -2062,14 +1742,7 @@ int32_t lsm6dsv320x_odr_trig_cfg_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Enables pulsed data-ready mode (~75 us).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      DRDY_LATCHED, DRDY_PULSED,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_data_ready_mode_set(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_data_ready_mode_t val)
 {
@@ -2087,14 +1760,7 @@ int32_t lsm6dsv320x_data_ready_mode_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Enables pulsed data-ready mode (~75 us).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      DRDY_LATCHED, DRDY_PULSED,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_data_ready_mode_get(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_data_ready_mode_t *val)
 {
@@ -2125,14 +1791,7 @@ int32_t lsm6dsv320x_data_ready_mode_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Enables interrupt.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      enable/disable, latched/pulsed
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_interrupt_enable_set(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_interrupt_mode_t val)
 {
@@ -2161,14 +1820,7 @@ int32_t lsm6dsv320x_interrupt_enable_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Enables latched interrupt mode.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      enable/disable, latched/pulsed
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_interrupt_enable_get(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_interrupt_mode_t *val)
 {
@@ -2189,14 +1841,7 @@ int32_t lsm6dsv320x_interrupt_enable_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Gyroscope full-scale selection[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      250dps, 500dps, 1000dps, 2000dps, 4000dps,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_gy_full_scale_set(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_gy_full_scale_t val)
 {
@@ -2235,14 +1880,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Gyroscope full-scale selection[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      250dps, 500dps, 1000dps, 2000dps, 4000dps,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_gy_full_scale_get(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_gy_full_scale_t *val)
 {
@@ -2285,14 +1923,7 @@ int32_t lsm6dsv320x_gy_full_scale_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Accelerometer full-scale selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      2g, 4g, 8g, 16g,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_xl_full_scale_set(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_xl_full_scale_t val)
 {
@@ -2310,14 +1941,7 @@ int32_t lsm6dsv320x_xl_full_scale_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Accelerometer full-scale selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      2g, 4g, 8g, 16g,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_xl_full_scale_get(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_xl_full_scale_t *val)
 {
@@ -2356,14 +1980,7 @@ int32_t lsm6dsv320x_xl_full_scale_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Accelerometer HG full-scale selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      lsm6dsv320x_hg_xl_full_scale_t
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_hg_xl_full_scale_set(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_hg_xl_full_scale_t val)
 {
@@ -2381,14 +1998,7 @@ int32_t lsm6dsv320x_hg_xl_full_scale_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Accelerometer HG full-scale selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      lsm6dsv320x_hg_xl_full_scale_t
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_hg_xl_full_scale_get(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_hg_xl_full_scale_t *val)
 {
@@ -2431,14 +2041,7 @@ int32_t lsm6dsv320x_hg_xl_full_scale_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Accelerometer self-test selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      ST_DISABLE, ST_POSITIVE, ST_NEGATIVE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_xl_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t val)
 {
   lsm6dsv320x_ctrl10_t ctrl10;
@@ -2455,14 +2058,7 @@ int32_t lsm6dsv320x_xl_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_self_t
   return ret;
 }
 
-/**
-  * @brief  Accelerometer self-test selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      ST_DISABLE, ST_POSITIVE, ST_NEGATIVE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t *val)
 {
   lsm6dsv320x_ctrl10_t ctrl10;
@@ -2496,14 +2092,7 @@ int32_t lsm6dsv320x_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_t
   return ret;
 }
 
-/**
-  * @brief  Gyroscope self-test selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      ST_DISABLE, ST_POSITIVE, ST_NEGATIVE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_gy_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t val)
 {
   lsm6dsv320x_ctrl10_t ctrl10;
@@ -2520,14 +2109,7 @@ int32_t lsm6dsv320x_gy_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_self_t
   return ret;
 }
 
-/**
-  * @brief  Gyroscope self-test selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      ST_DISABLE, ST_POSITIVE, ST_NEGATIVE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_gy_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t *val)
 {
   lsm6dsv320x_ctrl10_t ctrl10;
@@ -2561,14 +2143,7 @@ int32_t lsm6dsv320x_gy_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_t
   return ret;
 }
 
-/**
-  * @brief  HG XL self-test selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      ST_DISABLE, ST_POSITIVE, ST_NEGATIVE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_hg_xl_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t val)
 {
   lsm6dsv320x_ctrl2_xl_hg_t ctrl2_xl_hg;
@@ -2585,14 +2160,7 @@ int32_t lsm6dsv320x_hg_xl_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_sel
   return ret;
 }
 
-/**
-  * @brief  HG XL self-test selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      ST_DISABLE, ST_POSITIVE, ST_NEGATIVE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_hg_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t *val)
 {
   lsm6dsv320x_ctrl2_xl_hg_t ctrl2_xl_hg;
@@ -2626,14 +2194,6 @@ int32_t lsm6dsv320x_hg_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_sel
   return ret;
 }
 
-/**
-  * @brief  IF2 Accelerometer self-test selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      ST_DISABLE, ST_POSITIVE, ST_NEGATIVE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_ois_xl_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t val)
 {
   lsm6dsv320x_if2_int_ois_t if2_int_ois;
@@ -2650,14 +2210,7 @@ int32_t lsm6dsv320x_ois_xl_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_se
   return ret;
 }
 
-/**
-  * @brief  IF2 Accelerometer self-test selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      ST_DISABLE, ST_POSITIVE, ST_NEGATIVE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t *val)
 {
   lsm6dsv320x_if2_int_ois_t if2_int_ois;
@@ -2691,14 +2244,7 @@ int32_t lsm6dsv320x_ois_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_se
   return ret;
 }
 
-/**
-  * @brief  IF2 Accelerometer self-test selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      GY_ST_DISABLE, GY_ST_POSITIVE, GY_ST_NEGATIVE, LSM6DSV320X_OIS_GY_ST_CLAMP_POS, LSM6DSV320X_OIS_GY_ST_CLAMP_NEG
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_gy_self_test_set(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_ois_gy_self_test_t val)
 {
@@ -2717,14 +2263,7 @@ int32_t lsm6dsv320x_ois_gy_self_test_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  IF2 Accelerometer self-test selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      GY_ST_DISABLE, GY_ST_POSITIVE, GY_ST_NEGATIVE, LSM6DSV320X_OIS_GY_ST_CLAMP_POS, LSM6DSV320X_OIS_GY_ST_CLAMP_NEG
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_gy_self_test_get(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_ois_gy_self_test_t *val)
 {
@@ -2761,27 +2300,7 @@ int32_t lsm6dsv320x_ois_gy_self_test_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup   High-g
-  * @brief      This section groups all the functions that manage
-  *             High-g
-  * @{
-  *
-  */
-
-/**
-  * @brief  High-g event configuration.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      lsm6dsv320x_hg_wake_up_cfg_t structure
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_hg_wake_up_cfg_set(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_hg_wake_up_cfg_t val)
 {
@@ -2805,14 +2324,7 @@ int32_t lsm6dsv320x_hg_wake_up_cfg_set(const stmdev_ctx_t *ctx,
   return lsm6dsv320x_write_reg(ctx, LSM6DSV320X_HG_FUNCTIONS_ENABLE, reg, 2);
 }
 
-/**
-  * @brief  High-g event configuration.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      lsm6dsv320x_hg_wake_up_cfg_t structure
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_hg_wake_up_cfg_get(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_hg_wake_up_cfg_t *val)
 {
@@ -2836,14 +2348,7 @@ int32_t lsm6dsv320x_hg_wake_up_cfg_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
- * @brief   High-g wake-up interrupt configuration[set]
- *
- * @param  ctx    Read / write interface definitions.(ptr)
- * @param  val    lsm6dsv320x_hg_wu_interrupt_cfg_t.
- * @retval        Interface status (MANDATORY: return 0 -> no Error).
- *
- */
+
 int32_t lsm6dsv320x_hg_wu_interrupt_cfg_set(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_hg_wu_interrupt_cfg_t val)
 {
@@ -2863,14 +2368,7 @@ int32_t lsm6dsv320x_hg_wu_interrupt_cfg_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
- * @brief   High-g wake-up interrupt configuration[get]
- *
- * @param  ctx    Read / write interface definitions.(ptr)
- * @param  val    lsm6dsv320x_hg_wu_interrupt_cfg_t.
- * @retval        Interface status (MANDATORY: return 0 -> no Error).
- *
- */
+
 int32_t lsm6dsv320x_hg_wu_interrupt_cfg_get(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_hg_wu_interrupt_cfg_t *val)
 {
@@ -2889,14 +2387,7 @@ int32_t lsm6dsv320x_hg_wu_interrupt_cfg_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
- * @brief   Emable/disable user offset data correction driving to hg embedded functions[set]
- *
- * @param  ctx    Read / write interface definitions.(ptr)
- * @param  val    0: disable, 1: enable
- * @retval        Interface status (MANDATORY: return 0 -> no Error).
- *
- */
+
 int32_t lsm6dsv320x_hg_emb_usr_off_correction_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_emb_func_cfg_t emb_func_cfg;
@@ -2913,14 +2404,7 @@ int32_t lsm6dsv320x_hg_emb_usr_off_correction_set(const stmdev_ctx_t *ctx, uint8
   return ret;
 }
 
-/**
- * @brief   Emable/disable user offset data correction driving to hg embedded functions[get]
- *
- * @param  ctx    Read / write interface definitions.(ptr)
- * @param  val    0: disable, 1: enable
- * @retval        Interface status (MANDATORY: return 0 -> no Error).
- *
- */
+
 int32_t lsm6dsv320x_hg_emb_usr_off_correction_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_emb_func_cfg_t emb_func_cfg;
@@ -2937,14 +2421,7 @@ int32_t lsm6dsv320x_hg_emb_usr_off_correction_get(const stmdev_ctx_t *ctx, uint8
   return ret;
 }
 
-/**
- * @brief   Emable/disable user offset data correction driving to hg wake-up[set]
- *
- * @param  ctx    Read / write interface definitions.(ptr)
- * @param  val    0: disable, 1: enable
- * @retval        Interface status (MANDATORY: return 0 -> no Error).
- *
- */
+
 int32_t lsm6dsv320x_hg_wu_usr_off_correction_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_ctrl2_xl_hg_t ctrl2_xl_hg;
@@ -2961,14 +2438,7 @@ int32_t lsm6dsv320x_hg_wu_usr_off_correction_set(const stmdev_ctx_t *ctx, uint8_
   return ret;
 }
 
-/**
- * @brief   Emable/disable user offset data correction driving to hg wake-up[get]
- *
- * @param  ctx    Read / write interface definitions.(ptr)
- * @param  val    0: disable, 1: enable
- * @retval        Interface status (MANDATORY: return 0 -> no Error).
- *
- */
+
 int32_t lsm6dsv320x_hg_wu_usr_off_correction_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_ctrl2_xl_hg_t ctrl2_xl_hg;
@@ -2985,14 +2455,7 @@ int32_t lsm6dsv320x_hg_wu_usr_off_correction_get(const stmdev_ctx_t *ctx, uint8_
   return ret;
 }
 
-/**
-  * @brief   High-g event handling[get]
-  *
-  * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    High-g event.
-  * @retval        Interface status (MANDATORY: return 0 -> no Error).
-  *
-  */
+
 int32_t lsm6dsv320x_hg_event_get(const stmdev_ctx_t *ctx, lsm6dsv320x_hg_event_t *val)
 {
   lsm6dsv320x_all_int_src_t          int_src;
@@ -3028,28 +2491,7 @@ int32_t lsm6dsv320x_hg_event_get(const stmdev_ctx_t *ctx, lsm6dsv320x_hg_event_t
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup   interrupt_pins
-  * @brief      This section groups all the functions that manage
-  *             interrupt pins
-  * @{
-  *
-  */
-
-/**
-  * @brief   Select the signals that need to be routed on int1 pad.[set]
-  *
-  * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    the signals to route on int1 pin.
-  *                (xl/g drdy, fifo, 6d/tap/wu/ff/sleep_change/cnt_bdr)
-  * @retval        Interface status (MANDATORY: return 0 -> no Error).
-  *
-  */
 int32_t lsm6dsv320x_pin_int1_route_set(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_pin_int1_route_t *val)
 {
@@ -3095,15 +2537,7 @@ int32_t lsm6dsv320x_pin_int1_route_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Report the signals that are routed on int1 pad.[get]
-  *
-  * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    the signals that are routed on int1 pin.(ptr)
-  *                (xl/g drdy, fifo, 6d/tap/wu/ff/sleep_change/cnt_bdr)
-  * @retval        Interface status (MANDATORY: return 0 -> no Error).
-  *
-  */
+
 int32_t lsm6dsv320x_pin_int1_route_get(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_pin_int1_route_t *val)
 {
@@ -3141,15 +2575,7 @@ int32_t lsm6dsv320x_pin_int1_route_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief   Select the signals that need to be routed on int2 pad.[set]
-  *
-  * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    the signals to route on int1 pin.
-  *                (xl/g drdy, fifo, 6d/tap/wu/ff/sleep_change/cnt_bdr)
-  * @retval        Interface status (MANDATORY: return 0 -> no Error).
-  *
-  */
+
 int32_t lsm6dsv320x_pin_int2_route_set(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_pin_int2_route_t *val)
 {
@@ -3210,15 +2636,7 @@ int32_t lsm6dsv320x_pin_int2_route_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Report the signals that are routed on int2 pad.[get]
-  *
-  * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    the signals that are routed on int1 pin.(ptr)
-  *                (xl/g drdy, fifo, 6d/tap/wu/ff/sleep_change/cnt_bdr)
-  * @retval        Interface status (MANDATORY: return 0 -> no Error).
-  *
-  */
+
 int32_t lsm6dsv320x_pin_int2_route_get(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_pin_int2_route_t *val)
 {
@@ -3267,15 +2685,7 @@ int32_t lsm6dsv320x_pin_int2_route_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief   Select the signals that need to be routed on int1 pad.[set]
-  *
-  * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    the signals to route on int1 pin.
-  *                (HG events only)
-  * @retval        Interface status (MANDATORY: return 0 -> no Error).
-  *
-  */
+
 int32_t lsm6dsv320x_pin_int1_route_hg_set(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_pin_int_route_hg_t *val)
 {
@@ -3318,15 +2728,7 @@ int32_t lsm6dsv320x_pin_int1_route_hg_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Report the signals that are routed on int1 pad.[get]
-  *
-  * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    the signals that are routed on int1 pin.(ptr)
-  *                (HG events only)
-  * @retval        Interface status (MANDATORY: return 0 -> no Error).
-  *
-  */
+
 int32_t lsm6dsv320x_pin_int1_route_hg_get(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_pin_int_route_hg_t *val)
 {
@@ -3362,15 +2764,7 @@ int32_t lsm6dsv320x_pin_int1_route_hg_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief   Select the signals that need to be routed on int2 pad.[set]
-  *
-  * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    the signals to route on int2 pin.
-  *                (HG events only)
-  * @retval        Interface status (MANDATORY: return 0 -> no Error).
-  *
-  */
+
 int32_t lsm6dsv320x_pin_int2_route_hg_set(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_pin_int_route_hg_t *val)
 {
@@ -3409,15 +2803,7 @@ int32_t lsm6dsv320x_pin_int2_route_hg_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Report the signals that are routed on int2 pad.[get]
-  *
-  * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    the signals that are routed on int2 pin.(ptr)
-  *                (HG events only)
-  * @retval        Interface status (MANDATORY: return 0 -> no Error).
-  *
-  */
+
 int32_t lsm6dsv320x_pin_int2_route_hg_get(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_pin_int_route_hg_t *val)
 {
@@ -3453,15 +2839,7 @@ int32_t lsm6dsv320x_pin_int2_route_hg_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief   Select the signals that need to be routed on int1 pad.[set]
-  *
-  * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    the signals to route on int1 pin.
-  *                (embedded events)
-  * @retval        Interface status (MANDATORY: return 0 -> no Error).
-  *
-  */
+
 int32_t lsm6dsv320x_pin_int1_route_embedded_set(const stmdev_ctx_t *ctx,
                                                 lsm6dsv320x_pin_int_route_emb_t *val)
 {
@@ -3558,15 +2936,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief   Report the signals that are routed on int1 pad.[get]
-  *
-  * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    the signals to route on int1 pin.
-  *                (embedded events)
-  * @retval        Interface status (MANDATORY: return 0 -> no Error).
-  *
-  */
+
 int32_t lsm6dsv320x_pin_int1_route_embedded_get(const stmdev_ctx_t *ctx,
                                                 lsm6dsv320x_pin_int_route_emb_t *val)
 {
@@ -3630,15 +3000,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief   Select the signals that need to be routed on int2 pad[set]
-  *
-  * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    the signals to route on int2 pin.
-  *                (embedded events)
-  * @retval        Interface status (MANDATORY: return 0 -> no Error).
-  *
-  */
+
 int32_t lsm6dsv320x_pin_int2_route_embedded_set(const stmdev_ctx_t *ctx,
                                                 lsm6dsv320x_pin_int_route_emb_t *val)
 {
@@ -3735,15 +3097,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief   Report the signals that are routed on int2 pad.[get]
-  *
-  * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    the signals to route on int2 pin.
-  *                (embedded events)
-  * @retval        Interface status (MANDATORY: return 0 -> no Error).
-  *
-  */
+
 int32_t lsm6dsv320x_pin_int2_route_embedded_get(const stmdev_ctx_t *ctx,
                                                 lsm6dsv320x_pin_int_route_emb_t *val)
 {
@@ -3807,19 +3161,7 @@ exit:
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @brief  Get the status of all the interrupt sources.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Get the status of all the interrupt sources.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_all_sources_get(const stmdev_ctx_t *ctx,
                                     lsm6dsv320x_all_sources_t *val)
 {
@@ -4009,14 +3351,7 @@ int32_t lsm6dsv320x_flag_data_ready_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Mask status bit reset[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Mask to prevent status bit being reset
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_int_ack_mask_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   int32_t ret;
@@ -4035,14 +3370,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Mask status bit reset[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Mask to prevent status bit being reset
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_int_ack_mask_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   int32_t ret;
@@ -4061,14 +3389,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Temperature data output register[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Temperature data output register
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_temperature_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
 {
   uint8_t buff[2];
@@ -4086,14 +3407,7 @@ int32_t lsm6dsv320x_temperature_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
   return ret;
 }
 
-/**
-  * @brief  Angular rate sensor.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Angular rate sensor.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_angular_rate_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
 {
   uint8_t buff[6];
@@ -4115,14 +3429,6 @@ int32_t lsm6dsv320x_angular_rate_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
   return ret;
 }
 
-/**
-  * @brief  Angular rate sensor.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      OIS Angular rate sensor (thru IF2).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_ois_angular_rate_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
 {
   uint8_t buff[6];
@@ -4144,14 +3450,7 @@ int32_t lsm6dsv320x_ois_angular_rate_raw_get(const stmdev_ctx_t *ctx, int16_t *v
   return ret;
 }
 
-/**
-  * @brief  Angular rate sensor for OIS gyro or the EIS gyro channel.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Angular rate sensor for OIS gyro or the EIS gyro channel.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_eis_angular_rate_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
 {
   uint8_t buff[6];
@@ -4173,14 +3472,7 @@ int32_t lsm6dsv320x_ois_eis_angular_rate_raw_get(const stmdev_ctx_t *ctx, int16_
   return ret;
 }
 
-/**
-  * @brief  Linear acceleration sensor.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Linear acceleration sensor.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_acceleration_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
 {
   uint8_t buff[6];
@@ -4202,14 +3494,7 @@ int32_t lsm6dsv320x_acceleration_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
   return ret;
 }
 
-/**
-  * @brief  Linear acceleration sensor for hg channel mode.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Linear acceleration sensor or High-G channel mode.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_hg_acceleration_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
 {
   uint8_t buff[6];
@@ -4231,14 +3516,6 @@ int32_t lsm6dsv320x_hg_acceleration_raw_get(const stmdev_ctx_t *ctx, int16_t *va
   return ret;
 }
 
-/**
-  * @brief  Linear acceleration sensor for OIS channel mode.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Linear acceleration sensor or OIS channel mode.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_ois_acceleration_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
 {
   uint8_t buff[6];
@@ -4260,14 +3537,7 @@ int32_t lsm6dsv320x_ois_acceleration_raw_get(const stmdev_ctx_t *ctx, int16_t *v
   return ret;
 }
 
-/**
-  * @brief  SFLP gbias.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SFLP gbias raw array.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sflp_gbias_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
 {
   uint8_t buff[6];
@@ -4291,14 +3561,7 @@ int32_t lsm6dsv320x_sflp_gbias_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
   return ret;
 }
 
-/**
-  * @brief  SFLP gravity.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SFLP gravity raw array.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sflp_gravity_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
 {
   uint8_t buff[6];
@@ -4322,14 +3585,7 @@ int32_t lsm6dsv320x_sflp_gravity_raw_get(const stmdev_ctx_t *ctx, int16_t *val)
   return ret;
 }
 
-/**
-  * @brief  SFLP raw quaternions.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      pointer to SFLP quaternions raw array.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sflp_quaternion_raw_get(const stmdev_ctx_t *ctx, uint16_t *val)
 {
   uint8_t buff[8];
@@ -4355,14 +3611,7 @@ int32_t lsm6dsv320x_sflp_quaternion_raw_get(const stmdev_ctx_t *ctx, uint16_t *v
   return ret;
 }
 
-/**
-  * @brief  SFLP quaternions.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      pointer to SFLP quaternions raw array.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sflp_quaternion_get(const stmdev_ctx_t *ctx, lsm6dsv320x_quaternion_t *quat)
 {
   uint16_t val[4];
@@ -4382,14 +3631,7 @@ int32_t lsm6dsv320x_sflp_quaternion_get(const stmdev_ctx_t *ctx, lsm6dsv320x_qua
   return ret;
 }
 
-/**
-  * @brief  Difference in percentage of the effective ODR (and timestamp rate) with respect to the typical. Step: 0.13%. 8-bit format, 2's complement.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Difference in percentage of the effective ODR (and timestamp rate) with respect to the typical. Step: 0.13%. 8-bit format, 2's complement.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_odr_cal_reg_get(const stmdev_ctx_t *ctx, int8_t *val)
 {
   lsm6dsv320x_internal_freq_t internal_freq;
@@ -4406,21 +3648,6 @@ int32_t lsm6dsv320x_odr_cal_reg_get(const stmdev_ctx_t *ctx, int8_t *val)
   return ret;
 }
 
-/**
-  * @defgroup Common
-  * @brief     This section groups common useful functions.
-  * @{/
-  *
-  */
-
-/**
-  * @brief  Disable Embedded functions.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      1 (disable) or 0 (enable) embedded functions
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_disable_embedded_function_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_emb_func_cfg_t emb_func_cfg;
@@ -4438,14 +3665,7 @@ int32_t lsm6dsv320x_disable_embedded_function_set(const stmdev_ctx_t *ctx, uint8
   return ret;
 }
 
-/**
-  * @brief  Disable Embedded functions.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      1 (disable) or 0 (enable) embedded functions
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_disable_embedded_function_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_emb_func_cfg_t emb_func_cfg;
@@ -4462,14 +3682,7 @@ int32_t lsm6dsv320x_disable_embedded_function_get(const stmdev_ctx_t *ctx, uint8
   return ret;
 }
 
-/**
-  * @brief  Enable/Disable embedded function sensor conversion.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      0 (disable) or 1 (enable) embedded functions sensor conversion
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_emb_func_conv_set(const stmdev_ctx_t *ctx, lsm6dsv320x_emb_func_conv_t val)
 {
   lsm6dsv320x_emb_func_sensor_conv_en_t conv_reg;
@@ -4498,14 +3711,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Enable/Disable embedded function sensor conversion.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      0 (disable) or 1 (enable) embedded functions sensor conversion
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_emb_func_conv_get(const stmdev_ctx_t *ctx, lsm6dsv320x_emb_func_conv_t *val)
 {
   lsm6dsv320x_emb_func_sensor_conv_en_t conv_reg;
@@ -4533,14 +3739,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Write buffer in a page.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Write buffer in a page.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ln_pg_write(const stmdev_ctx_t *ctx, uint16_t address,
                                 uint8_t *buf, uint8_t len)
 {
@@ -4648,14 +3847,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Read buffer in a page.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Write buffer in a page.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ln_pg_read(const stmdev_ctx_t *ctx, uint16_t address, uint8_t *buf,
                                uint8_t len)
 {
@@ -4767,14 +3959,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Enable debug mode for embedded functions [set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      0, 1
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_emb_function_dbg_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_ctrl10_t ctrl10;
@@ -4791,14 +3976,7 @@ int32_t lsm6dsv320x_emb_function_dbg_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Enable debug mode for embedded functions [get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      0, 1
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_emb_function_dbg_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_ctrl10_t ctrl10;
@@ -4815,27 +3993,7 @@ int32_t lsm6dsv320x_emb_function_dbg_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Data ENable (DEN)
-  * @brief     This section groups all the functions concerning
-  *            DEN functionality.
-  * @{
-  *
-  */
-
-/**
-  * @brief  It changes the polarity of INT2 pin input trigger for data enable (DEN) or embedded functions.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      DEN_ACT_LOW, DEN_ACT_HIGH,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_den_polarity_set(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_den_polarity_t val)
 {
@@ -4853,14 +4011,7 @@ int32_t lsm6dsv320x_den_polarity_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  It changes the polarity of INT2 pin input trigger for data enable (DEN) or embedded functions.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      DEN_ACT_LOW, DEN_ACT_HIGH,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_den_polarity_get(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_den_polarity_t *val)
 {
@@ -4891,26 +4042,6 @@ int32_t lsm6dsv320x_den_polarity_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
-
-/**
-  * @defgroup Electronic Image Stabilization (EIS)
-  * @brief    Electronic Image Stabilization (EIS)
-  * @{/
-  *
-  */
-
-/**
-  * @brief  Gyroscope full-scale selection for EIS channel. WARNING: 4000dps will be available only if also User Interface chain is set to 4000dps[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      250dps, 500dps, 1000dps, 2000dps, 4000dps,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_eis_gy_full_scale_set(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_eis_gy_full_scale_t val)
 {
@@ -4949,14 +4080,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Gyroscope full-scale selection for EIS channel. WARNING: 4000dps will be available only if also User Interface chain is set to 4000dps[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      250dps, 500dps, 1000dps, 2000dps, 4000dps
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_eis_gy_full_scale_get(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_eis_gy_full_scale_t *val)
 {
@@ -4998,14 +4122,7 @@ int32_t lsm6dsv320x_eis_gy_full_scale_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Enables routing of gyroscope EIS outputs on IF2 (OIS interface). The gyroscope data on IF2 (OIS interface) cannot be read from User Interface (UI).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables routing of gyroscope EIS outputs on IF2 (OIS interface). The gyroscope data on IF2 (OIS interface) cannot be read from User Interface (UI).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_eis_gy_on_if2_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_ctrl_eis_t ctrl_eis;
@@ -5022,14 +4139,6 @@ int32_t lsm6dsv320x_eis_gy_on_if2_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Enables routing of gyroscope EIS outputs on IF2 (OIS interface). The gyroscope data on IF2 (OIS interface) cannot be read from User Interface (UI).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables routing of gyroscope EIS outputs on IF2 (OIS interface). The gyroscope data on IF2 (OIS interface) cannot be read from User Interface (UI).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_eis_gy_on_if2_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_ctrl_eis_t ctrl_eis;
@@ -5046,14 +4155,7 @@ int32_t lsm6dsv320x_eis_gy_on_if2_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Enables and selects the ODR of the gyroscope EIS channel.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      EIS_1920Hz, EIS_960Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_gy_eis_data_rate_set(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_gy_eis_data_rate_t val)
 {
@@ -5096,14 +4198,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Enables and selects the ODR of the gyroscope EIS channel.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      EIS_1920Hz, EIS_960Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_gy_eis_data_rate_get(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_gy_eis_data_rate_t *val)
 {
@@ -5138,26 +4233,7 @@ int32_t lsm6dsv320x_gy_eis_data_rate_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  FIFO
-  * @brief     This section group all the functions concerning the FIFO usage
-  * @{
-  *
-  */
-
-/**
-  * @brief  FIFO watermark threshold (1 LSb = TAG (1 Byte) + 1 sensor (6 Bytes) written in FIFO).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FIFO watermark threshold (1 LSb = TAG (1 Byte) + 1 sensor (6 Bytes) written in FIFO).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_fifo_watermark_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_fifo_ctrl1_t fifo_ctrl1;
@@ -5174,14 +4250,7 @@ int32_t lsm6dsv320x_fifo_watermark_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  FIFO watermark threshold (1 LSb = TAG (1 Byte) + 1 sensor (6 Bytes) written in FIFO).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FIFO watermark threshold (1 LSb = TAG (1 Byte) + 1 sensor (6 Bytes) written in FIFO).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_watermark_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_fifo_ctrl1_t fifo_ctrl1;
@@ -5198,14 +4267,6 @@ int32_t lsm6dsv320x_fifo_watermark_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  It configures the compression algorithm to write non-compressed data at each rate.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      CMP_DISABLE, CMP_ALWAYS, CMP_8_TO_1, CMP_16_TO_1, CMP_32_TO_1,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_fifo_compress_algo_set(const stmdev_ctx_t *ctx,
                                            lsm6dsv320x_fifo_compress_algo_t val)
 {
@@ -5222,14 +4283,7 @@ int32_t lsm6dsv320x_fifo_compress_algo_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  It configures the compression algorithm to write non-compressed data at each rate.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      CMP_DISABLE, CMP_ALWAYS, CMP_8_TO_1, CMP_16_TO_1, CMP_32_TO_1,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_compress_algo_get(const stmdev_ctx_t *ctx,
                                            lsm6dsv320x_fifo_compress_algo_t *val)
 {
@@ -5267,14 +4321,7 @@ int32_t lsm6dsv320x_fifo_compress_algo_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Enables ODR CHANGE virtual sensor to be batched in FIFO.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables ODR CHANGE virtual sensor to be batched in FIFO.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_virtual_sens_odr_chg_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_fifo_ctrl2_t fifo_ctrl2;
@@ -5290,14 +4337,7 @@ int32_t lsm6dsv320x_fifo_virtual_sens_odr_chg_set(const stmdev_ctx_t *ctx, uint8
   return ret;
 }
 
-/**
-  * @brief  Enables ODR CHANGE virtual sensor to be batched in FIFO.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables ODR CHANGE virtual sensor to be batched in FIFO.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_virtual_sens_odr_chg_get(const stmdev_ctx_t *ctx,
                                                   uint8_t *val)
 {
@@ -5315,14 +4355,7 @@ int32_t lsm6dsv320x_fifo_virtual_sens_odr_chg_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Enables/Disables compression algorithm runtime.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables/Disables compression algorithm runtime.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_compress_algo_real_time_set(const stmdev_ctx_t *ctx,
                                                      uint8_t val)
 {
@@ -5361,14 +4394,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Enables/Disables compression algorithm runtime.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables/Disables compression algorithm runtime.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_compress_algo_real_time_get(const stmdev_ctx_t *ctx,
                                                      uint8_t *val)
 {
@@ -5386,14 +4412,7 @@ int32_t lsm6dsv320x_fifo_compress_algo_real_time_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Sensing chain FIFO stop values memorization at threshold level.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Sensing chain FIFO stop values memorization at threshold level.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_stop_on_wtm_set(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_event_t val)
 {
   lsm6dsv320x_fifo_ctrl2_t fifo_ctrl2;
@@ -5409,14 +4428,7 @@ int32_t lsm6dsv320x_fifo_stop_on_wtm_set(const stmdev_ctx_t *ctx, lsm6dsv320x_fi
   return ret;
 }
 
-/**
-  * @brief  Sensing chain FIFO stop values memorization at threshold level.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Sensing chain FIFO stop values memorization at threshold level.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_stop_on_wtm_get(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_event_t *val)
 {
   lsm6dsv320x_fifo_ctrl2_t fifo_ctrl2;
@@ -5433,14 +4445,7 @@ int32_t lsm6dsv320x_fifo_stop_on_wtm_get(const stmdev_ctx_t *ctx, lsm6dsv320x_fi
   return ret;
 }
 
-/**
-  * @brief  Selects Batch Data Rate (write frequency in FIFO) for accelerometer data.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      XL_NOT_BATCHED, XL_BATCHED_AT_1Hz875, XL_BATCHED_AT_7Hz5, XL_BATCHED_AT_15Hz, XL_BATCHED_AT_30Hz, XL_BATCHED_AT_60Hz, XL_BATCHED_AT_120Hz, XL_BATCHED_AT_240Hz, XL_BATCHED_AT_480Hz, XL_BATCHED_AT_960Hz, XL_BATCHED_AT_1920Hz, XL_BATCHED_AT_3840Hz, XL_BATCHED_AT_7680Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_xl_batch_set(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_fifo_xl_batch_t val)
 {
@@ -5457,14 +4462,6 @@ int32_t lsm6dsv320x_fifo_xl_batch_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects Batch Data Rate (write frequency in FIFO) for accelerometer data.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      XL_NOT_BATCHED, XL_BATCHED_AT_1Hz875, XL_BATCHED_AT_7Hz5, XL_BATCHED_AT_15Hz, XL_BATCHED_AT_30Hz, XL_BATCHED_AT_60Hz, XL_BATCHED_AT_120Hz, XL_BATCHED_AT_240Hz, XL_BATCHED_AT_480Hz, XL_BATCHED_AT_960Hz, XL_BATCHED_AT_1920Hz, XL_BATCHED_AT_3840Hz, XL_BATCHED_AT_7680Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_fifo_xl_batch_get(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_fifo_xl_batch_t *val)
 {
@@ -5539,14 +4536,7 @@ int32_t lsm6dsv320x_fifo_xl_batch_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects Batch Data Rate (write frequency in FIFO) for gyroscope data.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      GY_NOT_BATCHED, GY_BATCHED_AT_1Hz875, GY_BATCHED_AT_7Hz5, GY_BATCHED_AT_15Hz, GY_BATCHED_AT_30Hz, GY_BATCHED_AT_60Hz, GY_BATCHED_AT_120Hz, GY_BATCHED_AT_240Hz, GY_BATCHED_AT_480Hz, GY_BATCHED_AT_960Hz, GY_BATCHED_AT_1920Hz, GY_BATCHED_AT_3840Hz, GY_BATCHED_AT_7680Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_gy_batch_set(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_fifo_gy_batch_t val)
 {
@@ -5563,14 +4553,6 @@ int32_t lsm6dsv320x_fifo_gy_batch_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects Batch Data Rate (write frequency in FIFO) for gyroscope data.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      GY_NOT_BATCHED, GY_BATCHED_AT_1Hz875, GY_BATCHED_AT_7Hz5, GY_BATCHED_AT_15Hz, GY_BATCHED_AT_30Hz, GY_BATCHED_AT_60Hz, GY_BATCHED_AT_120Hz, GY_BATCHED_AT_240Hz, GY_BATCHED_AT_480Hz, GY_BATCHED_AT_960Hz, GY_BATCHED_AT_1920Hz, GY_BATCHED_AT_3840Hz, GY_BATCHED_AT_7680Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_fifo_gy_batch_get(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_fifo_gy_batch_t *val)
 {
@@ -5644,14 +4626,7 @@ int32_t lsm6dsv320x_fifo_gy_batch_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Enable FIFO Batch for hg XL data.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      0 (disable) / 1 (enabled)
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_hg_xl_batch_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_counter_bdr_reg1_t cbdr_reg;
@@ -5667,14 +4642,7 @@ int32_t lsm6dsv320x_fifo_hg_xl_batch_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Enable FIFO Batch for hg XL data.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      0 (disable) / 1 (enabled)
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_hg_xl_batch_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_counter_bdr_reg1_t cbdr_reg;
@@ -5691,14 +4659,7 @@ int32_t lsm6dsv320x_fifo_hg_xl_batch_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  FIFO mode selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      BYPASS_MODE, FIFO_MODE, STREAM_WTM_TO_FULL_MODE, STREAM_TO_FIFO_MODE, BYPASS_TO_STREAM_MODE, STREAM_MODE, BYPASS_TO_FIFO_MODE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_mode_t val)
 {
   lsm6dsv320x_fifo_ctrl4_t fifo_ctrl4;
@@ -5714,14 +4675,7 @@ int32_t lsm6dsv320x_fifo_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_mode
   return ret;
 }
 
-/**
-  * @brief  FIFO mode selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      BYPASS_MODE, FIFO_MODE, STREAM_WTM_TO_FULL_MODE, STREAM_TO_FIFO_MODE, BYPASS_TO_STREAM_MODE, STREAM_MODE, BYPASS_TO_FIFO_MODE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_mode_t *val)
 {
   lsm6dsv320x_fifo_ctrl4_t fifo_ctrl4;
@@ -5770,14 +4724,6 @@ int32_t lsm6dsv320x_fifo_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_mode
   return ret;
 }
 
-/**
-  * @brief  Enables FIFO batching of EIS gyroscope output values.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables FIFO batching of EIS gyroscope output values.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_fifo_gy_eis_batch_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_fifo_ctrl4_t fifo_ctrl4;
@@ -5793,14 +4739,7 @@ int32_t lsm6dsv320x_fifo_gy_eis_batch_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Enables FIFO batching of EIS gyroscope output values.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables FIFO batching of EIS gyroscope output values.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_gy_eis_batch_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_fifo_ctrl4_t fifo_ctrl4;
@@ -5817,14 +4756,7 @@ int32_t lsm6dsv320x_fifo_gy_eis_batch_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Selects batch data rate (write frequency in FIFO) for temperature data.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      TEMP_NOT_BATCHED, TEMP_BATCHED_AT_1Hz875, TEMP_BATCHED_AT_15Hz, TEMP_BATCHED_AT_60Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_temp_batch_set(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_fifo_temp_batch_t val)
 {
@@ -5841,14 +4773,7 @@ int32_t lsm6dsv320x_fifo_temp_batch_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects batch data rate (write frequency in FIFO) for temperature data.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      TEMP_NOT_BATCHED, TEMP_BATCHED_AT_1Hz875, TEMP_BATCHED_AT_15Hz, TEMP_BATCHED_AT_60Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_temp_batch_get(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_fifo_temp_batch_t *val)
 {
@@ -5886,14 +4811,7 @@ int32_t lsm6dsv320x_fifo_temp_batch_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects decimation for timestamp batching in FIFO. Write rate will be the maximum rate between XL and GYRO BDR divided by decimation decoder.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      TMSTMP_NOT_BATCHED, TMSTMP_DEC_1, TMSTMP_DEC_8, TMSTMP_DEC_32,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_timestamp_batch_set(const stmdev_ctx_t *ctx,
                                              lsm6dsv320x_fifo_timestamp_batch_t val)
 {
@@ -5910,14 +4828,7 @@ int32_t lsm6dsv320x_fifo_timestamp_batch_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects decimation for timestamp batching in FIFO. Write rate will be the maximum rate between XL and GYRO BDR divided by decimation decoder.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      TMSTMP_NOT_BATCHED, TMSTMP_DEC_1, TMSTMP_DEC_8, TMSTMP_DEC_32,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_timestamp_batch_get(const stmdev_ctx_t *ctx,
                                              lsm6dsv320x_fifo_timestamp_batch_t *val)
 {
@@ -5956,14 +4867,7 @@ int32_t lsm6dsv320x_fifo_timestamp_batch_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  The threshold for the internal counter of batch events. When this counter reaches the threshold, the counter is reset and the interrupt flag is set to 1.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      The threshold for the internal counter of batch events. When this counter reaches the threshold, the counter is reset and the interrupt flag is set to 1.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_batch_counter_threshold_set(const stmdev_ctx_t *ctx,
                                                      uint16_t val)
 {
@@ -5985,14 +4889,7 @@ int32_t lsm6dsv320x_fifo_batch_counter_threshold_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  The threshold for the internal counter of batch events. When this counter reaches the threshold, the counter is reset and the interrupt flag is set to 1.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      The threshold for the internal counter of batch events. When this counter reaches the threshold, the counter is reset and the interrupt flag is set to 1.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_batch_counter_threshold_get(const stmdev_ctx_t *ctx,
                                                      uint16_t *val)
 {
@@ -6011,14 +4908,6 @@ int32_t lsm6dsv320x_fifo_batch_counter_threshold_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects the trigger for the internal counter of batch events.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      lsm6dsv320x_fifo_batch_cnt_event_t struct
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_fifo_batch_cnt_event_set(const stmdev_ctx_t *ctx,
                                              lsm6dsv320x_fifo_batch_cnt_event_t val)
 {
@@ -6035,14 +4924,7 @@ int32_t lsm6dsv320x_fifo_batch_cnt_event_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects the trigger for the internal counter of batch events.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      lsm6dsv320x_fifo_batch_cnt_event_t struct
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_batch_cnt_event_get(const stmdev_ctx_t *ctx,
                                              lsm6dsv320x_fifo_batch_cnt_event_t *val)
 {
@@ -6108,14 +4990,7 @@ int32_t lsm6dsv320x_fifo_status_get(const stmdev_ctx_t *ctx,
 }
 
 
-/**
-  * @brief  FIFO data output[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FIFO tag
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_out_raw_get(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_fifo_out_raw_t *val)
 {
@@ -6270,14 +5145,7 @@ int32_t lsm6dsv320x_fifo_out_raw_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Batching in FIFO buffer of step counter value.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Batching in FIFO buffer of step counter value.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_stpcnt_batch_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_emb_func_fifo_en_a_t emb_func_fifo_en_a;
@@ -6304,14 +5172,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Batching in FIFO buffer of step counter value.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Batching in FIFO buffer of step counter value.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_stpcnt_batch_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_emb_func_fifo_en_a_t emb_func_fifo_en_a;
@@ -6336,14 +5197,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Batching in FIFO buffer of finite state machine results.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Batching in FIFO buffer of finite state machine results.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_fsm_batch_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_emb_func_fifo_en_b_t emb_func_fifo_en_b;
@@ -6370,14 +5224,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Batching in FIFO buffer of finite state machine results.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Batching in FIFO buffer of finite state machine results.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_fsm_batch_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_emb_func_fifo_en_b_t emb_func_fifo_en_b;
@@ -6402,14 +5249,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Batching in FIFO buffer of machine learning core results.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Batching in FIFO buffer of machine learning core results.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_mlc_batch_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_emb_func_fifo_en_a_t emb_func_fifo_en_a;
@@ -6436,14 +5276,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Batching in FIFO buffer of machine learning core results.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Batching in FIFO buffer of machine learning core results.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_mlc_batch_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_emb_func_fifo_en_a_t emb_func_fifo_en_a;
@@ -6468,14 +5301,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Enables batching in FIFO buffer of machine learning core filters and features.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables batching in FIFO buffer of machine learning core filters and features.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_mlc_filt_batch_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_emb_func_fifo_en_b_t emb_func_fifo_en_b;
@@ -6502,14 +5328,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Enables batching in FIFO buffer of machine learning core filters and features.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables batching in FIFO buffer of machine learning core filters and features.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_mlc_filt_batch_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_emb_func_fifo_en_b_t emb_func_fifo_en_b;
@@ -6534,14 +5353,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Enable FIFO data batching of target idx.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enable FIFO data batching of target idx.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_sh_batch_target_set(const stmdev_ctx_t *ctx, uint8_t idx, uint8_t val)
 {
   lsm6dsv320x_tgt0_config_t tgt_config;
@@ -6572,14 +5384,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Enable FIFO data batching of target idx.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enable FIFO data batching of target idx.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_sh_batch_target_get(const stmdev_ctx_t *ctx, uint8_t idx, uint8_t *val)
 {
   lsm6dsv320x_tgt0_config_t tgt_config;
@@ -6609,14 +5414,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Batching in FIFO buffer of SFLP.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Batching in FIFO buffer of SFLP values.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_sflp_batch_set(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_fifo_sflp_raw_t val)
 {
@@ -6646,14 +5444,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Batching in FIFO buffer of SFLP.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Batching in FIFO buffer of SFLP values.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fifo_sflp_batch_get(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_fifo_sflp_raw_t *val)
 {
@@ -6681,27 +5472,7 @@ exit:
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Filters
-  * @brief     This section group all the functions concerning the
-  *            filters configuration
-  * @{
-  *
-  */
-
-/**
-  * @brief  Protocol anti-spike filters.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      AUTO, ALWAYS_ACTIVE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_filt_anti_spike_set(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_filt_anti_spike_t val)
 {
@@ -6719,14 +5490,7 @@ int32_t lsm6dsv320x_filt_anti_spike_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Protocol anti-spike filters.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      AUTO, ALWAYS_ACTIVE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_anti_spike_get(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_filt_anti_spike_t *val)
 {
@@ -6757,14 +5521,7 @@ int32_t lsm6dsv320x_filt_anti_spike_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  It masks DRDY and Interrupts RQ until filter settling ends.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      It masks DRDY and Interrupts RQ until filter settling ends.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_settling_mask_set(const stmdev_ctx_t *ctx,
                                            lsm6dsv320x_filt_settling_mask_t val)
 {
@@ -6810,14 +5567,7 @@ int32_t lsm6dsv320x_filt_settling_mask_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  It masks DRDY and Interrupts RQ until filter settling ends.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      It masks DRDY and Interrupts RQ until filter settling ends.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_settling_mask_get(const stmdev_ctx_t *ctx,
                                            lsm6dsv320x_filt_settling_mask_t *val)
 {
@@ -6842,14 +5592,6 @@ int32_t lsm6dsv320x_filt_settling_mask_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  It masks DRDY and Interrupts RQ until filter settling ends.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      It masks DRDY and Interrupts RQ until filter settling ends from OIS interface.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_filt_ois_settling_mask_set(const stmdev_ctx_t *ctx,
                                                lsm6dsv320x_filt_ois_settling_mask_t val)
 {
@@ -6867,14 +5609,7 @@ int32_t lsm6dsv320x_filt_ois_settling_mask_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  It masks DRDY and Interrupts RQ until filter settling ends.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      It masks DRDY and Interrupts RQ until filter settling ends.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_ois_settling_mask_get(const stmdev_ctx_t *ctx,
                                                lsm6dsv320x_filt_ois_settling_mask_t *val)
 {
@@ -6893,14 +5628,7 @@ int32_t lsm6dsv320x_filt_ois_settling_mask_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Gyroscope low-pass filter (LPF1) bandwidth selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      GY_ULTRA_LIGHT, GY_VERY_LIGHT, GY_LIGHT, GY_MEDIUM, GY_STRONG, GY_VERY_STRONG, GY_AGGRESSIVE, GY_XTREME,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_gy_lp1_bandwidth_set(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_filt_gy_lp1_bandwidth_t val)
 {
@@ -6917,14 +5645,7 @@ int32_t lsm6dsv320x_filt_gy_lp1_bandwidth_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Gyroscope low-pass filter (LPF1) bandwidth selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      GY_ULTRA_LIGHT, GY_VERY_LIGHT, GY_LIGHT, GY_MEDIUM, GY_STRONG, GY_VERY_STRONG, GY_AGGRESSIVE, GY_XTREME,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_gy_lp1_bandwidth_get(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_filt_gy_lp1_bandwidth_t *val)
 {
@@ -6979,14 +5700,7 @@ int32_t lsm6dsv320x_filt_gy_lp1_bandwidth_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  It enables gyroscope digital LPF1 filter.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      It enables gyroscope digital LPF1 filter.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_gy_lp1_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_ctrl7_t ctrl7;
@@ -7003,14 +5717,7 @@ int32_t lsm6dsv320x_filt_gy_lp1_set(const stmdev_ctx_t *ctx, uint8_t val)
 }
 
 
-/**
-  * @brief  It enables gyroscope digital LPF1 filter.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      It enables gyroscope digital LPF1 filter.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_gy_lp1_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_ctrl7_t ctrl7;
@@ -7027,19 +5734,6 @@ int32_t lsm6dsv320x_filt_gy_lp1_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief Setup xl filter pipeline from lpf1 filter to UI.
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  filter   LSM6DSV320X_XL_FILT_LP_LPF2, LSM6DSV320X_XL_FILT_LP_LPF1,
-  *                  LSM6DSV320X_XL_FILT_HP, LSM6DSV320X_XL_FILT_HP_SLOPE.
-  * @param  bw       LSM6DSV320X_GY_ULTRA_LIGHT, LSM6DSV320X_GY_VERY_LIGHT,
-  *                  LSM6DSV320X_GY_LIGHT, LSM6DSV320X_GY_MEDIUM, LSM6DSV320X_GY_STRONG,
-  *                  LSM6DSV320X_GY_VERY_STRONG, LSM6DSV320X_GY_AGGRESSIVE, LSM6DSV320X_GY_XTREME
-  * @param  ref_mode Enables reference mode (Availabe only in LSM6DSV320X_XL_FILT_HP mode)
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_filt_xl_setup(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_filter filter,
                                   lsm6dsv320x_filt_xl_lp2_bandwidth_t bw, uint8_t hp_ref_mode_xl)
 {
@@ -7101,14 +5795,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Accelerometer LPF2 and high pass filter configuration and cutoff setting.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      XL_ULTRA_LIGHT, XL_VERY_LIGHT, XL_LIGHT, XL_MEDIUM, XL_STRONG, XL_VERY_STRONG, XL_AGGRESSIVE, XL_XTREME,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_xl_lp2_bandwidth_set(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_filt_xl_lp2_bandwidth_t val)
 {
@@ -7125,14 +5812,7 @@ int32_t lsm6dsv320x_filt_xl_lp2_bandwidth_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Accelerometer LPF2 and high pass filter configuration and cutoff setting.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      XL_ULTRA_LIGHT, XL_VERY_LIGHT, XL_LIGHT, XL_MEDIUM, XL_STRONG, XL_VERY_STRONG, XL_AGGRESSIVE, XL_XTREME,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_xl_lp2_bandwidth_get(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_filt_xl_lp2_bandwidth_t *val)
 {
@@ -7187,14 +5867,7 @@ int32_t lsm6dsv320x_filt_xl_lp2_bandwidth_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Enable accelerometer LPS2 (Low Pass Filter 2) filtering stage.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enable accelerometer LPS2 (Low Pass Filter 2) filtering stage.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_xl_lp2_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_ctrl9_t ctrl9;
@@ -7210,14 +5883,7 @@ int32_t lsm6dsv320x_filt_xl_lp2_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Enable accelerometer LPS2 (Low Pass Filter 2) filtering stage.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enable accelerometer LPS2 (Low Pass Filter 2) filtering stage.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_xl_lp2_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_ctrl9_t ctrl9;
@@ -7234,14 +5900,6 @@ int32_t lsm6dsv320x_filt_xl_lp2_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Accelerometer slope filter / high-pass filter selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Accelerometer slope filter / high-pass filter selection.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_filt_xl_hp_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_ctrl9_t ctrl9;
@@ -7257,14 +5915,7 @@ int32_t lsm6dsv320x_filt_xl_hp_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Accelerometer slope filter / high-pass filter selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Accelerometer slope filter / high-pass filter selection.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_xl_hp_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_ctrl9_t ctrl9;
@@ -7281,14 +5932,6 @@ int32_t lsm6dsv320x_filt_xl_hp_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Enables accelerometer LPF2 and HPF fast-settling mode. The filter sets the first sample.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables accelerometer LPF2 and HPF fast-settling mode. The filter sets the first sample.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_filt_xl_fast_settling_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_ctrl9_t ctrl9;
@@ -7304,14 +5947,7 @@ int32_t lsm6dsv320x_filt_xl_fast_settling_set(const stmdev_ctx_t *ctx, uint8_t v
   return ret;
 }
 
-/**
-  * @brief  Enables accelerometer LPF2 and HPF fast-settling mode. The filter sets the first sample.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables accelerometer LPF2 and HPF fast-settling mode. The filter sets the first sample.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_xl_fast_settling_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_ctrl9_t ctrl9;
@@ -7328,14 +5964,6 @@ int32_t lsm6dsv320x_filt_xl_fast_settling_get(const stmdev_ctx_t *ctx, uint8_t *
   return ret;
 }
 
-/**
-  * @brief  Accelerometer high-pass filter mode.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      HP_MD_NORMAL_SLOPE_ON, HP_MD_NORMAL_SLOPE_OFF HP_MD_REFERENCE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_filt_xl_hp_mode_set(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_filt_xl_hp_mode_t val)
 {
@@ -7353,14 +5981,7 @@ int32_t lsm6dsv320x_filt_xl_hp_mode_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Accelerometer high-pass filter mode.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      HP_MD_NORMAL_SLOPE_ON, HP_MD_NORMAL_SLOPE_OFF, HP_MD_REFERENCE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_xl_hp_mode_get(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_filt_xl_hp_mode_t *val)
 {
@@ -7396,14 +6017,7 @@ int32_t lsm6dsv320x_filt_xl_hp_mode_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  HPF or SLOPE filter selection on wake-up and Activity/Inactivity functions.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      WK_FEED_SLOPE, WK_FEED_HIGH_PASS, WK_FEED_LP_WITH_OFFSET,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_wkup_act_feed_set(const stmdev_ctx_t *ctx,
                                            lsm6dsv320x_filt_wkup_act_feed_t val)
 {
@@ -7431,14 +6045,7 @@ int32_t lsm6dsv320x_filt_wkup_act_feed_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  HPF or SLOPE filter selection on wake-up and Activity/Inactivity functions.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      WK_FEED_SLOPE, WK_FEED_HIGH_PASS, WK_FEED_LP_WITH_OFFSET,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_wkup_act_feed_get(const stmdev_ctx_t *ctx,
                                            lsm6dsv320x_filt_wkup_act_feed_t *val)
 {
@@ -7475,14 +6082,7 @@ int32_t lsm6dsv320x_filt_wkup_act_feed_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Mask hw function triggers when xl is settling.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      0 or 1,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_mask_trigger_xl_settl_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_tap_cfg0_t tap_cfg0;
@@ -7499,14 +6099,7 @@ int32_t lsm6dsv320x_mask_trigger_xl_settl_set(const stmdev_ctx_t *ctx, uint8_t v
   return ret;
 }
 
-/**
-  * @brief  Mask hw function triggers when xl is settling.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      0 or 1,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_mask_trigger_xl_settl_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_tap_cfg0_t tap_cfg0;
@@ -7523,14 +6116,7 @@ int32_t lsm6dsv320x_mask_trigger_xl_settl_get(const stmdev_ctx_t *ctx, uint8_t *
   return ret;
 }
 
-/**
-  * @brief  LPF2 filter on 6D (sixd) function selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SIXD_FEED_ODR_DIV_2, SIXD_FEED_LOW_PASS,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_sixd_feed_set(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_filt_sixd_feed_t val)
 {
@@ -7548,14 +6134,7 @@ int32_t lsm6dsv320x_filt_sixd_feed_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  LPF2 filter on 6D (sixd) function selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SIXD_FEED_ODR_DIV_2, SIXD_FEED_LOW_PASS,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_sixd_feed_get(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_filt_sixd_feed_t *val)
 {
@@ -7586,14 +6165,6 @@ int32_t lsm6dsv320x_filt_sixd_feed_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Gyroscope digital LPF_EIS filter bandwidth selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      EIS_LP_NORMAL, EIS_LP_LIGHT,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_filt_gy_eis_lp_bandwidth_set(const stmdev_ctx_t *ctx,
                                                  lsm6dsv320x_filt_gy_eis_lp_bandwidth_t val)
 {
@@ -7611,14 +6182,7 @@ int32_t lsm6dsv320x_filt_gy_eis_lp_bandwidth_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Gyroscope digital LPF_EIS filter bandwidth selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      EIS_LP_NORMAL, EIS_LP_LIGHT,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_gy_eis_lp_bandwidth_get(const stmdev_ctx_t *ctx,
                                                  lsm6dsv320x_filt_gy_eis_lp_bandwidth_t *val)
 {
@@ -7649,14 +6213,7 @@ int32_t lsm6dsv320x_filt_gy_eis_lp_bandwidth_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Gyroscope OIS digital LPF1 filter bandwidth selection. This function works also on OIS interface (IF2_CTRL2_OIS = UI_CTRL2_OIS).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      OIS_GY_LP_NORMAL, OIS_GY_LP_STRONG, OIS_GY_LP_AGGRESSIVE, OIS_GY_LP_LIGHT,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_gy_ois_lp_bandwidth_set(const stmdev_ctx_t *ctx,
                                                  lsm6dsv320x_filt_gy_ois_lp_bandwidth_t val)
 {
@@ -7674,14 +6231,7 @@ int32_t lsm6dsv320x_filt_gy_ois_lp_bandwidth_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Gyroscope OIS digital LPF1 filter bandwidth selection. This function works also on OIS interface (IF2_CTRL2_OIS = UI_CTRL2_OIS).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      OIS_GY_LP_NORMAL, OIS_GY_LP_STRONG, OIS_GY_LP_AGGRESSIVE, OIS_GY_LP_LIGHT,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_gy_ois_lp_bandwidth_get(const stmdev_ctx_t *ctx,
                                                  lsm6dsv320x_filt_gy_ois_lp_bandwidth_t *val)
 {
@@ -7721,14 +6271,7 @@ int32_t lsm6dsv320x_filt_gy_ois_lp_bandwidth_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects accelerometer OIS channel bandwidth. This function works also on OIS interface (IF2_CTRL3_OIS = UI_CTRL3_OIS).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      OIS_XL_LP_ULTRA_LIGHT, OIS_XL_LP_VERY_LIGHT, OIS_XL_LP_LIGHT, OIS_XL_LP_NORMAL, OIS_XL_LP_STRONG, OIS_XL_LP_VERY_STRONG, OIS_XL_LP_AGGRESSIVE, OIS_XL_LP_XTREME,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_xl_ois_lp_bandwidth_set(const stmdev_ctx_t *ctx,
                                                  lsm6dsv320x_filt_xl_ois_lp_bandwidth_t val)
 {
@@ -7746,14 +6289,7 @@ int32_t lsm6dsv320x_filt_xl_ois_lp_bandwidth_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects accelerometer OIS channel bandwidth. This function works also on OIS interface (IF2_CTRL3_OIS = UI_CTRL3_OIS).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      OIS_XL_LP_ULTRA_LIGHT, OIS_XL_LP_VERY_LIGHT, OIS_XL_LP_LIGHT, OIS_XL_LP_NORMAL, OIS_XL_LP_STRONG, OIS_XL_LP_VERY_STRONG, OIS_XL_LP_AGGRESSIVE, OIS_XL_LP_XTREME,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_filt_xl_ois_lp_bandwidth_get(const stmdev_ctx_t *ctx,
                                                  lsm6dsv320x_filt_xl_ois_lp_bandwidth_t *val)
 {
@@ -7808,27 +6344,7 @@ int32_t lsm6dsv320x_filt_xl_ois_lp_bandwidth_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Finite State Machine (FSM)
-  * @brief     This section groups all the functions that manage the
-  *            state_machine.
-  * @{
-  *
-  */
-
-/**
-  * @brief  Enables the control of the CTRL registers to FSM (FSM can change some configurations of the device autonomously).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      PROTECT_CTRL_REGS, WRITE_CTRL_REG,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_fsm_permission_set(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_fsm_permission_t val)
 {
@@ -7846,14 +6362,7 @@ int32_t lsm6dsv320x_fsm_permission_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Enables the control of the CTRL registers to FSM (FSM can change some configurations of the device autonomously).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      PROTECT_CTRL_REGS, WRITE_CTRL_REG,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_permission_get(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_fsm_permission_t *val)
 {
@@ -7884,14 +6393,7 @@ int32_t lsm6dsv320x_fsm_permission_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Get the FSM permission status
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      0: All reg writable from std if - 1: some regs are under FSM control.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_permission_status(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_ctrl_status_t ctrl_status;
@@ -7908,14 +6410,7 @@ int32_t lsm6dsv320x_fsm_permission_status(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Enable Finite State Machine (FSM) feature.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enable Finite State Machine (FSM) feature.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_fsm_mode_t val)
 {
   lsm6dsv320x_emb_func_en_b_t emb_func_en_b;
@@ -7963,14 +6458,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Enable Finite State Machine (FSM) feature.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enable Finite State Machine (FSM) feature.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_fsm_mode_t *val)
 {
   lsm6dsv320x_fsm_enable_t fsm_enable;
@@ -8003,14 +6491,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  FSM long counter status register. Long counter value is an unsigned integer value (16-bit format).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FSM long counter status register. Long counter value is an unsigned integer value (16-bit format).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_long_cnt_set(const stmdev_ctx_t *ctx, uint16_t val)
 {
   uint8_t buff[2];
@@ -8033,14 +6514,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  FSM long counter status register. Long counter value is an unsigned integer value (16-bit format).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FSM long counter status register. Long counter value is an unsigned integer value (16-bit format).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_long_cnt_get(const stmdev_ctx_t *ctx, uint16_t *val)
 {
   uint8_t buff[2];
@@ -8067,14 +6541,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  FSM output registers[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FSM output registers
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_out_get(const stmdev_ctx_t *ctx, lsm6dsv320x_fsm_out_t *val)
 {
   int32_t ret;
@@ -8093,14 +6560,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Finite State Machine Output Data Rate (ODR) configuration.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FSM_15Hz, FSM_30Hz, FSM_60Hz, FSM_120Hz, FSM_240Hz, FSM_480Hz, FSM_960Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_data_rate_set(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_fsm_data_rate_t val)
 {
@@ -8127,14 +6587,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Finite State Machine Output Data Rate (ODR) configuration.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FSM_15Hz, FSM_30Hz, FSM_60Hz, FSM_120Hz, FSM_240Hz, FSM_480Hz, FSM_960Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_data_rate_get(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_fsm_data_rate_t *val)
 {
@@ -8399,16 +6852,7 @@ static float_t npy_half_to_float(uint16_t h)
   return conv.f;
 }
 
-/**
-  * @brief  SFLP GBIAS value. The register value is expressed as half-precision
-  *         floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent
-  *          bits; F: 10 fraction bits).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      GBIAS x/y/z val.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sflp_game_gbias_set(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_sflp_gbias_t *val)
 {
@@ -8466,14 +6910,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  External sensor sensitivity value register for the Finite State Machine (r/w). This register corresponds to the conversion value of the external sensor. The register value is expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits). Default value is 0x1624 (when using an external magnetometer this value corresponds to 0.0015 gauss/LSB).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      External sensor sensitivity value register for the Finite State Machine (r/w). This register corresponds to the conversion value of the external sensor. The register value is expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits). Default value is 0x1624 (when using an external magnetometer this value corresponds to 0.0015 gauss/LSB).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_ext_sens_sensitivity_set(const stmdev_ctx_t *ctx, uint16_t val)
 {
   uint8_t buff[2];
@@ -8486,14 +6923,6 @@ int32_t lsm6dsv320x_fsm_ext_sens_sensitivity_set(const stmdev_ctx_t *ctx, uint16
   return ret;
 }
 
-/**
-  * @brief  External sensor sensitivity value register for the Finite State Machine (r/w). This register corresponds to the conversion value of the external sensor. The register value is expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits). Default value is 0x1624 (when using an external magnetometer this value corresponds to 0.0015 gauss/LSB).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      External sensor sensitivity value register for the Finite State Machine (r/w). This register corresponds to the conversion value of the external sensor. The register value is expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits). Default value is 0x1624 (when using an external magnetometer this value corresponds to 0.0015 gauss/LSB).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_fsm_ext_sens_sensitivity_get(const stmdev_ctx_t *ctx,
                                                  uint16_t *val)
 {
@@ -8512,14 +6941,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_sensitivity_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  External sensor offsets (X,Y,Z). The values are expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      External sensor offsets (X,Y,Z). The values are expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_ext_sens_offset_set(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_xl_fsm_ext_sens_offset_t val)
 {
@@ -8537,14 +6959,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_offset_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  External sensor offsets (X,Y,Z). The values are expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      External sensor offsets (X,Y,Z). The values are expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_ext_sens_offset_get(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_xl_fsm_ext_sens_offset_t *val)
 {
@@ -8567,14 +6982,6 @@ int32_t lsm6dsv320x_fsm_ext_sens_offset_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  External sensor transformation matrix. The value is expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      External sensor transformation matrix. The value is expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_fsm_ext_sens_matrix_set(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_xl_fsm_ext_sens_matrix_t val)
 {
@@ -8598,14 +7005,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_matrix_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  External sensor transformation matrix. The value is expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      External sensor transformation matrix. The value is expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_ext_sens_matrix_get(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_xl_fsm_ext_sens_matrix_t *val)
 {
@@ -8634,14 +7034,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_matrix_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  External sensor z-axis coordinates rotation.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Z_EQ_Y, Z_EQ_MIN_Y, Z_EQ_X, Z_EQ_MIN_X, Z_EQ_MIN_Z, Z_EQ_Z,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_ext_sens_z_orient_set(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_fsm_ext_sens_z_orient_t val)
 {
@@ -8659,14 +7052,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_z_orient_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  External sensor z-axis coordinates rotation.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Z_EQ_Y, Z_EQ_MIN_Y, Z_EQ_X, Z_EQ_MIN_X, Z_EQ_MIN_Z, Z_EQ_Z,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_ext_sens_z_orient_get(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_fsm_ext_sens_z_orient_t *val)
 {
@@ -8713,14 +7099,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_z_orient_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  External sensor Y-axis coordinates rotation.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Y_EQ_Y, Y_EQ_MIN_Y, Y_EQ_X, Y_EQ_MIN_X, Y_EQ_MIN_Z, Y_EQ_Z,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_ext_sens_y_orient_set(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_fsm_ext_sens_y_orient_t val)
 {
@@ -8737,14 +7116,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_y_orient_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  External sensor Y-axis coordinates rotation.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Y_EQ_Y, Y_EQ_MIN_Y, Y_EQ_X, Y_EQ_MIN_X, Y_EQ_MIN_Z, Y_EQ_Z,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_ext_sens_y_orient_get(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_fsm_ext_sens_y_orient_t *val)
 {
@@ -8791,14 +7163,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_y_orient_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  External sensor X-axis coordinates rotation.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      X_EQ_Y, X_EQ_MIN_Y, X_EQ_X, X_EQ_MIN_X, X_EQ_MIN_Z, X_EQ_Z,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_ext_sens_x_orient_set(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_fsm_ext_sens_x_orient_t val)
 {
@@ -8815,14 +7180,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_x_orient_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  External sensor X-axis coordinates rotation.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      X_EQ_Y, X_EQ_MIN_Y, X_EQ_X, X_EQ_MIN_X, X_EQ_MIN_Z, X_EQ_Z,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_ext_sens_x_orient_get(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_fsm_ext_sens_x_orient_t *val)
 {
@@ -8869,14 +7227,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_x_orient_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  High-g accelerometer peak tracking enable.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      0: disable, 1: enable
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_xl_hg_peak_tracking_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_emb_func_init_b_t emb_func_init_b;
@@ -8902,14 +7253,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  High-g accelerometer peak tracking enable.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      0: disable, 1: enable
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_xl_hg_peak_tracking_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_emb_func_init_b_t emb_func_init_b;
@@ -8934,14 +7278,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Hihg-g accelerometer sensitivity value register for FSM and MLC.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Hihg-g accelerometer sensitivity value
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_xl_hg_sensitivity_set(const stmdev_ctx_t *ctx, uint16_t val)
 {
   uint8_t buff[2];
@@ -8955,14 +7292,7 @@ int32_t lsm6dsv320x_xl_hg_sensitivity_set(const stmdev_ctx_t *ctx, uint16_t val)
   return ret;
 }
 
-/**
-  * @brief  Hihg-g accelerometer sensitivity value register for FSM and MLC.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Hihg-g accelerometer sensitivity value
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_xl_hg_sensitivity_get(const stmdev_ctx_t *ctx, uint16_t *val)
 {
   uint8_t buff[2];
@@ -8981,14 +7311,7 @@ int32_t lsm6dsv320x_xl_hg_sensitivity_get(const stmdev_ctx_t *ctx, uint16_t *val
   return ret;
 }
 
-/**
-  * @brief  FSM long counter timeout. The long counter timeout value is an unsigned integer value (16-bit format). When the long counter value reached this value, the FSM generates an interrupt.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FSM long counter timeout. The long counter timeout value is an unsigned integer value (16-bit format). When the long counter value reached this value, the FSM generates an interrupt.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_long_cnt_timeout_set(const stmdev_ctx_t *ctx, uint16_t val)
 {
   uint8_t buff[2];
@@ -9002,14 +7325,6 @@ int32_t lsm6dsv320x_fsm_long_cnt_timeout_set(const stmdev_ctx_t *ctx, uint16_t v
   return ret;
 }
 
-/**
-  * @brief  FSM long counter timeout. The long counter timeout value is an unsigned integer value (16-bit format). When the long counter value reached this value, the FSM generates an interrupt.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FSM long counter timeout. The long counter timeout value is an unsigned integer value (16-bit format). When the long counter value reached this value, the FSM generates an interrupt.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_fsm_long_cnt_timeout_get(const stmdev_ctx_t *ctx, uint16_t *val)
 {
   uint8_t buff[2];
@@ -9028,14 +7343,7 @@ int32_t lsm6dsv320x_fsm_long_cnt_timeout_get(const stmdev_ctx_t *ctx, uint16_t *
   return ret;
 }
 
-/**
-  * @brief  FSM number of programs.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FSM number of programs.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_number_of_programs_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_fsm_programs_t fsm_programs;
@@ -9053,14 +7361,7 @@ int32_t lsm6dsv320x_fsm_number_of_programs_set(const stmdev_ctx_t *ctx, uint8_t 
   return ret;
 }
 
-/**
-  * @brief  FSM number of programs.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FSM number of programs.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_number_of_programs_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_fsm_programs_t fsm_programs;
@@ -9076,14 +7377,7 @@ int32_t lsm6dsv320x_fsm_number_of_programs_get(const stmdev_ctx_t *ctx, uint8_t 
   return ret;
 }
 
-/**
-  * @brief  FSM start address. First available address is 0x35C.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FSM start address. First available address is 0x35C.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_start_address_set(const stmdev_ctx_t *ctx, uint16_t val)
 {
   uint8_t buff[2];
@@ -9097,14 +7391,7 @@ int32_t lsm6dsv320x_fsm_start_address_set(const stmdev_ctx_t *ctx, uint16_t val)
   return ret;
 }
 
-/**
-  * @brief  FSM start address. First available address is 0x35C.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      FSM start address. First available address is 0x35C.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_fsm_start_address_get(const stmdev_ctx_t *ctx, uint16_t *val)
 {
   uint8_t buff[2];
@@ -9123,27 +7410,7 @@ int32_t lsm6dsv320x_fsm_start_address_get(const stmdev_ctx_t *ctx, uint16_t *val
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Free fall
-  * @brief     This section group all the functions concerning the free
-  *            fall detection.
-  * @{
-  *
-  */
-
-/**
-  * @brief  Time windows configuration for Free Fall detection 1 LSB = 1/ODR_XL time[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Time windows configuration for Free Fall detection 1 LSB = 1/ODR_XL time
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_ff_time_windows_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_wake_up_dur_t wake_up_dur;
@@ -9173,14 +7440,7 @@ int32_t lsm6dsv320x_ff_time_windows_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Time windows configuration for Free Fall detection 1 LSB = 1/ODR_XL time[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Time windows configuration for Free Fall detection 1 LSB = 1/ODR_XL time
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ff_time_windows_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_wake_up_dur_t wake_up_dur;
@@ -9199,14 +7459,7 @@ int32_t lsm6dsv320x_ff_time_windows_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Free fall threshold setting.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      156_mg, 219_mg, 250_mg, 312_mg, 344_mg, 406_mg, 469_mg, 500_mg,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ff_thresholds_set(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_ff_thresholds_t val)
 {
@@ -9223,14 +7476,7 @@ int32_t lsm6dsv320x_ff_thresholds_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Free fall threshold setting.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      156_mg, 219_mg, 250_mg, 312_mg, 344_mg, 406_mg, 469_mg, 500_mg,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ff_thresholds_get(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_ff_thresholds_t *val)
 {
@@ -9285,27 +7531,7 @@ int32_t lsm6dsv320x_ff_thresholds_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Machine Learning Core (MLC)
-  * @brief      This section group all the functions concerning the
-  *             usage of Machine Learning Core
-  * @{
-  *
-  */
-
-/**
-  * @brief  It enables Machine Learning Core feature (MLC). When the Machine Learning Core is enabled the Finite State Machine (FSM) programs are executed before executing the MLC algorithms.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      MLC_OFF, MLC_ON, MLC_BEFORE_FSM,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_mlc_set(const stmdev_ctx_t *ctx, lsm6dsv320x_mlc_mode_t val)
 {
   lsm6dsv320x_emb_func_en_b_t emb_en_b;
@@ -9351,14 +7577,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  It enables Machine Learning Core feature (MLC). When the Machine Learning Core is enabled the Finite State Machine (FSM) programs are executed before executing the MLC algorithms.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      MLC_OFF, MLC_ON, MLC_BEFORE_FSM,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_mlc_get(const stmdev_ctx_t *ctx, lsm6dsv320x_mlc_mode_t *val)
 {
   lsm6dsv320x_emb_func_en_b_t emb_en_b;
@@ -9400,14 +7619,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Machine Learning Core Output Data Rate (ODR) configuration.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      MLC_15Hz, MLC_30Hz, MLC_60Hz, MLC_120Hz, MLC_240Hz, MLC_480Hz, MLC_960Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_mlc_data_rate_set(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_mlc_data_rate_t val)
 {
@@ -9434,14 +7646,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Machine Learning Core Output Data Rate (ODR) configuration.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      MLC_15Hz, MLC_30Hz, MLC_60Hz, MLC_120Hz, MLC_240Hz, MLC_480Hz, MLC_960Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_mlc_data_rate_get(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_mlc_data_rate_t *val)
 {
@@ -9494,14 +7699,7 @@ int32_t lsm6dsv320x_mlc_data_rate_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Output value of all MLC decision trees.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Output value of all MLC decision trees.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_mlc_out_get(const stmdev_ctx_t *ctx, lsm6dsv320x_mlc_out_t *val)
 {
   int32_t ret;
@@ -9516,14 +7714,7 @@ int32_t lsm6dsv320x_mlc_out_get(const stmdev_ctx_t *ctx, lsm6dsv320x_mlc_out_t *
   return ret;
 }
 
-/**
-  * @brief  External sensor sensitivity value register for the Machine Learning Core. This register corresponds to the conversion value of the external sensor. The register value is expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits).Default value is 0x3C00 (when using an external magnetometer this value corresponds to 1 gauss/LSB).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      External sensor sensitivity value register for the Machine Learning Core. This register corresponds to the conversion value of the external sensor. The register value is expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits).Default value is 0x3C00 (when using an external magnetometer this value corresponds to 1 gauss/LSB).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_mlc_ext_sens_sensitivity_set(const stmdev_ctx_t *ctx, uint16_t val)
 {
   uint8_t buff[2];
@@ -9538,14 +7729,6 @@ int32_t lsm6dsv320x_mlc_ext_sens_sensitivity_set(const stmdev_ctx_t *ctx, uint16
   return ret;
 }
 
-/**
-  * @brief  External sensor sensitivity value register for the Machine Learning Core. This register corresponds to the conversion value of the external sensor. The register value is expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits).Default value is 0x3C00 (when using an external magnetometer this value corresponds to 1 gauss/LSB).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      External sensor sensitivity value register for the Machine Learning Core. This register corresponds to the conversion value of the external sensor. The register value is expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits).Default value is 0x3C00 (when using an external magnetometer this value corresponds to 1 gauss/LSB).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_mlc_ext_sens_sensitivity_get(const stmdev_ctx_t *ctx,
                                                  uint16_t *val)
 {
@@ -9565,27 +7748,6 @@ int32_t lsm6dsv320x_mlc_ext_sens_sensitivity_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
-
-/**
-  * @defgroup  Optical Image Stabilization (OIS)
-  * @brief     This section groups all the functions concerning
-  *            Optical Image Stabilization (OIS).
-  * @{
-  *
-  */
-
-/**
-  * @brief  Enable the full control of OIS configurations from the UI (User Interface).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      OIS_CTRL_FROM_OIS, OIS_CTRL_FROM_UI,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_ois_ctrl_mode_set(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_ois_ctrl_mode_t val)
 {
@@ -9602,14 +7764,7 @@ int32_t lsm6dsv320x_ois_ctrl_mode_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Enable the full control of OIS configurations from the UI (User Interface).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      OIS_CTRL_FROM_OIS, OIS_CTRL_FROM_UI,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_ctrl_mode_get(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_ois_ctrl_mode_t *val)
 {
@@ -9640,14 +7795,7 @@ int32_t lsm6dsv320x_ois_ctrl_mode_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Resets the control registers of OIS from the UI (User Interface)[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Resets the control registers of OIS from the UI (User Interface)
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_reset_set(const stmdev_ctx_t *ctx, int8_t val)
 {
   lsm6dsv320x_func_cfg_access_t func_cfg_access;
@@ -9663,14 +7811,7 @@ int32_t lsm6dsv320x_ois_reset_set(const stmdev_ctx_t *ctx, int8_t val)
   return ret;
 }
 
-/**
-  * @brief  Resets the control registers of OIS from the UI (User Interface)[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Resets the control registers of OIS from the UI (User Interface)
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_reset_get(const stmdev_ctx_t *ctx, int8_t *val)
 {
   lsm6dsv320x_func_cfg_access_t func_cfg_access;
@@ -9686,14 +7827,7 @@ int32_t lsm6dsv320x_ois_reset_get(const stmdev_ctx_t *ctx, int8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Enable/disable pull up on OIS interface.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enable/disable pull up on OIS interface.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_interface_pull_up_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_pin_ctrl_t pin_ctrl;
@@ -9709,14 +7843,7 @@ int32_t lsm6dsv320x_ois_interface_pull_up_set(const stmdev_ctx_t *ctx, uint8_t v
   return ret;
 }
 
-/**
-  * @brief  Enable/disable pull up on OIS interface.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enable/disable pull up on OIS interface.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_interface_pull_up_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_pin_ctrl_t pin_ctrl;
@@ -9732,14 +7859,7 @@ int32_t lsm6dsv320x_ois_interface_pull_up_get(const stmdev_ctx_t *ctx, uint8_t *
   return ret;
 }
 
-/**
-  * @brief  Handshake for (User Interface) UI / (OIS interface) IF2 shared registers. ACK: This bit acknowledges the handshake. If the secondary interface is not accessing the shared registers, this bit is set to 1 by the device and the R/W operation on the UI_IF2_SHARED registers is allowed on the primary interface. REQ: This bit is used by the primary interface controller to request access to the UI_IF2_SHARED registers. When the R/W operation is finished, the controller must reset this bit.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Handshake for (User Interface) UI / (OIS interface) IF2 shared registers. ACK: This bit acknowledges the handshake. If the secondary interface is not accessing the shared registers, this bit is set to 1 by the device and the R/W operation on the UI_IF2_SHARED registers is allowed on the primary interface. REQ: This bit is used by the primary interface controller to request access to the UI_IF2_SHARED registers. When the R/W operation is finished, the controller must reset this bit.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_handshake_from_ui_set(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_ois_handshake_t val)
 {
@@ -9757,14 +7877,6 @@ int32_t lsm6dsv320x_ois_handshake_from_ui_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Handshake for (User Interface) UI / (OIS interface) IF2 shared registers. ACK: This bit acknowledges the handshake. If the secondary interface is not accessing the shared registers, this bit is set to 1 by the device and the R/W operation on the UI_IF2_SHARED registers is allowed on the primary interface. REQ: This bit is used by the primary interface controller to request access to the UI_IF2_SHARED registers. When the R/W operation is finished, the controller must reset this bit.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Handshake for (User Interface) UI / (OIS interface) IF2 shared registers. ACK: This bit acknowledges the handshake. If the secondary interface is not accessing the shared registers, this bit is set to 1 by the device and the R/W operation on the UI_IF2_SHARED registers is allowed on the primary interface. REQ: This bit is used by the primary interface controller to request access to the UI_IF2_SHARED registers. When the R/W operation is finished, the controller must reset this bit.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_ois_handshake_from_ui_get(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_ois_handshake_t *val)
 {
@@ -9783,14 +7895,7 @@ int32_t lsm6dsv320x_ois_handshake_from_ui_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Handshake for (User Interface) UI / (OIS interface) IF2 shared registers. ACK: This bit acknowledges the handshake. If the secondary interface is not accessing the shared registers, this bit is set to 1 by the device and the R/W operation on the UI_IF2_SHARED registers is allowed on the primary interface. REQ: This bit is used by the primary interface controller to request access to the UI_IF2_SHARED registers. When the R/W operation is finished, the controller must reset this bit.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Handshake for (User Interface) UI / (OIS interface) IF2 shared registers. ACK: This bit acknowledges the handshake. If the secondary interface is not accessing the shared registers, this bit is set to 1 by the device and the R/W operation on the UI_IF2_SHARED registers is allowed on the primary interface. REQ: This bit is used by the primary interface controller to request access to the UI_IF2_SHARED registers. When the R/W operation is finished, the controller must reset this bit.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_handshake_from_ois_set(const stmdev_ctx_t *ctx,
                                                lsm6dsv320x_ois_handshake_t val)
 {
@@ -9808,14 +7913,6 @@ int32_t lsm6dsv320x_ois_handshake_from_ois_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Handshake for (User Interface) UI / (OIS interface) IF2 shared registers. ACK: This bit acknowledges the handshake. If the secondary interface is not accessing the shared registers, this bit is set to 1 by the device and the R/W operation on the UI_IF2_SHARED registers is allowed on the primary interface. REQ: This bit is used by the primary interface controller to request access to the UI_IF2_SHARED registers. When the R/W operation is finished, the controller must reset this bit.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Handshake for (User Interface) UI / (OIS interface) IF2 shared registers. ACK: This bit acknowledges the handshake. If the secondary interface is not accessing the shared registers, this bit is set to 1 by the device and the R/W operation on the UI_IF2_SHARED registers is allowed on the primary interface. REQ: This bit is used by the primary interface controller to request access to the UI_IF2_SHARED registers. When the R/W operation is finished, the controller must reset this bit.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_ois_handshake_from_ois_get(const stmdev_ctx_t *ctx,
                                                lsm6dsv320x_ois_handshake_t *val)
 {
@@ -9834,14 +7931,7 @@ int32_t lsm6dsv320x_ois_handshake_from_ois_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  User interface (UI) / IF2 (OIS) shared registers[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      User interface (UI) / IF2 (OIS) shared registers
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_shared_set(const stmdev_ctx_t *ctx, uint8_t val[6])
 {
   int32_t ret;
@@ -9851,14 +7941,6 @@ int32_t lsm6dsv320x_ois_shared_set(const stmdev_ctx_t *ctx, uint8_t val[6])
   return ret;
 }
 
-/**
-  * @brief  User interface (UI) / IF2 (OIS) shared registers[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      User interface (UI) / IF2 (OIS) shared registers
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_ois_shared_get(const stmdev_ctx_t *ctx, uint8_t val[6])
 {
   int32_t ret;
@@ -9868,14 +7950,7 @@ int32_t lsm6dsv320x_ois_shared_get(const stmdev_ctx_t *ctx, uint8_t val[6])
   return ret;
 }
 
-/**
-  * @brief  In User Interface (UI) full control mode, enables IF2 (OIS Interface) for reading OIS data. This function works also on OIS (UI_CTRL1_OIS = IF2_CTRL1_OIS).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      In User Interface (UI) full control mode, enables IF2 (OIS Interface) for reading OIS data.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_on_if2_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_ui_ctrl1_ois_t ui_ctrl1_ois;
@@ -9891,14 +7966,6 @@ int32_t lsm6dsv320x_ois_on_if2_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  In User Interface (UI) full control mode, enables IF2 (OIS Interface) for reading OIS data. This function works also on OIS (UI_CTRL1_OIS = IF2_CTRL1_OIS).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      In User Interface (UI) full control mode, enables IF2 (OIS Interface) for reading OIS data.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_ois_on_if2_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_ui_ctrl1_ois_t ui_ctrl1_ois;
@@ -9914,14 +7981,7 @@ int32_t lsm6dsv320x_ois_on_if2_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Enables gyroscope/accelerometer OIS chain. This function works also on OIS (UI_CTRL1_OIS = IF2_CTRL1_OIS).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables gyroscope/accelerometer OIS chain.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_chain_set(const stmdev_ctx_t *ctx, lsm6dsv320x_ois_chain_t val)
 {
   lsm6dsv320x_ui_ctrl1_ois_t ui_ctrl1_ois;
@@ -9938,14 +7998,7 @@ int32_t lsm6dsv320x_ois_chain_set(const stmdev_ctx_t *ctx, lsm6dsv320x_ois_chain
   return ret;
 }
 
-/**
-  * @brief  Enables gyroscope/accelerometer OIS chain.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables gyroscope/accelerometer OIS chain.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_chain_get(const stmdev_ctx_t *ctx, lsm6dsv320x_ois_chain_t *val)
 {
   lsm6dsv320x_ui_ctrl1_ois_t ui_ctrl1_ois;
@@ -9963,14 +8016,7 @@ int32_t lsm6dsv320x_ois_chain_get(const stmdev_ctx_t *ctx, lsm6dsv320x_ois_chain
   return ret;
 }
 
-/**
-  * @brief  Gyroscope OIS full-scale selection[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      OIS_250dps, OIS_500dps, OIS_1000dps, OIS_2000dps,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_gy_full_scale_set(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_ois_gy_full_scale_t val)
 {
@@ -9987,14 +8033,7 @@ int32_t lsm6dsv320x_ois_gy_full_scale_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Gyroscope OIS full-scale selection[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      OIS_250dps, OIS_500dps, OIS_1000dps, OIS_2000dps,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_gy_full_scale_get(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_ois_gy_full_scale_t *val)
 {
@@ -10033,14 +8072,7 @@ int32_t lsm6dsv320x_ois_gy_full_scale_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects accelerometer OIS channel full-scale.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      OIS_2g, OIS_4g, OIS_8g, OIS_16g,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_xl_full_scale_set(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_ois_xl_full_scale_t val)
 {
@@ -10057,14 +8089,7 @@ int32_t lsm6dsv320x_ois_xl_full_scale_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects accelerometer OIS channel full-scale.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      OIS_2g, OIS_4g, OIS_8g, OIS_16g,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ois_xl_full_scale_get(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_ois_xl_full_scale_t *val)
 {
@@ -10103,27 +8128,7 @@ int32_t lsm6dsv320x_ois_xl_full_scale_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Orientation 6D (and 4D)
-  * @brief     This section groups all the functions concerning six position
-  *            detection (6D).
-  * @{
-  *
-  */
-
-/**
-  * @brief  Threshold for 4D/6D function.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      DEG_80, DEG_70, DEG_60, DEG_50,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_6d_threshold_set(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_6d_threshold_t val)
 {
@@ -10140,14 +8145,7 @@ int32_t lsm6dsv320x_6d_threshold_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Threshold for 4D/6D function.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      DEG_80, DEG_70, DEG_60, DEG_50,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_6d_threshold_get(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_6d_threshold_t *val)
 {
@@ -10186,14 +8184,7 @@ int32_t lsm6dsv320x_6d_threshold_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  4D orientation detection enable. Z-axis position detection is disabled.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      4D orientation detection enable. Z-axis position detection is disabled.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_4d_mode_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_tap_ths_6d_t tap_ths_6d;
@@ -10209,14 +8200,7 @@ int32_t lsm6dsv320x_4d_mode_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  4D orientation detection enable. Z-axis position detection is disabled.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      4D orientation detection enable. Z-axis position detection is disabled.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_4d_mode_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_tap_ths_6d_t tap_ths_6d;
@@ -10233,27 +8217,7 @@ int32_t lsm6dsv320x_4d_mode_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  SenseWire (I3C)
-  * @brief     This section group all the functions concerning the
-  *            usage of SenseWire (I3C)
-  * @{
-  *
-  */
-
-/**
-  * @brief  I3C configuration.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      rst_mode, ibi_time, if2_ta0_pid
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_i3c_config_set(const stmdev_ctx_t *ctx,
                                    lsm6dsv320x_i3c_config_t val)
 {
@@ -10276,14 +8240,7 @@ int32_t lsm6dsv320x_i3c_config_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  I3C configuration.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      rst_mode, ibi_time, if2_ta0_pid
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_i3c_config_get(const stmdev_ctx_t *ctx,
                                    lsm6dsv320x_i3c_config_t *val)
 {
@@ -10346,27 +8303,7 @@ int32_t lsm6dsv320x_i3c_config_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Sensor hub
-  * @brief     This section groups all the functions that manage the
-  *            sensor hub.
-  * @{
-  *
-  */
-
-/**
-  * @brief  Sensor Hub controller I2C pull-up enable.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Sensor Hub controller I2C pull-up enable.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_sh_controller_interface_pull_up_set(const stmdev_ctx_t *ctx,
                                                         uint8_t val)
 {
@@ -10383,14 +8320,7 @@ int32_t lsm6dsv320x_sh_controller_interface_pull_up_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Sensor Hub controller I2C pull-up enable.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Sensor Hub controller I2C pull-up enable.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_controller_interface_pull_up_get(const stmdev_ctx_t *ctx,
                                                         uint8_t *val)
 {
@@ -10408,14 +8338,7 @@ int32_t lsm6dsv320x_sh_controller_interface_pull_up_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Sensor hub output registers.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Sensor hub output registers.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_read_data_raw_get(const stmdev_ctx_t *ctx, uint8_t *val,
                                          uint8_t len)
 {
@@ -10433,14 +8356,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Number of external sensors to be read by the sensor hub.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      TGT_0, TGT_0_1, TGT_0_1_2, TGT_0_1_2_3,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_target_connected_set(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_sh_target_connected_t val)
 {
@@ -10467,14 +8383,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Number of external sensors to be read by the sensor hub.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      TGT_0, TGT_0_1, TGT_0_1_2, TGT_0_1_2_3,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_target_connected_get(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_sh_target_connected_t *val)
 {
@@ -10515,14 +8424,7 @@ int32_t lsm6dsv320x_sh_target_connected_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Sensor hub I2C controller enable.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Sensor hub I2C controller enable.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_controller_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_controller_config_t controller_config;
@@ -10544,14 +8446,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Sensor hub I2C controller enable.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Sensor hub I2C controller enable.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_controller_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_controller_config_t controller_config;
@@ -10576,14 +8471,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  I2C interface pass-through.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      I2C interface pass-through.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_pass_through_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_controller_config_t controller_config;
@@ -10605,14 +8493,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  I2C interface pass-through.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      I2C interface pass-through.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_pass_through_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_controller_config_t controller_config;
@@ -10634,14 +8515,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Sensor hub trigger signal selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SH_TRG_XL_GY_DRDY, SH_TRIG_INT2,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_syncro_mode_set(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_sh_syncro_mode_t val)
 {
@@ -10665,14 +8539,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Sensor hub trigger signal selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SH_TRG_XL_GY_DRDY, SH_TRIG_INT2,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_syncro_mode_get(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_sh_syncro_mode_t *val)
 {
@@ -10705,14 +8572,7 @@ int32_t lsm6dsv320x_sh_syncro_mode_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Target 0 write operation is performed only at the first sensor hub cycle.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      EACH_SH_CYCLE, ONLY_FIRST_CYCLE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_write_mode_set(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_sh_write_mode_t val)
 {
@@ -10735,14 +8595,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Target 0 write operation is performed only at the first sensor hub cycle.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      EACH_SH_CYCLE, ONLY_FIRST_CYCLE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_write_mode_get(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_sh_write_mode_t *val)
 {
@@ -10775,14 +8628,7 @@ int32_t lsm6dsv320x_sh_write_mode_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Reset Controller logic and output registers. Must be set to ‘1’ and then set it to ‘0’.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Reset Controller logic and output registers. Must be set to ‘1’ and then set it to ‘0’.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_reset_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_controller_config_t controller_config;
@@ -10804,14 +8650,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Reset Controller logic and output registers. Must be set to ‘1’ and then set it to ‘0’.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Reset Controller logic and output registers. Must be set to ‘1’ and then set it to ‘0’.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_reset_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_controller_config_t controller_config;
@@ -10832,17 +8671,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Configure target 0 for perform a write.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      a structure that contain
-  *                      - uint8_t tgt1_add;    8 bit i2c device address
-  *                      - uint8_t tgt1_subadd; 8 bit register device address
-  *                      - uint8_t tgt1_data;   8 bit data to write
-  * @retval             interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_cfg_write(const stmdev_ctx_t *ctx,
                                  lsm6dsv320x_sh_cfg_write_t *val)
 {
@@ -10879,14 +8708,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Rate at which the controller communicates.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SH_15Hz, SH_30Hz, SH_60Hz, SH_120Hz, SH_240Hz, SH_480Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_data_rate_set(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_sh_data_rate_t val)
 {
@@ -10909,14 +8731,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Rate at which the controller communicates.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SH_15Hz, SH_30Hz, SH_60Hz, SH_120Hz, SH_240Hz, SH_480Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_data_rate_get(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_sh_data_rate_t *val)
 {
@@ -10968,17 +8783,7 @@ int32_t lsm6dsv320x_sh_data_rate_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Configure target idx for perform a read.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Structure that contain
-  *                      - uint8_t tgt_add;    8 bit i2c device address
-  *                      - uint8_t tgt_subadd; 8 bit register device address
-  *                      - uint8_t tgt_len;    num of bit to read
-  * @retval             interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_tgt_cfg_read(const stmdev_ctx_t *ctx, uint8_t idx,
                                     lsm6dsv320x_sh_cfg_read_t *val)
 {
@@ -11030,14 +8835,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Sensor hub source register.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      union of registers from STATUS_CONTROLLER to
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sh_status_get(const stmdev_ctx_t *ctx,
                                   lsm6dsv320x_status_controller_t *val)
 {
@@ -11048,27 +8846,7 @@ int32_t lsm6dsv320x_sh_status_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Serial interfaces
-  * @brief     This section groups all the functions concerning
-  *            serial interfaces management (not auxiliary)
-  * @{
-  *
-  */
-
-/**
-  * @brief  Enables pull-up on SDO pin of UI (User Interface).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables pull-up on SDO pin of UI (User Interface).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_ui_sdo_pull_up_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_pin_ctrl_t pin_ctrl;
@@ -11084,14 +8862,7 @@ int32_t lsm6dsv320x_ui_sdo_pull_up_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Enables pull-up on SDO pin of UI (User Interface).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables pull-up on SDO pin of UI (User Interface).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ui_sdo_pull_up_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_pin_ctrl_t pin_ctrl;
@@ -11108,14 +8879,6 @@ int32_t lsm6dsv320x_ui_sdo_pull_up_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Pad strength.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Pad strength
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_pad_strength_set(const stmdev_ctx_t *ctx, lsm6dsv320x_pad_strength_t val)
 {
   lsm6dsv320x_pin_ctrl_t pin_ctrl;
@@ -11131,14 +8894,7 @@ int32_t lsm6dsv320x_pad_strength_set(const stmdev_ctx_t *ctx, lsm6dsv320x_pad_st
   return ret;
 }
 
-/**
-  * @brief  Pad strength.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Pad strength
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_pad_strength_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pad_strength_t *val)
 {
   lsm6dsv320x_pin_ctrl_t pin_ctrl;
@@ -11169,14 +8925,7 @@ int32_t lsm6dsv320x_pad_strength_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pad_st
   return ret;
 }
 
-/**
-  * @brief  Disables I2C and I3C on UI (User Interface).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      I2C_I3C_ENABLE, I2C_I3C_DISABLE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ui_i2c_i3c_mode_set(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_ui_i2c_i3c_mode_t val)
 {
@@ -11193,14 +8942,7 @@ int32_t lsm6dsv320x_ui_i2c_i3c_mode_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Disables I2C and I3C on UI (User Interface).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      I2C_I3C_ENABLE, I2C_I3C_DISABLE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ui_i2c_i3c_mode_get(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_ui_i2c_i3c_mode_t *val)
 {
@@ -11231,14 +8973,7 @@ int32_t lsm6dsv320x_ui_i2c_i3c_mode_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  SPI Serial Interface Mode selection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SPI_4_WIRE, SPI_3_WIRE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_spi_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t val)
 {
   lsm6dsv320x_if_cfg_t if_cfg;
@@ -11254,14 +8989,7 @@ int32_t lsm6dsv320x_spi_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t
   return ret;
 }
 
-/**
-  * @brief  SPI Serial Interface Mode selection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SPI_4_WIRE, SPI_3_WIRE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_spi_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t *val)
 {
   lsm6dsv320x_if_cfg_t if_cfg;
@@ -11291,14 +9019,7 @@ int32_t lsm6dsv320x_spi_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t
   return ret;
 }
 
-/**
-  * @brief  Enables pull-up on SDA pin.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables pull-up on SDA pin.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ui_sda_pull_up_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_if_cfg_t if_cfg;
@@ -11314,14 +9035,7 @@ int32_t lsm6dsv320x_ui_sda_pull_up_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Enables pull-up on SDA pin.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables pull-up on SDA pin.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_ui_sda_pull_up_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_if_cfg_t if_cfg;
@@ -11338,14 +9052,6 @@ int32_t lsm6dsv320x_ui_sda_pull_up_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  IF2 (OIS Inteface) Serial Interface Mode selection. This function works also on OIS (UI_CTRL1_OIS = IF2_CTRL1_OIS).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SPI_4_WIRE, SPI_3_WIRE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_if2_spi_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t val)
 {
   lsm6dsv320x_ui_ctrl1_ois_t ui_ctrl1_ois;
@@ -11361,14 +9067,7 @@ int32_t lsm6dsv320x_if2_spi_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mo
   return ret;
 }
 
-/**
-  * @brief  IF2 (OIS Inteface) Serial Interface Mode selection. This function works also on OIS (UI_CTRL1_OIS = IF2_CTRL1_OIS).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SPI_4_WIRE, SPI_3_WIRE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_if2_spi_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t *val)
 {
   lsm6dsv320x_ui_ctrl1_ois_t ui_ctrl1_ois;
@@ -11398,28 +9097,7 @@ int32_t lsm6dsv320x_if2_spi_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mo
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Significant motion detection
-  * @brief     This section groups all the functions that manage the
-  *            significant motion detection.
-  * @{
-  *
-  */
-
-
-/**
-  * @brief  Enables significant motion detection function.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables significant motion detection function.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_sigmot_mode_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_emb_func_en_a_t emb_func_en_a;
@@ -11445,14 +9123,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Enables significant motion detection function.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables significant motion detection function.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sigmot_mode_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_emb_func_en_a_t emb_func_en_a;
@@ -11477,26 +9148,7 @@ exit:
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Step Counter (Pedometer)
-  * @brief     This section groups all the functions that manage pedometer.
-  * @{
-  *
-  */
-
-/**
-  * @brief  Step counter mode[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Step counter mode
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_stpcnt_mode_set(const stmdev_ctx_t *ctx,
                                     lsm6dsv320x_stpcnt_mode_t val)
 {
@@ -11547,14 +9199,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Step counter mode[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      false_step_rej, step_counter, step_detector,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_stpcnt_mode_get(const stmdev_ctx_t *ctx,
                                     lsm6dsv320x_stpcnt_mode_t *val)
 {
@@ -11583,14 +9228,7 @@ int32_t lsm6dsv320x_stpcnt_mode_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Step counter output, number of detected steps.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Step counter output, number of detected steps.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_stpcnt_steps_get(const stmdev_ctx_t *ctx, uint16_t *val)
 {
   uint8_t buff[2];
@@ -11610,14 +9248,7 @@ int32_t lsm6dsv320x_stpcnt_steps_get(const stmdev_ctx_t *ctx, uint16_t *val)
   return ret;
 }
 
-/**
-  * @brief  Reset step counter.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Reset step counter.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_stpcnt_rst_step_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_emb_func_src_t emb_func_src;
@@ -11644,14 +9275,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Reset step counter.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Reset step counter.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_stpcnt_rst_step_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_emb_func_src_t emb_func_src;
@@ -11676,14 +9300,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Pedometer debounce configuration.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Pedometer debounce configuration.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_stpcnt_debounce_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_pedo_deb_steps_conf_t pedo_deb_steps_conf;
@@ -11701,14 +9318,7 @@ int32_t lsm6dsv320x_stpcnt_debounce_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Pedometer debounce configuration.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Pedometer debounce configuration.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_stpcnt_debounce_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_pedo_deb_steps_conf_t pedo_deb_steps_conf;
@@ -11725,14 +9335,7 @@ int32_t lsm6dsv320x_stpcnt_debounce_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @brief  Time period register for step detection on delta time.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Time period register for step detection on delta time.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_stpcnt_period_set(const stmdev_ctx_t *ctx, uint16_t val)
 {
   uint8_t buff[2];
@@ -11746,14 +9349,7 @@ int32_t lsm6dsv320x_stpcnt_period_set(const stmdev_ctx_t *ctx, uint16_t val)
   return ret;
 }
 
-/**
-  * @brief  Time period register for step detection on delta time.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Time period register for step detection on delta time.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_stpcnt_period_get(const stmdev_ctx_t *ctx, uint16_t *val)
 {
   uint8_t buff[2];
@@ -11772,26 +9368,7 @@ int32_t lsm6dsv320x_stpcnt_period_get(const stmdev_ctx_t *ctx, uint16_t *val)
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Sensor Fusion Low Power (SFLP)
-  * @brief     This section groups all the functions that manage pedometer.
-  * @{
-  *
-  */
-
-/**
-  * @brief  Enable SFLP Game Rotation Vector (6x).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enable/Disable game rotation value (0/1).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_sflp_game_rotation_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_emb_func_en_a_t emb_func_en_a;
@@ -11819,14 +9396,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Enable SFLP Game Rotation Vector (6x).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enable/Disable game rotation value (0/1).
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sflp_game_rotation_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_emb_func_en_a_t emb_func_en_a;
@@ -11851,14 +9421,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  Reset SFLP Game Rotation Vector logic (6x).
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      1: reset, 0: stop reset procedure
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sflp_game_rotation_reset(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_emb_func_init_a_t emb_func_init_a;
@@ -11884,14 +9447,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  SFLP Data Rate (ODR) configuration.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SFLP_15Hz, SFLP_30Hz, SFLP_60Hz, SFLP_120Hz, SFLP_240Hz, SFLP_480Hz
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sflp_data_rate_set(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_sflp_data_rate_t val)
 {
@@ -11919,14 +9475,7 @@ exit:
   return ret;
 }
 
-/**
-  * @brief  SFLP Data Rate (ODR) configuration.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SFLP_15Hz, SFLP_30Hz, SFLP_60Hz, SFLP_120Hz, SFLP_240Hz, SFLP_480Hz
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_sflp_data_rate_get(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_sflp_data_rate_t *val)
 {
@@ -11975,27 +9524,7 @@ int32_t lsm6dsv320x_sflp_data_rate_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Tap - Double Tap
-  * @brief     This section groups all the functions that manage the
-  *            tap and double tap event generation.
-  * @{
-  *
-  */
-
-/**
-  * @brief  Enable axis for Tap - Double Tap detection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enable axis for Tap - Double Tap detection.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_tap_detection_set(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_tap_detection_t val)
 {
@@ -12014,14 +9543,7 @@ int32_t lsm6dsv320x_tap_detection_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Enable axis for Tap - Double Tap detection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enable axis for Tap - Double Tap detection.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_tap_detection_get(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_tap_detection_t *val)
 {
@@ -12041,14 +9563,7 @@ int32_t lsm6dsv320x_tap_detection_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  axis Tap - Double Tap recognition thresholds.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      axis Tap - Double Tap recognition thresholds.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_tap_thresholds_set(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_tap_thresholds_t val)
 {
@@ -12076,14 +9591,7 @@ int32_t lsm6dsv320x_tap_thresholds_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  axis Tap - Double Tap recognition thresholds.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      axis Tap - Double Tap recognition thresholds.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_tap_thresholds_get(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_tap_thresholds_t *val)
 {
@@ -12107,14 +9615,7 @@ int32_t lsm6dsv320x_tap_thresholds_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selection of axis priority for TAP detection.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      XYZ , YXZ , XZY, ZYX , YZX , ZXY ,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_tap_axis_priority_set(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_tap_axis_priority_t val)
 {
@@ -12131,14 +9632,7 @@ int32_t lsm6dsv320x_tap_axis_priority_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selection of axis priority for TAP detection.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      XYZ , YXZ , XZY, ZYX , YZX , ZXY ,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_tap_axis_priority_get(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_tap_axis_priority_t *val)
 {
@@ -12185,14 +9679,7 @@ int32_t lsm6dsv320x_tap_axis_priority_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Time windows configuration for Tap - Double Tap SHOCK, QUIET, DUR : SHOCK Maximum duration is the maximum time of an overthreshold signal detection to be recognized as a tap event. The default value of these bits is 00b which corresponds to 4/ODR_XL time. If the SHOCK bits are set to a different value, 1LSB corresponds to 8/ODR_XL time. QUIET Expected quiet time after a tap detection. Quiet time is the time after the first detected tap in which there must not be any overthreshold event. The default value of these bits is 00b which corresponds to 2/ODR_XL time. If the QUIET bits are set to a different value, 1LSB corresponds to 4/ODR_XL time. DUR Duration of maximum time gap for double tap recognition. When double tap recognition is enabled, this register expresses the maximum time between two consecutive detected taps to determine a double tap event. The default value of these bits is 0000b which corresponds to 16/ODR_XL time. If the DUR_[3:0] bits are set to a different value, 1LSB corresponds to 32/ODR_XL time.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Time windows configuration for Tap - Double Tap SHOCK, QUIET, DUR : SHOCK Maximum duration is the maximum time of an overthreshold signal detection to be recognized as a tap event. The default value of these bits is 00b which corresponds to 4/ODR_XL time. If the SHOCK bits are set to a different value, 1LSB corresponds to 8/ODR_XL time. QUIET Expected quiet time after a tap detection. Quiet time is the time after the first detected tap in which there must not be any overthreshold event. The default value of these bits is 00b which corresponds to 2/ODR_XL time. If the QUIET bits are set to a different value, 1LSB corresponds to 4/ODR_XL time. DUR Duration of maximum time gap for double tap recognition. When double tap recognition is enabled, this register expresses the maximum time between two consecutive detected taps to determine a double tap event. The default value of these bits is 0000b which corresponds to 16/ODR_XL time. If the DUR_[3:0] bits are set to a different value, 1LSB corresponds to 32/ODR_XL time.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_tap_time_windows_set(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_tap_time_windows_t val)
 {
@@ -12211,14 +9698,6 @@ int32_t lsm6dsv320x_tap_time_windows_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Time windows configuration for Tap - Double Tap SHOCK, QUIET, DUR : SHOCK Maximum duration is the maximum time of an overthreshold signal detection to be recognized as a tap event. The default value of these bits is 00b which corresponds to 4/ODR_XL time. If the SHOCK bits are set to a different value, 1LSB corresponds to 8/ODR_XL time. QUIET Expected quiet time after a tap detection. Quiet time is the time after the first detected tap in which there must not be any overthreshold event. The default value of these bits is 00b which corresponds to 2/ODR_XL time. If the QUIET bits are set to a different value, 1LSB corresponds to 4/ODR_XL time. DUR Duration of maximum time gap for double tap recognition. When double tap recognition is enabled, this register expresses the maximum time between two consecutive detected taps to determine a double tap event. The default value of these bits is 0000b which corresponds to 16/ODR_XL time. If the DUR_[3:0] bits are set to a different value, 1LSB corresponds to 32/ODR_XL time.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Time windows configuration for Tap - Double Tap SHOCK, QUIET, DUR : SHOCK Maximum duration is the maximum time of an overthreshold signal detection to be recognized as a tap event. The default value of these bits is 00b which corresponds to 4/ODR_XL time. If the SHOCK bits are set to a different value, 1LSB corresponds to 8/ODR_XL time. QUIET Expected quiet time after a tap detection. Quiet time is the time after the first detected tap in which there must not be any overthreshold event. The default value of these bits is 00b which corresponds to 2/ODR_XL time. If the QUIET bits are set to a different value, 1LSB corresponds to 4/ODR_XL time. DUR Duration of maximum time gap for double tap recognition. When double tap recognition is enabled, this register expresses the maximum time between two consecutive detected taps to determine a double tap event. The default value of these bits is 0000b which corresponds to 16/ODR_XL time. If the DUR_[3:0] bits are set to a different value, 1LSB corresponds to 32/ODR_XL time.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_tap_time_windows_get(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_tap_time_windows_t *val)
 {
@@ -12238,14 +9717,7 @@ int32_t lsm6dsv320x_tap_time_windows_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Single/double-tap event enable.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      ONLY_SINGLE, BOTH_SINGLE_DOUBLE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_tap_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_tap_mode_t val)
 {
   lsm6dsv320x_wake_up_ths_t wake_up_ths;
@@ -12261,14 +9733,7 @@ int32_t lsm6dsv320x_tap_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_tap_mode_t
   return ret;
 }
 
-/**
-  * @brief  Single/double-tap event enable.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      ONLY_SINGLE, BOTH_SINGLE_DOUBLE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_tap_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_tap_mode_t *val)
 {
   lsm6dsv320x_wake_up_ths_t wake_up_ths;
@@ -12298,27 +9763,7 @@ int32_t lsm6dsv320x_tap_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_tap_mode_t
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Tilt detection
-  * @brief     This section groups all the functions that manage the tilt
-  *            event detection.
-  * @{
-  *
-  */
-
-/**
-  * @brief  Tilt calculation.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Tilt calculation.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_tilt_mode_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_emb_func_en_a_t emb_func_en_a;
@@ -12339,14 +9784,7 @@ int32_t lsm6dsv320x_tilt_mode_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Tilt calculation.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Tilt calculation.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_tilt_mode_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_emb_func_en_a_t emb_func_en_a;
@@ -12366,27 +9804,7 @@ int32_t lsm6dsv320x_tilt_mode_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Timestamp
-  * @brief     This section groups all the functions that manage the
-  *            timestamp generation.
-  * @{
-  *
-  */
-
-/**
-  * @brief  Timestamp data output.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Timestamp data output.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_timestamp_raw_get(const stmdev_ctx_t *ctx, uint32_t *val)
 {
   uint8_t buff[4];
@@ -12406,14 +9824,7 @@ int32_t lsm6dsv320x_timestamp_raw_get(const stmdev_ctx_t *ctx, uint32_t *val)
   return ret;
 }
 
-/**
-  * @brief  Enables timestamp counter.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables timestamp counter.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_timestamp_set(const stmdev_ctx_t *ctx, uint8_t val)
 {
   lsm6dsv320x_functions_enable_t functions_enable;
@@ -12429,14 +9840,7 @@ int32_t lsm6dsv320x_timestamp_set(const stmdev_ctx_t *ctx, uint8_t val)
   return ret;
 }
 
-/**
-  * @brief  Enables timestamp counter.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Enables timestamp counter.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_timestamp_get(const stmdev_ctx_t *ctx, uint8_t *val)
 {
   lsm6dsv320x_functions_enable_t functions_enable;
@@ -12453,27 +9857,7 @@ int32_t lsm6dsv320x_timestamp_get(const stmdev_ctx_t *ctx, uint8_t *val)
   return ret;
 }
 
-/**
-  * @}
-  *
-  */
 
-/**
-  * @defgroup  Wake Up - Activity - Inactivity (Sleep)
-  * @brief     This section groups all the functions that manage the Wake Up
-  *            event generation.
-  * @{
-  *
-  */
-
-/**
-  * @brief  Enable activity/inactivity (sleep) function.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      XL_AND_GY_NOT_AFFECTED, XL_LOW_POWER_GY_NOT_AFFECTED, XL_LOW_POWER_GY_SLEEP, XL_LOW_POWER_GY_POWER_DOWN,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
 int32_t lsm6dsv320x_act_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_act_mode_t val)
 {
   lsm6dsv320x_functions_enable_t functions_enable;
@@ -12489,14 +9873,7 @@ int32_t lsm6dsv320x_act_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_act_mode_t
   return ret;
 }
 
-/**
-  * @brief  Enable activity/inactivity (sleep) function.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      XL_AND_GY_NOT_AFFECTED, XL_LOW_POWER_GY_NOT_AFFECTED, XL_LOW_POWER_GY_SLEEP, XL_LOW_POWER_GY_POWER_DOWN,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_act_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_act_mode_t *val)
 {
   lsm6dsv320x_functions_enable_t functions_enable;
@@ -12534,14 +9911,7 @@ int32_t lsm6dsv320x_act_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_act_mode_t
   return ret;
 }
 
-/**
-  * @brief  Duration in the transition from Stationary to Motion (from Inactivity to Activity).[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SLEEP_TO_ACT_AT_1ST_SAMPLE, SLEEP_TO_ACT_AT_2ND_SAMPLE, SLEEP_TO_ACT_AT_3RD_SAMPLE, SLEEP_TO_ACT_AT_4th_SAMPLE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_act_from_sleep_to_act_dur_set(const stmdev_ctx_t *ctx,
                                                   lsm6dsv320x_act_from_sleep_to_act_dur_t val)
 {
@@ -12558,14 +9928,7 @@ int32_t lsm6dsv320x_act_from_sleep_to_act_dur_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Duration in the transition from Stationary to Motion (from Inactivity to Activity).[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      SLEEP_TO_ACT_AT_1ST_SAMPLE, SLEEP_TO_ACT_AT_2ND_SAMPLE, SLEEP_TO_ACT_AT_3RD_SAMPLE, SLEEP_TO_ACT_AT_4th_SAMPLE,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_act_from_sleep_to_act_dur_get(const stmdev_ctx_t *ctx,
                                                   lsm6dsv320x_act_from_sleep_to_act_dur_t *val)
 {
@@ -12604,14 +9967,7 @@ int32_t lsm6dsv320x_act_from_sleep_to_act_dur_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects the accelerometer data rate during Inactivity.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      1Hz875, 15Hz, 30Hz, 60Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_act_sleep_xl_odr_set(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_act_sleep_xl_odr_t val)
 {
@@ -12628,14 +9984,7 @@ int32_t lsm6dsv320x_act_sleep_xl_odr_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Selects the accelerometer data rate during Inactivity.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      1Hz875, 15Hz, 30Hz, 60Hz,
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_act_sleep_xl_odr_get(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_act_sleep_xl_odr_t *val)
 {
@@ -12674,14 +10023,7 @@ int32_t lsm6dsv320x_act_sleep_xl_odr_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Wakeup and activity/inactivity threshold.[set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Wakeup and activity/inactivity threshold.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_act_thresholds_set(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_act_thresholds_t *val)
 {
@@ -12716,14 +10058,7 @@ int32_t lsm6dsv320x_act_thresholds_set(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Wakeup and activity/inactivity threshold.[get]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Wakeup and activity/inactivity threshold.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_act_thresholds_get(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_act_thresholds_t *val)
 {
@@ -12753,14 +10088,7 @@ int32_t lsm6dsv320x_act_thresholds_get(const stmdev_ctx_t *ctx,
   return ret;
 }
 
-/**
-  * @brief  Time windows configuration for Wake Up - Activity - Inactivity (SLEEP, WAKE). Duration to go in sleep mode. Default value: 0000 (this corresponds to 16 ODR) 1 LSB = 512/ODR_XL time. Wake up duration event. 1 LSB = 1/ODR_XL time. [set]
-  *
-  * @param  ctx      read / write interface definitions
-  * @param  val      Time windows configuration for Wake Up - Activity - Inactivity (SLEEP, WAKE). Duration to go in sleep mode. Default value: 0000 (this corresponds to 16 ODR) 1 LSB = 512/ODR_XL time. Wake up duration event. 1 LSB = 1/ODR_XL time.
-  * @retval          interface status (MANDATORY: return 0 -> no Error)
-  *
-  */
+
 int32_t lsm6dsv320x_act_wkup_time_windows_set(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_act_wkup_time_windows_t val)
 {
@@ -12803,8 +10131,3 @@ int32_t lsm6dsv320x_act_wkup_time_windows_get(const stmdev_ctx_t *ctx,
 
   return ret;
 }
-
-/**
-  * @}
-  *
-  */

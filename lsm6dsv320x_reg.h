@@ -35,7 +35,7 @@ extern "C" {
   *
   */
 
-/** @defgroup  Endianness definitions
+/** @defgroup endiannes_def Endianness definitions
   * @{
   *
   */
@@ -5479,7 +5479,7 @@ typedef enum
 {
   LSM6DSV320X_32g  = 0x0,
   LSM6DSV320X_64g  = 0x1,
-  LSM6DSV320X_128g  = 0x2,
+  LSM6DSV320X_128g = 0x2,
   LSM6DSV320X_256g = 0x3,
   LSM6DSV320X_320g = 0x4,
 } lsm6dsv320x_hg_xl_full_scale_t;

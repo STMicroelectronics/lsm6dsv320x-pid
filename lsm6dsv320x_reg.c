@@ -560,15 +560,15 @@ int32_t lsm6dsv320x_mem_bank_get(const stmdev_ctx_t *ctx, lsm6dsv320x_mem_bank_t
 
   switch ((func_cfg_access.shub_reg_access << 1) + func_cfg_access.emb_func_reg_access)
   {
-    case LSM6DSV320X_MAIN_MEM_BANK:
+    case 0x00:
       *val = LSM6DSV320X_MAIN_MEM_BANK;
       break;
 
-    case LSM6DSV320X_EMBED_FUNC_MEM_BANK:
+    case 0x01:
       *val = LSM6DSV320X_EMBED_FUNC_MEM_BANK;
       break;
 
-    case LSM6DSV320X_SENSOR_HUB_MEM_BANK:
+    case 0x02:
       *val = LSM6DSV320X_SENSOR_HUB_MEM_BANK;
       break;
 
@@ -600,6 +600,7 @@ int32_t lsm6dsv320x_xl_setup(
   lsm6dsv320x_ctrl2_t ctrl2;
   lsm6dsv320x_haodr_cfg_t haodr;
   uint8_t xl_ha = ((uint8_t) xl_odr >> 4) & 0xFU;
+  uint8_t both_on;
 
   // Table 10 of AN6119
   // 1.875 Hz allowed only in Low-power modes
@@ -661,8 +662,8 @@ int32_t lsm6dsv320x_xl_setup(
   }
 
   // cross-checking haodr mode
-  uint8_t both_on = ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
-                    ctrl2.odr_g != LSM6DSV320X_ODR_OFF ? 1 : 0;
+  both_on = ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
+            ctrl2.odr_g != LSM6DSV320X_ODR_OFF ? 1 : 0;
 
   // if both on, then haodr_sel is a shared bit. Could be changed through haodr_set API
   if (both_on && (xl_ha != haodr.haodr_sel))
@@ -685,7 +686,8 @@ int32_t lsm6dsv320x_xl_setup(
       (xl_mode == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD || // check if mode to set is HAODR
        ctrl1.op_mode_xl == LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD)) // check if previous mode was HAODR
   {
-    ret += lsm6dsv320x_haodr_set(ctx, xl_odr, xl_mode, ctrl2.odr_g, ctrl2.op_mode_g);
+    ret += lsm6dsv320x_haodr_set(ctx, xl_odr, xl_mode, (lsm6dsv320x_data_rate_t)ctrl2.odr_g,
+                                 (lsm6dsv320x_gy_mode_t)ctrl2.op_mode_g);
   }
   else
   {
@@ -712,6 +714,7 @@ int32_t lsm6dsv320x_gy_setup(
   lsm6dsv320x_ctrl2_t ctrl2;
   lsm6dsv320x_haodr_cfg_t haodr;
   uint8_t gy_ha = ((uint8_t) gy_odr >> 4) & 0xFU;
+  uint8_t both_on;
 
   // Table 13 of AN6119
   // 7.5Hz with HAODR mode enable, is already handled by the enum selection
@@ -751,8 +754,8 @@ int32_t lsm6dsv320x_gy_setup(
   }
 
   // cross-checking haodr mode
-  uint8_t both_on = ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
-                    ctrl2.odr_g != LSM6DSV320X_ODR_OFF ? 1 : 0;
+  both_on = ctrl1.odr_xl != LSM6DSV320X_ODR_OFF &&
+            ctrl2.odr_g != LSM6DSV320X_ODR_OFF ? 1 : 0;
 
   // if both on, then haodr_sel is a shared bit
   if (both_on && (gy_ha != haodr.haodr_sel))
@@ -768,7 +771,8 @@ int32_t lsm6dsv320x_gy_setup(
       (gy_mode == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD || // check if mode to set is HAODR
        ctrl2.op_mode_g == LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD)) // check if previous mode was HAODR
   {
-    ret += lsm6dsv320x_haodr_set(ctx, ctrl1.odr_xl, ctrl1.op_mode_xl, gy_odr, gy_mode);
+    ret += lsm6dsv320x_haodr_set(ctx, (lsm6dsv320x_data_rate_t)ctrl1.odr_xl,
+                                 (lsm6dsv320x_xl_mode_t)ctrl1.op_mode_xl, gy_odr, gy_mode);
   }
   else
   {
@@ -796,6 +800,9 @@ int32_t lsm6dsv320x_haodr_set(
   lsm6dsv320x_ctrl2_t ctrl2;
   lsm6dsv320x_haodr_cfg_t haodr;
   lsm6dsv320x_ctrl1_xl_hg_t ctrl1_xl_hg;
+  lsm6dsv320x_xl_mode_t prev_mode;
+  lsm6dsv320x_ctrl1_xl_hg_t ctrl1_xl_hg_prev;
+  lsm6dsv320x_ctrl_eis_t ctrl_eis_prev;
   lsm6dsv320x_ctrl_eis_t ctrl_eis;
   int32_t ret;
 
@@ -821,9 +828,9 @@ int32_t lsm6dsv320x_haodr_set(
   ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL1_XL_HG, (uint8_t *)&ctrl1_xl_hg, 1);
   ret += lsm6dsv320x_read_reg(ctx, LSM6DSV320X_CTRL_EIS, (uint8_t *)&ctrl_eis, 1);
 
-  lsm6dsv320x_xl_mode_t prev_mode = ctrl1.op_mode_xl;
-  lsm6dsv320x_ctrl1_xl_hg_t ctrl1_xl_hg_prev = ctrl1_xl_hg;
-  lsm6dsv320x_ctrl_eis_t ctrl_eis_prev = ctrl_eis;
+  prev_mode = (lsm6dsv320x_xl_mode_t) ctrl1.op_mode_xl;
+  ctrl1_xl_hg_prev = ctrl1_xl_hg;
+  ctrl_eis_prev = ctrl_eis;
 
   if (ret != 0)
   {
@@ -938,19 +945,19 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl1.odr_xl)
   {
-    case LSM6DSV320X_ODR_OFF:
+    case 0x00:
       *val = LSM6DSV320X_ODR_OFF;
       break;
 
-    case LSM6DSV320X_ODR_AT_1Hz875:
+    case 0x01:
       *val = LSM6DSV320X_ODR_AT_1Hz875;
       break;
 
-    case LSM6DSV320X_ODR_AT_7Hz5:
+    case 0x02:
       *val = LSM6DSV320X_ODR_AT_7Hz5;
       break;
 
-    case LSM6DSV320X_ODR_AT_15Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_15Hz:
       switch (sel)
       {
         default:
@@ -969,7 +976,7 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_30Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_30Hz:
       switch (sel)
       {
         default:
@@ -988,7 +995,7 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_60Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_60Hz:
       switch (sel)
       {
         default:
@@ -1007,7 +1014,7 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_120Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_120Hz:
       switch (sel)
       {
         default:
@@ -1026,7 +1033,7 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_240Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_240Hz:
       switch (sel)
       {
         default:
@@ -1045,7 +1052,7 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_480Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_480Hz:
       switch (sel)
       {
         default:
@@ -1064,7 +1071,7 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_960Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_960Hz:
       switch (sel)
       {
         default:
@@ -1083,7 +1090,7 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_1920Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_1920Hz:
       switch (sel)
       {
         default:
@@ -1102,7 +1109,7 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_3840Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_3840Hz:
       switch (sel)
       {
         default:
@@ -1121,7 +1128,7 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_7680Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_7680Hz:
       switch (sel)
       {
         default:
@@ -1210,27 +1217,27 @@ int32_t lsm6dsv320x_hg_xl_data_rate_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl1_xl_hg.odr_xl_hg)
   {
-    case LSM6DSV320X_HG_XL_ODR_OFF:
+    case 0x00:
       *val = LSM6DSV320X_HG_XL_ODR_OFF;
       break;
 
-    case LSM6DSV320X_HG_XL_ODR_AT_480Hz:
+    case 0x03:
       *val = LSM6DSV320X_HG_XL_ODR_AT_480Hz;
       break;
 
-    case LSM6DSV320X_HG_XL_ODR_AT_960Hz:
+    case 0x04:
       *val = LSM6DSV320X_HG_XL_ODR_AT_960Hz;
       break;
 
-    case LSM6DSV320X_HG_XL_ODR_AT_1920Hz:
+    case 0x05:
       *val = LSM6DSV320X_HG_XL_ODR_AT_1920Hz;
       break;
 
-    case LSM6DSV320X_HG_XL_ODR_AT_3840Hz:
+    case 0x06:
       *val = LSM6DSV320X_HG_XL_ODR_AT_3840Hz;
       break;
 
-    case LSM6DSV320X_HG_XL_ODR_AT_7680Hz:
+    case 0x07:
       *val = LSM6DSV320X_HG_XL_ODR_AT_7680Hz;
       break;
 
@@ -1272,31 +1279,31 @@ int32_t lsm6dsv320x_xl_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t *
 
   switch (ctrl1.op_mode_xl)
   {
-    case LSM6DSV320X_XL_HIGH_PERFORMANCE_MD:
+    case 0x00:
       *val = LSM6DSV320X_XL_HIGH_PERFORMANCE_MD;
       break;
 
-    case LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD:
+    case 0x01:
       *val = LSM6DSV320X_XL_HIGH_ACCURACY_ODR_MD;
       break;
 
-    case LSM6DSV320X_XL_ODR_TRIGGERED_MD:
+    case 0x03:
       *val = LSM6DSV320X_XL_ODR_TRIGGERED_MD;
       break;
 
-    case LSM6DSV320X_XL_LOW_POWER_2_AVG_MD:
+    case 0x04:
       *val = LSM6DSV320X_XL_LOW_POWER_2_AVG_MD;
       break;
 
-    case LSM6DSV320X_XL_LOW_POWER_4_AVG_MD:
+    case 0x05:
       *val = LSM6DSV320X_XL_LOW_POWER_4_AVG_MD;
       break;
 
-    case LSM6DSV320X_XL_LOW_POWER_8_AVG_MD:
+    case 0x06:
       *val = LSM6DSV320X_XL_LOW_POWER_8_AVG_MD;
       break;
 
-    case LSM6DSV320X_XL_NORMAL_MD:
+    case 0x07:
       *val = LSM6DSV320X_XL_NORMAL_MD;
       break;
 
@@ -1371,19 +1378,19 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl2.odr_g)
   {
-    case LSM6DSV320X_ODR_OFF:
+    case 0x00:
       *val = LSM6DSV320X_ODR_OFF;
       break;
 
-    case LSM6DSV320X_ODR_AT_1Hz875:
+    case 0x01:
       *val = LSM6DSV320X_ODR_AT_1Hz875;
       break;
 
-    case LSM6DSV320X_ODR_AT_7Hz5:
+    case 0x02:
       *val = LSM6DSV320X_ODR_AT_7Hz5;
       break;
 
-    case LSM6DSV320X_ODR_AT_15Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_15Hz:
       switch (sel)
       {
         default:
@@ -1402,7 +1409,7 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_30Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_30Hz:
       switch (sel)
       {
         default:
@@ -1421,7 +1428,7 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_60Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_60Hz:
       switch (sel)
       {
         default:
@@ -1440,7 +1447,7 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_120Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_120Hz:
       switch (sel)
       {
         default:
@@ -1459,7 +1466,7 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_240Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_240Hz:
       switch (sel)
       {
         default:
@@ -1478,7 +1485,7 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_480Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_480Hz:
       switch (sel)
       {
         default:
@@ -1497,7 +1504,7 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_960Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_960Hz:
       switch (sel)
       {
         default:
@@ -1516,7 +1523,7 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_1920Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_1920Hz:
       switch (sel)
       {
         default:
@@ -1535,7 +1542,7 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_3840Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_3840Hz:
       switch (sel)
       {
         default:
@@ -1554,7 +1561,7 @@ int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
       }
       break;
 
-    case LSM6DSV320X_ODR_AT_7680Hz:
+    case (uint8_t)LSM6DSV320X_ODR_AT_7680Hz:
       switch (sel)
       {
         default:
@@ -1611,23 +1618,23 @@ int32_t lsm6dsv320x_gy_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t *
 
   switch (ctrl2.op_mode_g)
   {
-    case LSM6DSV320X_GY_HIGH_PERFORMANCE_MD:
+    case 0x00:
       *val = LSM6DSV320X_GY_HIGH_PERFORMANCE_MD;
       break;
 
-    case LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD:
+    case 0x01:
       *val = LSM6DSV320X_GY_HIGH_ACCURACY_ODR_MD;
       break;
 
-    case LSM6DSV320X_GY_ODR_TRIGGERED_MD:
+    case 0x03:
       *val = LSM6DSV320X_GY_ODR_TRIGGERED_MD;
       break;
 
-    case LSM6DSV320X_GY_SLEEP_MD:
+    case 0x04:
       *val = LSM6DSV320X_GY_SLEEP_MD;
       break;
 
-    case LSM6DSV320X_GY_LOW_POWER_MD:
+    case 0x05:
       *val = LSM6DSV320X_GY_LOW_POWER_MD;
       break;
 
@@ -1775,11 +1782,11 @@ int32_t lsm6dsv320x_data_ready_mode_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl4.drdy_pulsed)
   {
-    case LSM6DSV320X_DRDY_LATCHED:
+    case 0x00:
       *val = LSM6DSV320X_DRDY_LATCHED;
       break;
 
-    case LSM6DSV320X_DRDY_PULSED:
+    case 0x01:
       *val = LSM6DSV320X_DRDY_PULSED;
       break;
 
@@ -1895,23 +1902,23 @@ int32_t lsm6dsv320x_gy_full_scale_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl6.fs_g)
   {
-    case LSM6DSV320X_250dps:
+    case 0x01:
       *val = LSM6DSV320X_250dps;
       break;
 
-    case LSM6DSV320X_500dps:
+    case 0x02:
       *val = LSM6DSV320X_500dps;
       break;
 
-    case LSM6DSV320X_1000dps:
+    case 0x03:
       *val = LSM6DSV320X_1000dps;
       break;
 
-    case LSM6DSV320X_2000dps:
+    case 0x04:
       *val = LSM6DSV320X_2000dps;
       break;
 
-    case LSM6DSV320X_4000dps:
+    case 0x05:
       *val = LSM6DSV320X_4000dps;
       break;
 
@@ -1956,19 +1963,19 @@ int32_t lsm6dsv320x_xl_full_scale_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl8.fs_xl)
   {
-    case LSM6DSV320X_2g:
+    case 0x00:
       *val = LSM6DSV320X_2g;
       break;
 
-    case LSM6DSV320X_4g:
+    case 0x01:
       *val = LSM6DSV320X_4g;
       break;
 
-    case LSM6DSV320X_8g:
+    case 0x02:
       *val = LSM6DSV320X_8g;
       break;
 
-    case LSM6DSV320X_16g:
+    case 0x03:
       *val = LSM6DSV320X_16g;
       break;
 
@@ -2013,23 +2020,23 @@ int32_t lsm6dsv320x_hg_xl_full_scale_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl1.fs_xl_hg)
   {
-    case LSM6DSV320X_32g:
+    case 0x00:
       *val = LSM6DSV320X_32g;
       break;
 
-    case LSM6DSV320X_64g:
+    case 0x01:
       *val = LSM6DSV320X_64g;
       break;
 
-    case LSM6DSV320X_128g:
+    case 0x02:
       *val = LSM6DSV320X_128g;
       break;
 
-    case LSM6DSV320X_256g:
+    case 0x03:
       *val = LSM6DSV320X_256g;
       break;
 
-    case LSM6DSV320X_320g:
+    case 0x04:
       *val = LSM6DSV320X_320g;
       break;
 
@@ -2072,15 +2079,15 @@ int32_t lsm6dsv320x_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_t
 
   switch (ctrl10.st_xl)
   {
-    case LSM6DSV320X_ST_DISABLE:
+    case 0x00:
       *val = LSM6DSV320X_ST_DISABLE;
       break;
 
-    case LSM6DSV320X_ST_POSITIVE:
+    case 0x01:
       *val = LSM6DSV320X_ST_POSITIVE;
       break;
 
-    case LSM6DSV320X_ST_NEGATIVE:
+    case 0x02:
       *val = LSM6DSV320X_ST_NEGATIVE;
       break;
 
@@ -2123,15 +2130,15 @@ int32_t lsm6dsv320x_gy_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_t
 
   switch (ctrl10.st_g)
   {
-    case LSM6DSV320X_ST_DISABLE:
+    case 0x00:
       *val = LSM6DSV320X_ST_DISABLE;
       break;
 
-    case LSM6DSV320X_ST_POSITIVE:
+    case 0x01:
       *val = LSM6DSV320X_ST_POSITIVE;
       break;
 
-    case LSM6DSV320X_ST_NEGATIVE:
+    case 0x02:
       *val = LSM6DSV320X_ST_NEGATIVE;
       break;
 
@@ -2174,15 +2181,15 @@ int32_t lsm6dsv320x_hg_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_sel
 
   switch (ctrl2_xl_hg.xl_hg_st)
   {
-    case LSM6DSV320X_ST_DISABLE:
+    case 0x00:
       *val = LSM6DSV320X_ST_DISABLE;
       break;
 
-    case LSM6DSV320X_ST_POSITIVE:
+    case 0x01:
       *val = LSM6DSV320X_ST_POSITIVE;
       break;
 
-    case LSM6DSV320X_ST_NEGATIVE:
+    case 0x02:
       *val = LSM6DSV320X_ST_NEGATIVE;
       break;
 
@@ -2224,15 +2231,15 @@ int32_t lsm6dsv320x_ois_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_se
 
   switch (if2_int_ois.st_xl_ois)
   {
-    case LSM6DSV320X_ST_DISABLE:
+    case 0x00:
       *val = LSM6DSV320X_ST_DISABLE;
       break;
 
-    case LSM6DSV320X_ST_POSITIVE:
+    case 0x01:
       *val = LSM6DSV320X_ST_POSITIVE;
       break;
 
-    case LSM6DSV320X_ST_NEGATIVE:
+    case 0x02:
       *val = LSM6DSV320X_ST_NEGATIVE;
       break;
 
@@ -2278,16 +2285,16 @@ int32_t lsm6dsv320x_ois_gy_self_test_get(const stmdev_ctx_t *ctx,
 
   switch (if2_int_ois.st_g_ois)
   {
-    case LSM6DSV320X_OIS_GY_ST_DISABLE:
+    case 0x00:
       *val = LSM6DSV320X_OIS_GY_ST_DISABLE;
       break;
 
-    case LSM6DSV320X_OIS_GY_ST_POSITIVE:
+    case 0x01:
       *val = (if2_int_ois.st_ois_clampdis == 1U) ? LSM6DSV320X_OIS_GY_ST_CLAMP_POS :
              LSM6DSV320X_OIS_GY_ST_POSITIVE;
       break;
 
-    case LSM6DSV320X_OIS_GY_ST_NEGATIVE:
+    case 0x02:
       *val = (if2_int_ois.st_ois_clampdis == 1U) ? LSM6DSV320X_OIS_GY_ST_CLAMP_NEG :
              LSM6DSV320X_OIS_GY_ST_NEGATIVE;
       break;
@@ -4026,11 +4033,11 @@ int32_t lsm6dsv320x_den_polarity_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl4.int2_in_lh)
   {
-    case LSM6DSV320X_DEN_ACT_LOW:
+    case 0x00:
       *val = LSM6DSV320X_DEN_ACT_LOW;
       break;
 
-    case LSM6DSV320X_DEN_ACT_HIGH:
+    case 0x01:
       *val = LSM6DSV320X_DEN_ACT_HIGH;
       break;
 
@@ -4095,23 +4102,23 @@ int32_t lsm6dsv320x_eis_gy_full_scale_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl_eis.fs_g_eis)
   {
-    case 1:
+    case 0x01:
       *val = LSM6DSV320X_EIS_250dps;
       break;
 
-    case 2:
+    case 0x02:
       *val = LSM6DSV320X_EIS_500dps;
       break;
 
-    case 3:
+    case 0x03:
       *val = LSM6DSV320X_EIS_1000dps;
       break;
 
-    case 4:
+    case 0x04:
       *val = LSM6DSV320X_EIS_2000dps;
       break;
 
-    case 5:
+    case 0x05:
       *val = LSM6DSV320X_EIS_4000dps;
       break;
 
@@ -4213,15 +4220,15 @@ int32_t lsm6dsv320x_gy_eis_data_rate_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl_eis.odr_g_eis)
   {
-    case LSM6DSV320X_EIS_ODR_OFF:
+    case 0x00:
       *val = LSM6DSV320X_EIS_ODR_OFF;
       break;
 
-    case LSM6DSV320X_EIS_1920Hz:
+    case 0x01:
       *val = LSM6DSV320X_EIS_1920Hz;
       break;
 
-    case LSM6DSV320X_EIS_960Hz:
+    case 0x02:
       *val = LSM6DSV320X_EIS_960Hz;
       break;
 
@@ -4298,19 +4305,19 @@ int32_t lsm6dsv320x_fifo_compress_algo_get(const stmdev_ctx_t *ctx,
 
   switch (fifo_ctrl2.uncompr_rate)
   {
-    case LSM6DSV320X_CMP_DISABLE:
+    case 0x00:
       *val = LSM6DSV320X_CMP_DISABLE;
       break;
 
-    case LSM6DSV320X_CMP_8_TO_1:
+    case 0x01:
       *val = LSM6DSV320X_CMP_8_TO_1;
       break;
 
-    case LSM6DSV320X_CMP_16_TO_1:
+    case 0x02:
       *val = LSM6DSV320X_CMP_16_TO_1;
       break;
 
-    case LSM6DSV320X_CMP_32_TO_1:
+    case 0x03:
       *val = LSM6DSV320X_CMP_32_TO_1;
       break;
 
@@ -4476,55 +4483,55 @@ int32_t lsm6dsv320x_fifo_xl_batch_get(const stmdev_ctx_t *ctx,
 
   switch (fifo_ctrl3.bdr_xl)
   {
-    case LSM6DSV320X_XL_NOT_BATCHED:
+    case 0x00:
       *val = LSM6DSV320X_XL_NOT_BATCHED;
       break;
 
-    case LSM6DSV320X_XL_BATCHED_AT_1Hz875:
+    case 0x01:
       *val = LSM6DSV320X_XL_BATCHED_AT_1Hz875;
       break;
 
-    case LSM6DSV320X_XL_BATCHED_AT_7Hz5:
+    case 0x02:
       *val = LSM6DSV320X_XL_BATCHED_AT_7Hz5;
       break;
 
-    case LSM6DSV320X_XL_BATCHED_AT_15Hz:
+    case 0x03:
       *val = LSM6DSV320X_XL_BATCHED_AT_15Hz;
       break;
 
-    case LSM6DSV320X_XL_BATCHED_AT_30Hz:
+    case 0x04:
       *val = LSM6DSV320X_XL_BATCHED_AT_30Hz;
       break;
 
-    case LSM6DSV320X_XL_BATCHED_AT_60Hz:
+    case 0x05:
       *val = LSM6DSV320X_XL_BATCHED_AT_60Hz;
       break;
 
-    case LSM6DSV320X_XL_BATCHED_AT_120Hz:
+    case 0x06:
       *val = LSM6DSV320X_XL_BATCHED_AT_120Hz;
       break;
 
-    case LSM6DSV320X_XL_BATCHED_AT_240Hz:
+    case 0x07:
       *val = LSM6DSV320X_XL_BATCHED_AT_240Hz;
       break;
 
-    case LSM6DSV320X_XL_BATCHED_AT_480Hz:
+    case 0x08:
       *val = LSM6DSV320X_XL_BATCHED_AT_480Hz;
       break;
 
-    case LSM6DSV320X_XL_BATCHED_AT_960Hz:
+    case 0x09:
       *val = LSM6DSV320X_XL_BATCHED_AT_960Hz;
       break;
 
-    case LSM6DSV320X_XL_BATCHED_AT_1920Hz:
+    case 0x0A:
       *val = LSM6DSV320X_XL_BATCHED_AT_1920Hz;
       break;
 
-    case LSM6DSV320X_XL_BATCHED_AT_3840Hz:
+    case 0x0B:
       *val = LSM6DSV320X_XL_BATCHED_AT_3840Hz;
       break;
 
-    case LSM6DSV320X_XL_BATCHED_AT_7680Hz:
+    case 0x0C:
       *val = LSM6DSV320X_XL_BATCHED_AT_7680Hz;
       break;
 
@@ -4567,55 +4574,55 @@ int32_t lsm6dsv320x_fifo_gy_batch_get(const stmdev_ctx_t *ctx,
 
   switch (fifo_ctrl3.bdr_gy)
   {
-    case LSM6DSV320X_GY_NOT_BATCHED:
+    case 0x00:
       *val = LSM6DSV320X_GY_NOT_BATCHED;
       break;
 
-    case LSM6DSV320X_GY_BATCHED_AT_1Hz875:
+    case 0x01:
       *val = LSM6DSV320X_GY_BATCHED_AT_1Hz875;
       break;
 
-    case LSM6DSV320X_GY_BATCHED_AT_7Hz5:
+    case 0x02:
       *val = LSM6DSV320X_GY_BATCHED_AT_7Hz5;
       break;
 
-    case LSM6DSV320X_GY_BATCHED_AT_15Hz:
+    case 0x03:
       *val = LSM6DSV320X_GY_BATCHED_AT_15Hz;
       break;
 
-    case LSM6DSV320X_GY_BATCHED_AT_30Hz:
+    case 0x04:
       *val = LSM6DSV320X_GY_BATCHED_AT_30Hz;
       break;
 
-    case LSM6DSV320X_GY_BATCHED_AT_60Hz:
+    case 0x05:
       *val = LSM6DSV320X_GY_BATCHED_AT_60Hz;
       break;
 
-    case LSM6DSV320X_GY_BATCHED_AT_120Hz:
+    case 0x06:
       *val = LSM6DSV320X_GY_BATCHED_AT_120Hz;
       break;
 
-    case LSM6DSV320X_GY_BATCHED_AT_240Hz:
+    case 0x07:
       *val = LSM6DSV320X_GY_BATCHED_AT_240Hz;
       break;
 
-    case LSM6DSV320X_GY_BATCHED_AT_480Hz:
+    case 0x08:
       *val = LSM6DSV320X_GY_BATCHED_AT_480Hz;
       break;
 
-    case LSM6DSV320X_GY_BATCHED_AT_960Hz:
+    case 0x09:
       *val = LSM6DSV320X_GY_BATCHED_AT_960Hz;
       break;
 
-    case LSM6DSV320X_GY_BATCHED_AT_1920Hz:
+    case 0x0A:
       *val = LSM6DSV320X_GY_BATCHED_AT_1920Hz;
       break;
 
-    case LSM6DSV320X_GY_BATCHED_AT_3840Hz:
+    case 0x0B:
       *val = LSM6DSV320X_GY_BATCHED_AT_3840Hz;
       break;
 
-    case LSM6DSV320X_GY_BATCHED_AT_7680Hz:
+    case 0x0C:
       *val = LSM6DSV320X_GY_BATCHED_AT_7680Hz;
       break;
 
@@ -4689,31 +4696,31 @@ int32_t lsm6dsv320x_fifo_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_mode
 
   switch (fifo_ctrl4.fifo_mode)
   {
-    case LSM6DSV320X_BYPASS_MODE:
+    case 0x00:
       *val = LSM6DSV320X_BYPASS_MODE;
       break;
 
-    case LSM6DSV320X_FIFO_MODE:
+    case 0x01:
       *val = LSM6DSV320X_FIFO_MODE;
       break;
 
-    case LSM6DSV320X_STREAM_WTM_TO_FULL_MODE:
+    case 0x02:
       *val = LSM6DSV320X_STREAM_WTM_TO_FULL_MODE;
       break;
 
-    case LSM6DSV320X_STREAM_TO_FIFO_MODE:
+    case 0x03:
       *val = LSM6DSV320X_STREAM_TO_FIFO_MODE;
       break;
 
-    case LSM6DSV320X_BYPASS_TO_STREAM_MODE:
+    case 0x04:
       *val = LSM6DSV320X_BYPASS_TO_STREAM_MODE;
       break;
 
-    case LSM6DSV320X_STREAM_MODE:
+    case 0x06:
       *val = LSM6DSV320X_STREAM_MODE;
       break;
 
-    case LSM6DSV320X_BYPASS_TO_FIFO_MODE:
+    case 0x07:
       *val = LSM6DSV320X_BYPASS_TO_FIFO_MODE;
       break;
 
@@ -4788,19 +4795,19 @@ int32_t lsm6dsv320x_fifo_temp_batch_get(const stmdev_ctx_t *ctx,
 
   switch (fifo_ctrl4.odr_t_batch)
   {
-    case LSM6DSV320X_TEMP_NOT_BATCHED:
+    case 0x00:
       *val = LSM6DSV320X_TEMP_NOT_BATCHED;
       break;
 
-    case LSM6DSV320X_TEMP_BATCHED_AT_1Hz875:
+    case 0x01:
       *val = LSM6DSV320X_TEMP_BATCHED_AT_1Hz875;
       break;
 
-    case LSM6DSV320X_TEMP_BATCHED_AT_15Hz:
+    case 0x02:
       *val = LSM6DSV320X_TEMP_BATCHED_AT_15Hz;
       break;
 
-    case LSM6DSV320X_TEMP_BATCHED_AT_60Hz:
+    case 0x03:
       *val = LSM6DSV320X_TEMP_BATCHED_AT_60Hz;
       break;
 
@@ -4843,19 +4850,19 @@ int32_t lsm6dsv320x_fifo_timestamp_batch_get(const stmdev_ctx_t *ctx,
 
   switch (fifo_ctrl4.dec_ts_batch)
   {
-    case LSM6DSV320X_TMSTMP_NOT_BATCHED:
+    case 0x00:
       *val = LSM6DSV320X_TMSTMP_NOT_BATCHED;
       break;
 
-    case LSM6DSV320X_TMSTMP_DEC_1:
+    case 0x01:
       *val = LSM6DSV320X_TMSTMP_DEC_1;
       break;
 
-    case LSM6DSV320X_TMSTMP_DEC_8:
+    case 0x02:
       *val = LSM6DSV320X_TMSTMP_DEC_8;
       break;
 
-    case LSM6DSV320X_TMSTMP_DEC_32:
+    case 0x03:
       *val = LSM6DSV320X_TMSTMP_DEC_32;
       break;
 
@@ -5008,67 +5015,67 @@ int32_t lsm6dsv320x_fifo_out_raw_get(const stmdev_ctx_t *ctx,
 
   switch (fifo_data_out_tag.tag_sensor)
   {
-    case 0:
+    case 0x00:
       val->tag = LSM6DSV320X_FIFO_EMPTY;
       break;
 
-    case 1:
+    case 0x01:
       val->tag = LSM6DSV320X_GY_NC_TAG;
       break;
 
-    case 2:
+    case 0x02:
       val->tag = LSM6DSV320X_XL_NC_TAG;
       break;
 
-    case 3:
+    case 0x03:
       val->tag = LSM6DSV320X_TEMPERATURE_TAG;
       break;
 
-    case 4:
+    case 0x04:
       val->tag = LSM6DSV320X_TIMESTAMP_TAG;
       break;
 
-    case 5:
+    case 0x05:
       val->tag = LSM6DSV320X_CFG_CHANGE_TAG;
       break;
 
-    case 6:
+    case 0x06:
       val->tag = LSM6DSV320X_XL_NC_T_2_TAG;
       break;
 
-    case 7:
+    case 0x07:
       val->tag = LSM6DSV320X_XL_NC_T_1_TAG;
       break;
 
-    case 8:
+    case 0x08:
       val->tag = LSM6DSV320X_XL_2XC_TAG;
       break;
 
-    case 9:
+    case 0x09:
       val->tag = LSM6DSV320X_XL_3XC_TAG;
       break;
 
-    case 0xA:
+    case 0x0A:
       val->tag = LSM6DSV320X_GY_NC_T_2_TAG;
       break;
 
-    case 0xB:
+    case 0x0B:
       val->tag = LSM6DSV320X_GY_NC_T_1_TAG;
       break;
 
-    case 0xC:
+    case 0x0C:
       val->tag = LSM6DSV320X_GY_2XC_TAG;
       break;
 
-    case 0xD:
+    case 0x0D:
       val->tag = LSM6DSV320X_GY_3XC_TAG;
       break;
 
-    case 0xE:
+    case 0x0E:
       val->tag = LSM6DSV320X_SENSORHUB_TARGET0_TAG;
       break;
 
-    case 0xF:
+    case 0x0F:
       val->tag = LSM6DSV320X_SENSORHUB_TARGET1_TAG;
       break;
 
@@ -5505,11 +5512,11 @@ int32_t lsm6dsv320x_filt_anti_spike_get(const stmdev_ctx_t *ctx,
 
   switch (if_cfg.asf_ctrl)
   {
-    case LSM6DSV320X_AUTO:
+    case 0x00:
       *val = LSM6DSV320X_AUTO;
       break;
 
-    case LSM6DSV320X_ALWAYS_ACTIVE:
+    case 0x01:
       *val = LSM6DSV320X_ALWAYS_ACTIVE;
       break;
 
@@ -5660,35 +5667,35 @@ int32_t lsm6dsv320x_filt_gy_lp1_bandwidth_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl6.lpf1_g_bw)
   {
-    case LSM6DSV320X_GY_ULTRA_LIGHT:
+    case 0x00:
       *val = LSM6DSV320X_GY_ULTRA_LIGHT;
       break;
 
-    case LSM6DSV320X_GY_VERY_LIGHT:
+    case 0x01:
       *val = LSM6DSV320X_GY_VERY_LIGHT;
       break;
 
-    case LSM6DSV320X_GY_LIGHT:
+    case 0x02:
       *val = LSM6DSV320X_GY_LIGHT;
       break;
 
-    case LSM6DSV320X_GY_MEDIUM:
+    case 0x03:
       *val = LSM6DSV320X_GY_MEDIUM;
       break;
 
-    case LSM6DSV320X_GY_STRONG:
+    case 0x04:
       *val = LSM6DSV320X_GY_STRONG;
       break;
 
-    case LSM6DSV320X_GY_VERY_STRONG:
+    case 0x05:
       *val = LSM6DSV320X_GY_VERY_STRONG;
       break;
 
-    case LSM6DSV320X_GY_AGGRESSIVE:
+    case 0x06:
       *val = LSM6DSV320X_GY_AGGRESSIVE;
       break;
 
-    case LSM6DSV320X_GY_XTREME:
+    case 0x07:
       *val = LSM6DSV320X_GY_XTREME;
       break;
 
@@ -5827,35 +5834,35 @@ int32_t lsm6dsv320x_filt_xl_lp2_bandwidth_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl8.hp_lpf2_xl_bw)
   {
-    case LSM6DSV320X_XL_ULTRA_LIGHT:
+    case 0x00:
       *val = LSM6DSV320X_XL_ULTRA_LIGHT;
       break;
 
-    case LSM6DSV320X_XL_VERY_LIGHT:
+    case 0x01:
       *val = LSM6DSV320X_XL_VERY_LIGHT;
       break;
 
-    case LSM6DSV320X_XL_LIGHT:
+    case 0x02:
       *val = LSM6DSV320X_XL_LIGHT;
       break;
 
-    case LSM6DSV320X_XL_MEDIUM:
+    case 0x03:
       *val = LSM6DSV320X_XL_MEDIUM;
       break;
 
-    case LSM6DSV320X_XL_STRONG:
+    case 0x04:
       *val = LSM6DSV320X_XL_STRONG;
       break;
 
-    case LSM6DSV320X_XL_VERY_STRONG:
+    case 0x05:
       *val = LSM6DSV320X_XL_VERY_STRONG;
       break;
 
-    case LSM6DSV320X_XL_AGGRESSIVE:
+    case 0x06:
       *val = LSM6DSV320X_XL_AGGRESSIVE;
       break;
 
-    case LSM6DSV320X_XL_XTREME:
+    case 0x07:
       *val = LSM6DSV320X_XL_XTREME;
       break;
 
@@ -5997,15 +6004,15 @@ int32_t lsm6dsv320x_filt_xl_hp_mode_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl9.hp_ref_mode_xl | (ctrl9.hp_slope_xl_en << 1))
   {
-    case LSM6DSV320X_HP_MD_NORMAL_SLOPE_ON:
+    case 0x02:
       *val = LSM6DSV320X_HP_MD_NORMAL_SLOPE_ON;
       break;
 
-    case LSM6DSV320X_HP_MD_NORMAL_SLOPE_OFF:
+    case 0x00:
       *val = LSM6DSV320X_HP_MD_NORMAL_SLOPE_OFF;
       break;
 
-    case LSM6DSV320X_HP_MD_REFERENCE:
+    case 0x03:
       *val = LSM6DSV320X_HP_MD_REFERENCE;
       break;
 
@@ -6062,15 +6069,15 @@ int32_t lsm6dsv320x_filt_wkup_act_feed_get(const stmdev_ctx_t *ctx,
 
   switch ((wake_up_ths.usr_off_on_wu << 1) + tap_cfg0.slope_fds)
   {
-    case LSM6DSV320X_WK_FEED_SLOPE:
+    case 0x00:
       *val = LSM6DSV320X_WK_FEED_SLOPE;
       break;
 
-    case LSM6DSV320X_WK_FEED_HIGH_PASS:
+    case 0x01:
       *val = LSM6DSV320X_WK_FEED_HIGH_PASS;
       break;
 
-    case LSM6DSV320X_WK_FEED_LP_WITH_OFFSET:
+    case 0x03:
       *val = LSM6DSV320X_WK_FEED_LP_WITH_OFFSET;
       break;
 
@@ -6149,11 +6156,11 @@ int32_t lsm6dsv320x_filt_sixd_feed_get(const stmdev_ctx_t *ctx,
 
   switch (tap_cfg0.low_pass_on_6d)
   {
-    case LSM6DSV320X_SIXD_FEED_ODR_DIV_2:
+    case 0x00:
       *val = LSM6DSV320X_SIXD_FEED_ODR_DIV_2;
       break;
 
-    case LSM6DSV320X_SIXD_FEED_LOW_PASS:
+    case 0x01:
       *val = LSM6DSV320X_SIXD_FEED_LOW_PASS;
       break;
 
@@ -6197,11 +6204,11 @@ int32_t lsm6dsv320x_filt_gy_eis_lp_bandwidth_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl_eis.lpf_g_eis_bw)
   {
-    case LSM6DSV320X_EIS_LP_NORMAL:
+    case 0x00:
       *val = LSM6DSV320X_EIS_LP_NORMAL;
       break;
 
-    case LSM6DSV320X_EIS_LP_LIGHT:
+    case 0x01:
       *val = LSM6DSV320X_EIS_LP_LIGHT;
       break;
 
@@ -6247,19 +6254,19 @@ int32_t lsm6dsv320x_filt_gy_ois_lp_bandwidth_get(const stmdev_ctx_t *ctx,
 
   switch (ui_ctrl2_ois.lpf1_g_ois_bw)
   {
-    case LSM6DSV320X_OIS_GY_LP_NORMAL:
+    case 0x00:
       *val = LSM6DSV320X_OIS_GY_LP_NORMAL;
       break;
 
-    case LSM6DSV320X_OIS_GY_LP_STRONG:
+    case 0x01:
       *val = LSM6DSV320X_OIS_GY_LP_STRONG;
       break;
 
-    case LSM6DSV320X_OIS_GY_LP_AGGRESSIVE:
+    case 0x02:
       *val = LSM6DSV320X_OIS_GY_LP_AGGRESSIVE;
       break;
 
-    case LSM6DSV320X_OIS_GY_LP_LIGHT:
+    case 0x03:
       *val = LSM6DSV320X_OIS_GY_LP_LIGHT;
       break;
 
@@ -6304,35 +6311,35 @@ int32_t lsm6dsv320x_filt_xl_ois_lp_bandwidth_get(const stmdev_ctx_t *ctx,
 
   switch (ui_ctrl3_ois.lpf_xl_ois_bw)
   {
-    case LSM6DSV320X_OIS_XL_LP_ULTRA_LIGHT:
+    case 0x00:
       *val = LSM6DSV320X_OIS_XL_LP_ULTRA_LIGHT;
       break;
 
-    case LSM6DSV320X_OIS_XL_LP_VERY_LIGHT:
+    case 0x01:
       *val = LSM6DSV320X_OIS_XL_LP_VERY_LIGHT;
       break;
 
-    case LSM6DSV320X_OIS_XL_LP_LIGHT:
+    case 0x02:
       *val = LSM6DSV320X_OIS_XL_LP_LIGHT;
       break;
 
-    case LSM6DSV320X_OIS_XL_LP_NORMAL:
+    case 0x03:
       *val = LSM6DSV320X_OIS_XL_LP_NORMAL;
       break;
 
-    case LSM6DSV320X_OIS_XL_LP_STRONG:
+    case 0x04:
       *val = LSM6DSV320X_OIS_XL_LP_STRONG;
       break;
 
-    case LSM6DSV320X_OIS_XL_LP_VERY_STRONG:
+    case 0x05:
       *val = LSM6DSV320X_OIS_XL_LP_VERY_STRONG;
       break;
 
-    case LSM6DSV320X_OIS_XL_LP_AGGRESSIVE:
+    case 0x06:
       *val = LSM6DSV320X_OIS_XL_LP_AGGRESSIVE;
       break;
 
-    case LSM6DSV320X_OIS_XL_LP_XTREME:
+    case 0x07:
       *val = LSM6DSV320X_OIS_XL_LP_XTREME;
       break;
 
@@ -6377,11 +6384,11 @@ int32_t lsm6dsv320x_fsm_permission_get(const stmdev_ctx_t *ctx,
 
   switch (func_cfg_access.fsm_wr_ctrl_en)
   {
-    case LSM6DSV320X_PROTECT_CTRL_REGS:
+    case 0x00:
       *val = LSM6DSV320X_PROTECT_CTRL_REGS;
       break;
 
-    case LSM6DSV320X_WRITE_CTRL_REG:
+    case 0x01:
       *val = LSM6DSV320X_WRITE_CTRL_REG;
       break;
 
@@ -6611,31 +6618,31 @@ exit:
 
   switch (fsm_odr.fsm_odr)
   {
-    case LSM6DSV320X_FSM_15Hz:
+    case 0x00:
       *val = LSM6DSV320X_FSM_15Hz;
       break;
 
-    case LSM6DSV320X_FSM_30Hz:
+    case 0x01:
       *val = LSM6DSV320X_FSM_30Hz;
       break;
 
-    case LSM6DSV320X_FSM_60Hz:
+    case 0x02:
       *val = LSM6DSV320X_FSM_60Hz;
       break;
 
-    case LSM6DSV320X_FSM_120Hz:
+    case 0x03:
       *val = LSM6DSV320X_FSM_120Hz;
       break;
 
-    case LSM6DSV320X_FSM_240Hz:
+    case 0x04:
       *val = LSM6DSV320X_FSM_240Hz;
       break;
 
-    case LSM6DSV320X_FSM_480Hz:
+    case 0x05:
       *val = LSM6DSV320X_FSM_480Hz;
       break;
 
-    case LSM6DSV320X_FSM_960Hz:
+    case 0x06:
       *val = LSM6DSV320X_FSM_960Hz;
       break;
 
@@ -7067,27 +7074,27 @@ int32_t lsm6dsv320x_fsm_ext_sens_z_orient_get(const stmdev_ctx_t *ctx,
 
   switch (ext_cfg_a.ext_z_axis)
   {
-    case LSM6DSV320X_Z_EQ_Y:
+    case 0x00:
       *val = LSM6DSV320X_Z_EQ_Y;
       break;
 
-    case LSM6DSV320X_Z_EQ_MIN_Y:
+    case 0x01:
       *val = LSM6DSV320X_Z_EQ_MIN_Y;
       break;
 
-    case LSM6DSV320X_Z_EQ_X:
+    case 0x02:
       *val = LSM6DSV320X_Z_EQ_X;
       break;
 
-    case LSM6DSV320X_Z_EQ_MIN_X:
+    case 0x03:
       *val = LSM6DSV320X_Z_EQ_MIN_X;
       break;
 
-    case LSM6DSV320X_Z_EQ_MIN_Z:
+    case 0x04:
       *val = LSM6DSV320X_Z_EQ_MIN_Z;
       break;
 
-    case LSM6DSV320X_Z_EQ_Z:
+    case 0x05:
       *val = LSM6DSV320X_Z_EQ_Z;
       break;
 
@@ -7131,27 +7138,27 @@ int32_t lsm6dsv320x_fsm_ext_sens_y_orient_get(const stmdev_ctx_t *ctx,
 
   switch (ext_cfg_a.ext_y_axis)
   {
-    case LSM6DSV320X_Y_EQ_Y:
+    case 0x00:
       *val = LSM6DSV320X_Y_EQ_Y;
       break;
 
-    case LSM6DSV320X_Y_EQ_MIN_Y:
+    case 0x01:
       *val = LSM6DSV320X_Y_EQ_MIN_Y;
       break;
 
-    case LSM6DSV320X_Y_EQ_X:
+    case 0x02:
       *val = LSM6DSV320X_Y_EQ_X;
       break;
 
-    case LSM6DSV320X_Y_EQ_MIN_X:
+    case 0x03:
       *val = LSM6DSV320X_Y_EQ_MIN_X;
       break;
 
-    case LSM6DSV320X_Y_EQ_MIN_Z:
+    case 0x04:
       *val = LSM6DSV320X_Y_EQ_MIN_Z;
       break;
 
-    case LSM6DSV320X_Y_EQ_Z:
+    case 0x05:
       *val = LSM6DSV320X_Y_EQ_Z;
       break;
 
@@ -7195,27 +7202,27 @@ int32_t lsm6dsv320x_fsm_ext_sens_x_orient_get(const stmdev_ctx_t *ctx,
 
   switch (ext_cfg_b.ext_x_axis)
   {
-    case LSM6DSV320X_X_EQ_Y:
+    case 0x00:
       *val = LSM6DSV320X_X_EQ_Y;
       break;
 
-    case LSM6DSV320X_X_EQ_MIN_Y:
+    case 0x01:
       *val = LSM6DSV320X_X_EQ_MIN_Y;
       break;
 
-    case LSM6DSV320X_X_EQ_X:
+    case 0x02:
       *val = LSM6DSV320X_X_EQ_X;
       break;
 
-    case LSM6DSV320X_X_EQ_MIN_X:
+    case 0x03:
       *val = LSM6DSV320X_X_EQ_MIN_X;
       break;
 
-    case LSM6DSV320X_X_EQ_MIN_Z:
+    case 0x04:
       *val = LSM6DSV320X_X_EQ_MIN_Z;
       break;
 
-    case LSM6DSV320X_X_EQ_Z:
+    case 0x05:
       *val = LSM6DSV320X_X_EQ_Z;
       break;
 
@@ -7491,35 +7498,35 @@ int32_t lsm6dsv320x_ff_thresholds_get(const stmdev_ctx_t *ctx,
 
   switch (free_fall.ff_ths)
   {
-    case LSM6DSV320X_156_mg:
+    case 0x00:
       *val = LSM6DSV320X_156_mg;
       break;
 
-    case LSM6DSV320X_219_mg:
+    case 0x01:
       *val = LSM6DSV320X_219_mg;
       break;
 
-    case LSM6DSV320X_250_mg:
+    case 0x02:
       *val = LSM6DSV320X_250_mg;
       break;
 
-    case LSM6DSV320X_312_mg:
+    case 0x03:
       *val = LSM6DSV320X_312_mg;
       break;
 
-    case LSM6DSV320X_344_mg:
+    case 0x04:
       *val = LSM6DSV320X_344_mg;
       break;
 
-    case LSM6DSV320X_406_mg:
+    case 0x05:
       *val = LSM6DSV320X_406_mg;
       break;
 
-    case LSM6DSV320X_469_mg:
+    case 0x06:
       *val = LSM6DSV320X_469_mg;
       break;
 
-    case LSM6DSV320X_500_mg:
+    case 0x07:
       *val = LSM6DSV320X_500_mg;
       break;
 
@@ -7663,31 +7670,31 @@ int32_t lsm6dsv320x_mlc_data_rate_get(const stmdev_ctx_t *ctx,
 
   switch (mlc_odr.mlc_odr)
   {
-    case 0:
+    case 0x00:
       *val = LSM6DSV320X_MLC_15Hz;
       break;
 
-    case 1:
+    case 0x01:
       *val = LSM6DSV320X_MLC_30Hz;
       break;
 
-    case 2:
+    case 0x02:
       *val = LSM6DSV320X_MLC_60Hz;
       break;
 
-    case 3:
+    case 0x03:
       *val = LSM6DSV320X_MLC_120Hz;
       break;
 
-    case 4:
+    case 0x04:
       *val = LSM6DSV320X_MLC_240Hz;
       break;
 
-    case 5:
+    case 0x05:
       *val = LSM6DSV320X_MLC_480Hz;
       break;
 
-    case 6:
+    case 0x06:
       *val = LSM6DSV320X_MLC_960Hz;
       break;
 
@@ -7779,11 +7786,11 @@ int32_t lsm6dsv320x_ois_ctrl_mode_get(const stmdev_ctx_t *ctx,
 
   switch (func_cfg_access.ois_ctrl_from_ui)
   {
-    case LSM6DSV320X_OIS_CTRL_FROM_OIS:
+    case 0x00:
       *val = LSM6DSV320X_OIS_CTRL_FROM_OIS;
       break;
 
-    case LSM6DSV320X_OIS_CTRL_FROM_UI:
+    case 0x01:
       *val = LSM6DSV320X_OIS_CTRL_FROM_UI;
       break;
 
@@ -8048,19 +8055,19 @@ int32_t lsm6dsv320x_ois_gy_full_scale_get(const stmdev_ctx_t *ctx,
 
   switch (ui_ctrl2_ois.fs_g_ois)
   {
-    case LSM6DSV320X_OIS_250dps:
+    case 0x01:
       *val = LSM6DSV320X_OIS_250dps;
       break;
 
-    case LSM6DSV320X_OIS_500dps:
+    case 0x02:
       *val = LSM6DSV320X_OIS_500dps;
       break;
 
-    case LSM6DSV320X_OIS_1000dps:
+    case 0x03:
       *val = LSM6DSV320X_OIS_1000dps;
       break;
 
-    case LSM6DSV320X_OIS_2000dps:
+    case 0x04:
       *val = LSM6DSV320X_OIS_2000dps;
       break;
 
@@ -8104,19 +8111,19 @@ int32_t lsm6dsv320x_ois_xl_full_scale_get(const stmdev_ctx_t *ctx,
 
   switch (ui_ctrl3_ois.fs_xl_ois)
   {
-    case LSM6DSV320X_OIS_2g:
+    case 0x00:
       *val = LSM6DSV320X_OIS_2g;
       break;
 
-    case LSM6DSV320X_OIS_4g:
+    case 0x01:
       *val = LSM6DSV320X_OIS_4g;
       break;
 
-    case LSM6DSV320X_OIS_8g:
+    case 0x02:
       *val = LSM6DSV320X_OIS_8g;
       break;
 
-    case LSM6DSV320X_OIS_16g:
+    case 0x03:
       *val = LSM6DSV320X_OIS_16g;
       break;
 
@@ -8160,19 +8167,19 @@ int32_t lsm6dsv320x_6d_threshold_get(const stmdev_ctx_t *ctx,
 
   switch (tap_ths_6d.sixd_ths)
   {
-    case LSM6DSV320X_DEG_80:
+    case 0x00:
       *val = LSM6DSV320X_DEG_80;
       break;
 
-    case LSM6DSV320X_DEG_70:
+    case 0x01:
       *val = LSM6DSV320X_DEG_70;
       break;
 
-    case LSM6DSV320X_DEG_60:
+    case 0x02:
       *val = LSM6DSV320X_DEG_60;
       break;
 
-    case LSM6DSV320X_DEG_50:
+    case 0x03:
       *val = LSM6DSV320X_DEG_50;
       break;
 
@@ -8256,11 +8263,11 @@ int32_t lsm6dsv320x_i3c_config_get(const stmdev_ctx_t *ctx,
 
   switch (pin_ctrl.ibhr_por_en)
   {
-    case LSM6DSV320X_SW_RST_DYN_ADDRESS_RST:
+    case 0x00:
       val->rst_mode = LSM6DSV320X_SW_RST_DYN_ADDRESS_RST;
       break;
 
-    case LSM6DSV320X_I3C_GLOBAL_RST:
+    case 0x01:
       val->rst_mode = LSM6DSV320X_I3C_GLOBAL_RST;
       break;
 
@@ -8277,19 +8284,19 @@ int32_t lsm6dsv320x_i3c_config_get(const stmdev_ctx_t *ctx,
 
   switch (ctrl5.bus_act_sel)
   {
-    case 0:
+    case 0x00:
       val->ibi_time = LSM6DSV320X_IBI_50us;
       break;
 
-    case 1:
+    case 0x01:
       val->ibi_time = LSM6DSV320X_IBI_2us;
       break;
 
-    case 2:
+    case 0x02:
       val->ibi_time = LSM6DSV320X_IBI_1ms;
       break;
 
-    case 3:
+    case 0x03:
       val->ibi_time = LSM6DSV320X_IBI_50ms;
       break;
 
@@ -8400,19 +8407,19 @@ int32_t lsm6dsv320x_sh_target_connected_get(const stmdev_ctx_t *ctx,
 
   switch (controller_config.aux_sens_on)
   {
-    case LSM6DSV320X_TGT_0:
+    case 0x00:
       *val = LSM6DSV320X_TGT_0;
       break;
 
-    case LSM6DSV320X_TGT_0_1:
+    case 0x01:
       *val = LSM6DSV320X_TGT_0_1;
       break;
 
-    case LSM6DSV320X_TGT_0_1_2:
+    case 0x02:
       *val = LSM6DSV320X_TGT_0_1_2;
       break;
 
-    case LSM6DSV320X_TGT_0_1_2_3:
+    case 0x03:
       *val = LSM6DSV320X_TGT_0_1_2_3;
       break;
 
@@ -8556,11 +8563,11 @@ int32_t lsm6dsv320x_sh_syncro_mode_get(const stmdev_ctx_t *ctx,
 
   switch (controller_config.start_config)
   {
-    case LSM6DSV320X_SH_TRG_XL_GY_DRDY:
+    case 0x00:
       *val = LSM6DSV320X_SH_TRG_XL_GY_DRDY;
       break;
 
-    case LSM6DSV320X_SH_TRIG_INT2:
+    case 0x01:
       *val = LSM6DSV320X_SH_TRIG_INT2;
       break;
 
@@ -8612,11 +8619,11 @@ int32_t lsm6dsv320x_sh_write_mode_get(const stmdev_ctx_t *ctx,
 
   switch (controller_config.write_once)
   {
-    case LSM6DSV320X_EACH_SH_CYCLE:
+    case 0x00:
       *val = LSM6DSV320X_EACH_SH_CYCLE;
       break;
 
-    case LSM6DSV320X_ONLY_FIRST_CYCLE:
+    case 0x01:
       *val = LSM6DSV320X_ONLY_FIRST_CYCLE;
       break;
 
@@ -8748,30 +8755,30 @@ int32_t lsm6dsv320x_sh_data_rate_get(const stmdev_ctx_t *ctx,
 
   switch (tgt0_config.shub_odr)
   {
-    case LSM6DSV320X_SH_1Hz875:
+    case 0x00:
       *val = LSM6DSV320X_SH_1Hz875;
       break;
-    case LSM6DSV320X_SH_15Hz:
+    case 0x01:
       *val = LSM6DSV320X_SH_15Hz;
       break;
 
-    case LSM6DSV320X_SH_30Hz:
+    case 0x02:
       *val = LSM6DSV320X_SH_30Hz;
       break;
 
-    case LSM6DSV320X_SH_60Hz:
+    case 0x03:
       *val = LSM6DSV320X_SH_60Hz;
       break;
 
-    case LSM6DSV320X_SH_120Hz:
+    case 0x04:
       *val = LSM6DSV320X_SH_120Hz;
       break;
 
-    case LSM6DSV320X_SH_240Hz:
+    case 0x05:
       *val = LSM6DSV320X_SH_240Hz;
       break;
 
-    case LSM6DSV320X_SH_480Hz:
+    case 0x06:
       *val = LSM6DSV320X_SH_480Hz;
       break;
 
@@ -8908,15 +8915,15 @@ int32_t lsm6dsv320x_pad_strength_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pad_st
 
   switch (pin_ctrl.io_pad_strength)
   {
-    case 0:
+    case 0x00:
       *val = LSM6DSV320X_PAD_LOW_STRENGTH;
       break;
 
-    case 1:
+    case 0x01:
       *val = LSM6DSV320X_PAD_MIDDLE_STRENGTH;
       break;
 
-    case 2:
+    case 0x02:
     default:
       *val = LSM6DSV320X_PAD_HIGH_STRENGTH;
       break;
@@ -8957,11 +8964,11 @@ int32_t lsm6dsv320x_ui_i2c_i3c_mode_get(const stmdev_ctx_t *ctx,
 
   switch (if_cfg.i2c_i3c_disable)
   {
-    case LSM6DSV320X_I2C_I3C_ENABLE:
+    case 0x00:
       *val = LSM6DSV320X_I2C_I3C_ENABLE;
       break;
 
-    case LSM6DSV320X_I2C_I3C_DISABLE:
+    case 0x01:
       *val = LSM6DSV320X_I2C_I3C_DISABLE;
       break;
 
@@ -9003,11 +9010,11 @@ int32_t lsm6dsv320x_spi_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t
 
   switch (if_cfg.sim)
   {
-    case LSM6DSV320X_SPI_4_WIRE:
+    case 0x00:
       *val = LSM6DSV320X_SPI_4_WIRE;
       break;
 
-    case LSM6DSV320X_SPI_3_WIRE:
+    case 0x01:
       *val = LSM6DSV320X_SPI_3_WIRE;
       break;
 
@@ -9081,11 +9088,11 @@ int32_t lsm6dsv320x_if2_spi_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mo
 
   switch (ui_ctrl1_ois.sim_ois)
   {
-    case LSM6DSV320X_SPI_4_WIRE:
+    case 0x00:
       *val = LSM6DSV320X_SPI_4_WIRE;
       break;
 
-    case LSM6DSV320X_SPI_3_WIRE:
+    case 0x01:
       *val = LSM6DSV320X_SPI_3_WIRE;
       break;
 
@@ -9492,27 +9499,27 @@ int32_t lsm6dsv320x_sflp_data_rate_get(const stmdev_ctx_t *ctx,
 
   switch (sflp_odr.sflp_game_odr)
   {
-    case LSM6DSV320X_SFLP_15Hz:
+    case 0x00:
       *val = LSM6DSV320X_SFLP_15Hz;
       break;
 
-    case LSM6DSV320X_SFLP_30Hz:
+    case 0x01:
       *val = LSM6DSV320X_SFLP_30Hz;
       break;
 
-    case LSM6DSV320X_SFLP_60Hz:
+    case 0x02:
       *val = LSM6DSV320X_SFLP_60Hz;
       break;
 
-    case LSM6DSV320X_SFLP_120Hz:
+    case 0x03:
       *val = LSM6DSV320X_SFLP_120Hz;
       break;
 
-    case LSM6DSV320X_SFLP_240Hz:
+    case 0x04:
       *val = LSM6DSV320X_SFLP_240Hz;
       break;
 
-    case LSM6DSV320X_SFLP_480Hz:
+    case 0x05:
       *val = LSM6DSV320X_SFLP_480Hz;
       break;
 
@@ -9647,27 +9654,27 @@ int32_t lsm6dsv320x_tap_axis_priority_get(const stmdev_ctx_t *ctx,
 
   switch (tap_cfg1.tap_priority)
   {
-    case LSM6DSV320X_XYZ :
+    case 0x00 :
       *val = LSM6DSV320X_XYZ ;
       break;
 
-    case LSM6DSV320X_YXZ :
+    case 0x01 :
       *val = LSM6DSV320X_YXZ ;
       break;
 
-    case LSM6DSV320X_XZY:
+    case 0x02:
       *val = LSM6DSV320X_XZY;
       break;
 
-    case LSM6DSV320X_ZYX :
+    case 0x03 :
       *val = LSM6DSV320X_ZYX ;
       break;
 
-    case LSM6DSV320X_YZX :
+    case 0x05 :
       *val = LSM6DSV320X_YZX ;
       break;
 
-    case LSM6DSV320X_ZXY :
+    case 0x06 :
       *val = LSM6DSV320X_ZXY ;
       break;
 
@@ -9747,11 +9754,11 @@ int32_t lsm6dsv320x_tap_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_tap_mode_t
 
   switch (wake_up_ths.single_double_tap)
   {
-    case LSM6DSV320X_ONLY_SINGLE:
+    case 0x00:
       *val = LSM6DSV320X_ONLY_SINGLE;
       break;
 
-    case LSM6DSV320X_BOTH_SINGLE_DOUBLE:
+    case 0x01:
       *val = LSM6DSV320X_BOTH_SINGLE_DOUBLE;
       break;
 
@@ -9887,19 +9894,19 @@ int32_t lsm6dsv320x_act_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_act_mode_t
 
   switch (functions_enable.inact_en)
   {
-    case LSM6DSV320X_XL_AND_GY_NOT_AFFECTED:
+    case 0x00:
       *val = LSM6DSV320X_XL_AND_GY_NOT_AFFECTED;
       break;
 
-    case LSM6DSV320X_XL_LOW_POWER_GY_NOT_AFFECTED:
+    case 0x01:
       *val = LSM6DSV320X_XL_LOW_POWER_GY_NOT_AFFECTED;
       break;
 
-    case LSM6DSV320X_XL_LOW_POWER_GY_SLEEP:
+    case 0x02:
       *val = LSM6DSV320X_XL_LOW_POWER_GY_SLEEP;
       break;
 
-    case LSM6DSV320X_XL_LOW_POWER_GY_POWER_DOWN:
+    case 0x03:
       *val = LSM6DSV320X_XL_LOW_POWER_GY_POWER_DOWN;
       break;
 
@@ -9943,19 +9950,19 @@ int32_t lsm6dsv320x_act_from_sleep_to_act_dur_get(const stmdev_ctx_t *ctx,
 
   switch (inactivity_dur.inact_dur)
   {
-    case LSM6DSV320X_SLEEP_TO_ACT_AT_1ST_SAMPLE:
+    case 0x00:
       *val = LSM6DSV320X_SLEEP_TO_ACT_AT_1ST_SAMPLE;
       break;
 
-    case LSM6DSV320X_SLEEP_TO_ACT_AT_2ND_SAMPLE:
+    case 0x01:
       *val = LSM6DSV320X_SLEEP_TO_ACT_AT_2ND_SAMPLE;
       break;
 
-    case LSM6DSV320X_SLEEP_TO_ACT_AT_3RD_SAMPLE:
+    case 0x02:
       *val = LSM6DSV320X_SLEEP_TO_ACT_AT_3RD_SAMPLE;
       break;
 
-    case LSM6DSV320X_SLEEP_TO_ACT_AT_4th_SAMPLE:
+    case 0x03:
       *val = LSM6DSV320X_SLEEP_TO_ACT_AT_4th_SAMPLE;
       break;
 
@@ -9999,19 +10006,19 @@ int32_t lsm6dsv320x_act_sleep_xl_odr_get(const stmdev_ctx_t *ctx,
 
   switch (inactivity_dur.xl_inact_odr)
   {
-    case LSM6DSV320X_1Hz875:
+    case 0x00:
       *val = LSM6DSV320X_1Hz875;
       break;
 
-    case LSM6DSV320X_15Hz:
+    case 0x01:
       *val = LSM6DSV320X_15Hz;
       break;
 
-    case LSM6DSV320X_30Hz:
+    case 0x02:
       *val = LSM6DSV320X_30Hz;
       break;
 
-    case LSM6DSV320X_60Hz:
+    case 0x03:
       *val = LSM6DSV320X_60Hz;
       break;
 

@@ -30,7 +30,20 @@ This directory contains the LSM6DSV320X component drivers.
 # Update history
 
 ::: {.collapse}
-<input type="checkbox" id="collapse-section7" checked aria-hidden="true">
+<input type="checkbox" id="collapse-section8" checked aria-hidden="true">
+<label for="collapse-section8" aria-hidden="true">V5.1.1 / 12-Mar-2026</label>
+<div>
+
+## Main changes
+
+- Change switch cases to use hex values and fix some warnings
+- Re-order update history with most updated on top
+
+##
+
+</div>
+
+<input type="checkbox" id="collapse-section7" aria-hidden="true">
 <label for="collapse-section7" aria-hidden="true">V5.1.0 / 28-Jan-2026</label>
 <div>
 
@@ -42,6 +55,7 @@ This directory contains the LSM6DSV320X component drivers.
 ##
 
 </div>
+
 <input type="checkbox" id="collapse-section6" aria-hidden="true">
 <label for="collapse-section6" aria-hidden="true">V5.0.0 / 15-Jan-2026</label>
 <div>

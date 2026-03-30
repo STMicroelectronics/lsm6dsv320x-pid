@@ -30,7 +30,20 @@ This directory contains the LSM6DSV320X component drivers.
 # Update history
 
 ::: {.collapse}
-<input type="checkbox" id="collapse-section9" checked aria-hidden="true">
+<input type="checkbox" id="collapse-section10" checked aria-hidden="true">
+<label for="collapse-section10" aria-hidden="true">V5.2.0 / 30-Mar-2026</label>
+<div>
+
+## Main changes
+
+- Add UNCHANGED enum values in xl_setup and gy_setup APIs
+- Fix some MISRA rules
+
+##
+
+</div>
+
+<input type="checkbox" id="collapse-section9" aria-hidden="true">
 <label for="collapse-section9" aria-hidden="true">V5.1.2 / 18-Mar-2026</label>
 <div>
 

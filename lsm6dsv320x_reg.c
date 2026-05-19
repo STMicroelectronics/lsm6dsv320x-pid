@@ -600,7 +600,7 @@ int32_t lsm6dsv320x_xl_setup(
   lsm6dsv320x_ctrl1_t ctrl1 = {0};
   lsm6dsv320x_ctrl2_t ctrl2 = {0};
   lsm6dsv320x_haodr_cfg_t haodr = {0};
-  uint8_t xl_ha = ((uint8_t) xl_odr >> 4) & 0xFU;
+  uint8_t xl_ha;
   uint8_t both_on = 0;
   uint8_t buff[2] = {0};
 
@@ -613,6 +613,8 @@ int32_t lsm6dsv320x_xl_setup(
       return ret;
     }
   }
+
+  xl_ha = ((uint8_t) xl_odr >> 4) & 0xFU;
 
   if (xl_mode == LSM6DSV320X_XL_UNCHANGED_MD)
   {
@@ -728,7 +730,7 @@ int32_t lsm6dsv320x_gy_setup(
   lsm6dsv320x_ctrl1_t ctrl1 = {0};
   lsm6dsv320x_ctrl2_t ctrl2 = {0};
   lsm6dsv320x_haodr_cfg_t haodr = {0};
-  uint8_t gy_ha = ((uint8_t) gy_odr >> 4) & 0xFU;
+  uint8_t gy_ha;
   uint8_t both_on = 0;
   uint8_t buff[2] = {0};
 
@@ -741,6 +743,8 @@ int32_t lsm6dsv320x_gy_setup(
       return ret;
     }
   }
+
+  gy_ha = ((uint8_t) gy_odr >> 4) & 0xFU;
 
   if (gy_mode == LSM6DSV320X_GY_UNCHANGED_MD)
   {

@@ -5033,7 +5033,7 @@ int32_t lsm6dsv320x_fifo_status_get(const stmdev_ctx_t *ctx,
   val->fifo_full = status.fifo_full_ia;
   val->fifo_th = status.fifo_wtm_ia;
 
-  val->fifo_level = (uint16_t)(buff[0] | ((uint16_t)(buff[1] & 0x01U) << 8));
+  val->fifo_level = (uint16_t)(buff[0] | ((uint16_t)(buff[1] & 0x01U) << 8)) & 0x1FFU;
 
   return ret;
 }

@@ -30,7 +30,21 @@ This directory contains the LSM6DSV320X component drivers.
 # Update history
 
 ::: {.collapse}
-<input type="checkbox" id="collapse-section11" checked aria-hidden="true">
+<input type="checkbox" id="collapse-section12" checked aria-hidden="true">
+<label for="collapse-section12" aria-hidden="true">V5.4.0 / 09-Jul-2026</label>
+<div>
+
+## Main changes
+
+- Fix wrong mask for tgt_add (7-bit i2c addr)
+- fix wrong behaviour of xl/gy setup APIs
+- Fix [-Werror=conversion] warning in compilation
+
+##
+
+</div>
+
+<input type="checkbox" id="collapse-section11" aria-hidden="true">
 <label for="collapse-section11" aria-hidden="true">V5.3.0 / 22-Apr-2026</label>
 <div>
 

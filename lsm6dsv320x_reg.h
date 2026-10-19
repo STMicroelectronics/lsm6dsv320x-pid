@@ -31,7 +31,14 @@ extern "C" {
 #include <math.h>
 #include <string.h>
 
-/** @addtogroup LSM6DSV320X
+/**
+  * @defgroup  LSM6DSV320X_sensor LSM6DSV320X Sensor driver definitions
+  * @{
+  *
+  */
+
+/** @defgroup LSM6DSV320X_regs LSM6DSV320X Register section
+  * @brief       This section provides sensor's register related definitions
   * @{
   *
   */
@@ -67,11 +74,6 @@ extern "C" {
   *
   */
 
-/** @defgroup st_common_types STMicroelectronics Sensors Common Types
-  * @{
-  *
-  */
-
 #ifndef MEMS_SHARED_TYPES
 #define MEMS_SHARED_TYPES
 
@@ -101,7 +103,7 @@ typedef struct
 #define PROPERTY_DISABLE                (0U)
 #define PROPERTY_ENABLE                 (1U)
 
-/** @addtogroup  Interfaces_Functions
+/** @defgroup  Interfaces_Functions Generic Read/Write routines
   * @brief       This section provide a set of functions used to read and
   *              write a generic register of the device.
   *              MANDATORY: return 0 -> no Error.
@@ -144,39 +146,7 @@ typedef struct
 
 #endif /* MEMS_SHARED_TYPES */
 
-#ifndef MEMS_UCF_SHARED_TYPES
-#define MEMS_UCF_SHARED_TYPES
-
-/** @defgroup    Generic_structs Generic address-data structure definition
-  * @brief       This structure is useful to load a predefined configuration
-  *              of a sensor.
-  *              You can create a sensor configuration by your own or using
-  *              Unico / Unicleo tools available on STMicroelectronics
-  *              web site.
-  *
-  * @{
-  *
-  */
-
-typedef struct
-{
-  uint8_t address;
-  uint8_t data;
-} ucf_line_t;
-
-/**
-  * @}
-  *
-  */
-
-#endif /* MEMS_UCF_SHARED_TYPES */
-
-/**
-  * @}
-  *
-  */
-
-/** @defgroup LSM6DSV320X_Infos Infos
+/** @defgroup LSM6DSV320X_Infos I2C Address and Device ID
   * @{
   *
   */
@@ -193,7 +163,8 @@ typedef struct
   *
   */
 
-/** @defgroup bitfields_page_main Bitfields Page Main
+/** @defgroup bitfields_page_main Main Page register's bitfield
+  * @brief       Register definitions in Sensor Main Page
   * @{
   *
   */
@@ -1806,7 +1777,8 @@ typedef struct
   *
   */
 
-/** @defgroup bitfields_page_if2 Bitfields Page if2
+/** @defgroup bitfields_page_if2 If2 Page register's bitfield
+  * @brief       Register definitions in Sensor If2 Page
   * @{
   *
   */
@@ -2066,7 +2038,8 @@ typedef struct
   *
   */
 
-/** @defgroup bitfields_page_embedded Bitfields Page Embedded
+/** @defgroup bitfields_page_embedded Embedded Page register's bitfield
+  * @brief       Register definitions in Sensor Embedded Page
   * @{
   *
   */
@@ -3154,7 +3127,8 @@ typedef struct
   *
   */
 
-/** @defgroup bitfields_page_pg0_emb_adv Bitfields Page pg0_emb_adv
+/** @defgroup bitfields_page_pg0_emb_adv pg0_emb_adv register's bitfield
+  * @brief       Register definitions in Sensor Embedded Advanced Page 0
   * @{
   *
   */
@@ -3393,7 +3367,8 @@ typedef struct
   *
   */
 
-/** @defgroup bitfields_page_pg1_emb_adv Bitfields Page pg1_emb_adv
+/** @defgroup bitfields_page_pg1_emb_adv pg1_emb_adv register's bitfield
+  * @brief       Register definitions in Sensor Embedded Advanced Page 1
   * @{
   *
   */
@@ -3535,7 +3510,13 @@ typedef struct
 #endif /* DRV_BYTE_ORDER */
 } lsm6dsv320x_mlc_ext_sensitivity_h_t;
 
-/** @defgroup bitfields_page_pg2_emb_adv Bitfields Page pg2_emb_adv
+/**
+  * @}
+  *
+  */
+
+/** @defgroup bitfields_page_pg2_emb_adv pg2_emb_adv register's bitfield
+  * @brief       Register definitions in Sensor Embedded Advanced Page 2
   * @{
   *
   */
@@ -3610,7 +3591,8 @@ typedef struct
   *
   */
 
-/** @defgroup bitfields_page_sensor_hub Bitfields Page sensor_hub
+/** @defgroup bitfields_page_sensor_hub Page sensor_hub register's bitfield
+  * @brief       Register definitions in Sensor Hub Page
   * @{
   *
   */
@@ -4001,307 +3983,6 @@ typedef struct
   */
 
 /**
-  * @defgroup LSM6DSV320X_Register_Union Register Union
-  * @brief    This union group all the registers having a bit-field
-  *           description.
-  *           This union is useful but it's not needed by the driver.
-  *
-  *           REMOVING this union you are compliant with:
-  *           MISRA-C 2012 [Rule 19.2] -> " Union are not allowed "
-  *
-  * @{
-  *
-  */
-typedef union
-{
-  /* master page registers */
-  lsm6dsv320x_func_cfg_access_t          func_cfg_access;
-  lsm6dsv320x_pin_ctrl_t                 pin_ctrl;
-  lsm6dsv320x_if_cfg_t                   if_cfg;
-  lsm6dsv320x_odr_trig_cfg_t             odr_trig_cfg;
-  lsm6dsv320x_fifo_ctrl1_t               fifo_ctrl1;
-  lsm6dsv320x_fifo_ctrl2_t               fifo_ctrl2;
-  lsm6dsv320x_fifo_ctrl3_t               fifo_ctrl3;
-  lsm6dsv320x_fifo_ctrl4_t               fifo_ctrl4;
-  lsm6dsv320x_counter_bdr_reg1_t         counter_bdr_reg1;
-  lsm6dsv320x_counter_bdr_reg2_t         counter_bdr_reg2;
-  lsm6dsv320x_int1_ctrl_t                int1_ctrl;
-  lsm6dsv320x_int2_ctrl_t                int2_ctrl;
-  lsm6dsv320x_who_am_i_t                 who_am_i;
-  lsm6dsv320x_ctrl1_t                    ctrl1;
-  lsm6dsv320x_ctrl2_t                    ctrl2;
-  lsm6dsv320x_ctrl3_t                    ctrl3;
-  lsm6dsv320x_ctrl4_t                    ctrl4;
-  lsm6dsv320x_ctrl5_t                    ctrl5;
-  lsm6dsv320x_ctrl6_t                    ctrl6;
-  lsm6dsv320x_ctrl7_t                    ctrl7;
-  lsm6dsv320x_ctrl8_t                    ctrl8;
-  lsm6dsv320x_ctrl9_t                    ctrl9;
-  lsm6dsv320x_ctrl10_t                   ctrl10;
-  lsm6dsv320x_ctrl_status_t              ctrl_status;
-  lsm6dsv320x_fifo_status1_t             fifo_status1;
-  lsm6dsv320x_fifo_status2_t             fifo_status2;
-  lsm6dsv320x_all_int_src_t              all_int_src;
-  lsm6dsv320x_status_reg_t               status_reg;
-  lsm6dsv320x_out_temp_l_t               out_temp_l;
-  lsm6dsv320x_out_temp_h_t               out_temp_h;
-  lsm6dsv320x_outx_l_g_t                 outx_l_g;
-  lsm6dsv320x_outx_h_g_t                 outx_h_g;
-  lsm6dsv320x_outy_l_g_t                 outy_l_g;
-  lsm6dsv320x_outy_h_g_t                 outy_h_g;
-  lsm6dsv320x_outz_l_g_t                 outz_l_g;
-  lsm6dsv320x_outz_h_g_t                 outz_h_g;
-  lsm6dsv320x_outx_l_a_t                 outx_l_a;
-  lsm6dsv320x_outx_h_a_t                 outx_h_a;
-  lsm6dsv320x_outy_l_a_t                 outy_l_a;
-  lsm6dsv320x_outy_h_a_t                 outy_h_a;
-  lsm6dsv320x_outz_l_a_t                 outz_l_a;
-  lsm6dsv320x_outz_h_a_t                 outz_h_a;
-  lsm6dsv320x_ui_outx_l_g_ois_eis_t      ui_outx_l_g_ois_eis;
-  lsm6dsv320x_ui_outx_h_g_ois_eis_t      ui_outx_h_g_ois_eis;
-  lsm6dsv320x_ui_outy_l_g_ois_eis_t      ui_outy_l_g_ois_eis;
-  lsm6dsv320x_ui_outy_h_g_ois_eis_t      ui_outy_h_g_ois_eis;
-  lsm6dsv320x_ui_outz_l_g_ois_eis_t      ui_outz_l_g_ois_eis;
-  lsm6dsv320x_ui_outz_h_g_ois_eis_t      ui_outz_h_g_ois_eis;
-  lsm6dsv320x_ui_outx_l_a_ois_hg_t       ui_outx_l_a_ois_hg;
-  lsm6dsv320x_ui_outx_h_a_ois_hg_t       ui_outx_h_a_ois_hg;
-  lsm6dsv320x_ui_outy_l_a_ois_hg_t       ui_outy_l_a_ois_hg;
-  lsm6dsv320x_ui_outy_h_a_ois_hg_t       ui_outy_h_a_ois_hg;
-  lsm6dsv320x_ui_outz_l_a_ois_hg_t       ui_outz_l_a_ois_hg;
-  lsm6dsv320x_ui_outz_h_a_ois_hg_t       ui_outz_h_a_ois_hg;
-  lsm6dsv320x_timestamp0_t               timestamp0;
-  lsm6dsv320x_timestamp1_t               timestamp1;
-  lsm6dsv320x_timestamp2_t               timestamp2;
-  lsm6dsv320x_timestamp3_t               timestamp3;
-  lsm6dsv320x_ui_status_reg_ois_t        ui_status_reg_ois;
-  lsm6dsv320x_wake_up_src_t              wake_up_src;
-  lsm6dsv320x_tap_src_t                  tap_src;
-  lsm6dsv320x_d6d_src_t                  d6d_src;
-  lsm6dsv320x_status_controller_mainpage_t   status_controller_mainpage;
-  lsm6dsv320x_emb_func_status_mainpage_t emb_func_status_mainpage;
-  lsm6dsv320x_fsm_status_mainpage_t      fsm_status_mainpage;
-  lsm6dsv320x_mlc_status_mainpage_t      mlc_status_mainpage;
-  lsm6dsv320x_hg_wake_up_src_t           hg_wake_up_src;
-  lsm6dsv320x_ctrl2_xl_hg_t              ctrl2_xl_hg;
-  lsm6dsv320x_ctrl1_xl_hg_t              ctrl1_xl_hg;
-  lsm6dsv320x_internal_freq_t            internal_freq;
-  lsm6dsv320x_functions_enable_t         functions_enable;
-  lsm6dsv320x_inactivity_dur_t           inactivity_dur;
-  lsm6dsv320x_inactivity_ths_t           inactivity_ths;
-  lsm6dsv320x_tap_cfg0_t                 tap_cfg0;
-  lsm6dsv320x_tap_cfg1_t                 tap_cfg1;
-  lsm6dsv320x_tap_cfg2_t                 tap_cfg2;
-  lsm6dsv320x_tap_ths_6d_t               tap_ths_6d;
-  lsm6dsv320x_tap_dur_t                  tap_dur;
-  lsm6dsv320x_wake_up_ths_t              wake_up_ths;
-  lsm6dsv320x_wake_up_dur_t              wake_up_dur;
-  lsm6dsv320x_free_fall_t                free_fall;
-  lsm6dsv320x_md1_cfg_t                  md1_cfg;
-  lsm6dsv320x_md2_cfg_t                  md2_cfg;
-  lsm6dsv320x_emb_func_cfg_t             emb_func_cfg;
-  lsm6dsv320x_ui_handshake_ctrl_t        ui_handshake_ctrl;
-  lsm6dsv320x_ui_if2_shared_0_t          ui_if2_shared_0;
-  lsm6dsv320x_ui_if2_shared_1_t          ui_if2_shared_1;
-  lsm6dsv320x_ui_if2_shared_2_t          ui_if2_shared_2;
-  lsm6dsv320x_ui_if2_shared_3_t          ui_if2_shared_3;
-  lsm6dsv320x_ui_if2_shared_4_t          ui_if2_shared_4;
-  lsm6dsv320x_ui_if2_shared_5_t          ui_if2_shared_5;
-  lsm6dsv320x_ctrl_eis_t                 ctrl_eis;
-  lsm6dsv320x_hg_x_ofs_usr_t             hg_x_ofs_usr;
-  lsm6dsv320x_hg_y_ofs_usr_t             hg_y_ofs_usr;
-  lsm6dsv320x_hg_z_ofs_usr_t             hg_z_ofs_usr;
-  lsm6dsv320x_ui_int_ois_t               ui_int_ois;
-  lsm6dsv320x_ui_ctrl1_ois_t             ui_ctrl1_ois;
-  lsm6dsv320x_ui_ctrl2_ois_t             ui_ctrl2_ois;
-  lsm6dsv320x_ui_ctrl3_ois_t             ui_ctrl3_ois;
-  lsm6dsv320x_x_ofs_usr_t                x_ofs_usr;
-  lsm6dsv320x_y_ofs_usr_t                y_ofs_usr;
-  lsm6dsv320x_z_ofs_usr_t                z_ofs_usr;
-  lsm6dsv320x_fifo_data_out_tag_t        fifo_data_out_tag;
-  lsm6dsv320x_fifo_data_out_x_l_t        fifo_data_out_x_l;
-  lsm6dsv320x_fifo_data_out_x_h_t        fifo_data_out_x_h;
-  lsm6dsv320x_fifo_data_out_y_l_t        fifo_data_out_y_l;
-  lsm6dsv320x_fifo_data_out_y_h_t        fifo_data_out_y_h;
-  lsm6dsv320x_fifo_data_out_z_l_t        fifo_data_out_z_l;
-  lsm6dsv320x_fifo_data_out_z_h_t        fifo_data_out_z_h;
-  /* IF2 registers */
-  lsm6dsv320x_if2_who_am_i_t             if2_who_am_i;
-  lsm6dsv320x_if2_status_reg_ois_t       if2_status_reg_ois;
-  lsm6dsv320x_if2_out_temp_l_t           if2_out_temp_l;
-  lsm6dsv320x_if2_out_temp_h_t           if2_out_temp_h;
-  lsm6dsv320x_if2_outx_l_g_ois_t         if2_outx_l_g_ois;
-  lsm6dsv320x_if2_outx_h_g_ois_t         if2_outx_h_g_ois;
-  lsm6dsv320x_if2_outy_l_g_ois_t         if2_outy_l_g_ois;
-  lsm6dsv320x_if2_outy_h_g_ois_t         if2_outy_h_g_ois;
-  lsm6dsv320x_if2_outz_l_g_ois_t         if2_outz_l_g_ois;
-  lsm6dsv320x_if2_outz_h_g_ois_t         if2_outz_h_g_ois;
-  lsm6dsv320x_if2_outx_l_a_ois_t         if2_outx_l_a_ois;
-  lsm6dsv320x_if2_outx_h_a_ois_t         if2_outx_h_a_ois;
-  lsm6dsv320x_if2_outy_l_a_ois_t         if2_outy_l_a_ois;
-  lsm6dsv320x_if2_outy_h_a_ois_t         if2_outy_h_a_ois;
-  lsm6dsv320x_if2_outz_l_a_ois_t         if2_outz_l_a_ois;
-  lsm6dsv320x_if2_outz_h_a_ois_t         if2_outz_h_a_ois;
-  lsm6dsv320x_if2_handshake_ctrl_t       if2_handshake_ctrl;
-  lsm6dsv320x_if2_int_ois_t              if2_int_ois;
-  lsm6dsv320x_if2_ctrl1_ois_t            if2_ctrl1_ois;
-  lsm6dsv320x_if2_ctrl2_ois_t            if2_ctrl2_ois;
-  lsm6dsv320x_if2_ctrl3_ois_t            if2_ctrl3_ois;
-  /* Embedded functions registers */
-  lsm6dsv320x_page_sel_t                 page_sel;
-  lsm6dsv320x_emb_func_en_a_t            emb_func_en_a;
-  lsm6dsv320x_emb_func_en_b_t            emb_func_en_b;
-  lsm6dsv320x_emb_func_exec_status_t     emb_func_exec_status;
-  lsm6dsv320x_page_address_t             page_address;
-  lsm6dsv320x_page_value_t               page_value;
-  lsm6dsv320x_emb_func_int1_t            emb_func_int1;
-  lsm6dsv320x_fsm_int1_t                 fsm_int1;
-  lsm6dsv320x_mlc_int1_t                 mlc_int1;
-  lsm6dsv320x_emb_func_int2_t            emb_func_int2;
-  lsm6dsv320x_fsm_int2_t                 fsm_int2;
-  lsm6dsv320x_mlc_int2_t                 mlc_int2;
-  lsm6dsv320x_emb_func_status_t          emb_func_status;
-  lsm6dsv320x_fsm_status_t               fsm_status;
-  lsm6dsv320x_mlc_status_t               mlc_status;
-  lsm6dsv320x_page_rw_t                  page_rw;
-  lsm6dsv320x_sflp_gbiasx_l_t            sflp_gbiasx_l;
-  lsm6dsv320x_sflp_gbiasx_h_t            sflp_gbiasx_h;
-  lsm6dsv320x_sflp_gbiasy_l_t            sflp_gbiasy_l;
-  lsm6dsv320x_sflp_gbiasy_h_t            sflp_gbiasy_h;
-  lsm6dsv320x_sflp_gbiasz_l_t            sflp_gbiasz_l;
-  lsm6dsv320x_sflp_gbiasz_h_t            sflp_gbiasz_h;
-  lsm6dsv320x_sflp_gravx_l_t             sflp_gravx_l;
-  lsm6dsv320x_sflp_gravx_h_t             sflp_gravx_h;
-  lsm6dsv320x_sflp_gravy_l_t             sflp_gravy_l;
-  lsm6dsv320x_sflp_gravy_h_t             sflp_gravy_h;
-  lsm6dsv320x_sflp_gravz_l_t             sflp_gravz_l;
-  lsm6dsv320x_sflp_gravz_h_t             sflp_gravz_h;
-  lsm6dsv320x_sflp_quatw_l_t             sflp_quatw_l;
-  lsm6dsv320x_sflp_quatw_h_t             sflp_quatw_h;
-  lsm6dsv320x_sflp_quatx_l_t             sflp_quatx_l;
-  lsm6dsv320x_sflp_quatx_h_t             sflp_quatx_h;
-  lsm6dsv320x_sflp_quaty_l_t             sflp_quaty_l;
-  lsm6dsv320x_sflp_quaty_h_t             sflp_quaty_h;
-  lsm6dsv320x_sflp_quatz_l_t             sflp_quatz_l;
-  lsm6dsv320x_sflp_quatz_h_t             sflp_quatz_h;
-  lsm6dsv320x_sflp_gbiasx_init_l_t       sflp_gbiasx_init_l;
-  lsm6dsv320x_sflp_gbiasx_init_h_t       sflp_gbiasx_init_h;
-  lsm6dsv320x_sflp_gbiasy_init_l_t       sflp_gbiasy_init_l;
-  lsm6dsv320x_sflp_gbiasy_init_h_t       sflp_gbiasy_init_h;
-  lsm6dsv320x_sflp_gbiasz_init_l_t       sflp_gbiasz_init_l;
-  lsm6dsv320x_sflp_gbiasz_init_h_t       sflp_gbiasz_init_h;
-  lsm6dsv320x_emb_func_fifo_en_a_t       emb_func_fifo_en_a;
-  lsm6dsv320x_emb_func_fifo_en_b_t       emb_func_fifo_en_b;
-  lsm6dsv320x_fsm_enable_t               fsm_enable;
-  lsm6dsv320x_fsm_long_counter_l_t       fsm_long_counter_l;
-  lsm6dsv320x_fsm_long_counter_h_t       fsm_long_counter_h;
-  lsm6dsv320x_int_ack_mask_t             int_ack_mask;
-  lsm6dsv320x_fsm_outs1_t                fsm_outs1;
-  lsm6dsv320x_fsm_outs2_t                fsm_outs2;
-  lsm6dsv320x_fsm_outs3_t                fsm_outs3;
-  lsm6dsv320x_fsm_outs4_t                fsm_outs4;
-  lsm6dsv320x_fsm_outs5_t                fsm_outs5;
-  lsm6dsv320x_fsm_outs6_t                fsm_outs6;
-  lsm6dsv320x_fsm_outs7_t                fsm_outs7;
-  lsm6dsv320x_fsm_outs8_t                fsm_outs8;
-  lsm6dsv320x_sflp_odr_t                 sflp_odr;
-  lsm6dsv320x_fsm_odr_t                  fsm_odr;
-  lsm6dsv320x_mlc_odr_t                  mlc_odr;
-  lsm6dsv320x_step_counter_l_t           step_counter_l;
-  lsm6dsv320x_step_counter_h_t           step_counter_h;
-  lsm6dsv320x_emb_func_src_t             emb_func_src;
-  lsm6dsv320x_emb_func_init_a_t          emb_func_init_a;
-  lsm6dsv320x_emb_func_init_b_t          emb_func_init_b;
-  lsm6dsv320x_emb_func_sensor_conv_en_t  emb_func_sensor_conv_en;
-  lsm6dsv320x_mlc1_src_t                 mlc1_src;
-  lsm6dsv320x_mlc2_src_t                 mlc2_src;
-  lsm6dsv320x_mlc3_src_t                 mlc3_src;
-  lsm6dsv320x_mlc4_src_t                 mlc4_src;
-  lsm6dsv320x_mlc5_src_t                 mlc5_src;
-  lsm6dsv320x_mlc6_src_t                 mlc6_src;
-  lsm6dsv320x_mlc7_src_t                 mlc7_src;
-  /* Embedded functions extended page 0 registers */
-  lsm6dsv320x_fsm_ext_sensitivity_l_t    fsm_ext_sensitivity_l;
-  lsm6dsv320x_fsm_ext_sensitivity_h_t    fsm_ext_sensitivity_h;
-  lsm6dsv320x_fsm_ext_offx_l_t           fsm_ext_offx_l;
-  lsm6dsv320x_fsm_ext_offx_h_t           fsm_ext_offx_h;
-  lsm6dsv320x_fsm_ext_offy_l_t           fsm_ext_offy_l;
-  lsm6dsv320x_fsm_ext_offy_h_t           fsm_ext_offy_h;
-  lsm6dsv320x_fsm_ext_offz_l_t           fsm_ext_offz_l;
-  lsm6dsv320x_fsm_ext_offz_h_t           fsm_ext_offz_h;
-  lsm6dsv320x_fsm_ext_matrix_xx_l_t      fsm_ext_matrix_xx_l;
-  lsm6dsv320x_fsm_ext_matrix_xx_h_t      fsm_ext_matrix_xx_h;
-  lsm6dsv320x_fsm_ext_matrix_xy_l_t      fsm_ext_matrix_xy_l;
-  lsm6dsv320x_fsm_ext_matrix_xy_h_t      fsm_ext_matrix_xy_h;
-  lsm6dsv320x_fsm_ext_matrix_xz_l_t      fsm_ext_matrix_xz_l;
-  lsm6dsv320x_fsm_ext_matrix_xz_h_t      fsm_ext_matrix_xz_h;
-  lsm6dsv320x_fsm_ext_matrix_yy_l_t      fsm_ext_matrix_yy_l;
-  lsm6dsv320x_fsm_ext_matrix_yy_h_t      fsm_ext_matrix_yy_h;
-  lsm6dsv320x_fsm_ext_matrix_yz_l_t      fsm_ext_matrix_yz_l;
-  lsm6dsv320x_fsm_ext_matrix_yz_h_t      fsm_ext_matrix_yz_h;
-  lsm6dsv320x_fsm_ext_matrix_zz_l_t      fsm_ext_matrix_zz_l;
-  lsm6dsv320x_fsm_ext_matrix_zz_h_t      fsm_ext_matrix_zz_h;
-  lsm6dsv320x_ext_cfg_a_t                ext_cfg_a;
-  lsm6dsv320x_ext_cfg_b_t                ext_cfg_b;
-  /* Embedded functions extended page 1 registers */
-  lsm6dsv320x_xl_hg_sensitivity_l_t      xl_hg_sensitivity_l;
-  lsm6dsv320x_xl_hg_sensitivity_h_t      xl_hg_sensitivity_h;
-  lsm6dsv320x_fsm_lc_timeout_l_t         fsm_lc_timeout_l;
-  lsm6dsv320x_fsm_lc_timeout_h_t         fsm_lc_timeout_h;
-  lsm6dsv320x_fsm_programs_t             fsm_programs;
-  lsm6dsv320x_fsm_start_add_l_t          fsm_start_add_l;
-  lsm6dsv320x_fsm_start_add_h_t          fsm_start_add_h;
-  lsm6dsv320x_pedo_cmd_reg_t             pedo_cmd_reg;
-  lsm6dsv320x_pedo_deb_steps_conf_t      pedo_deb_steps_conf;
-  lsm6dsv320x_pedo_sc_deltat_l_t         pedo_sc_deltat_l;
-  lsm6dsv320x_pedo_sc_deltat_h_t         pedo_sc_deltat_h;
-  lsm6dsv320x_mlc_ext_sensitivity_l_t    mlc_ext_sensitivity_l;
-  lsm6dsv320x_mlc_ext_sensitivity_h_t    mlc_ext_sensitivity_h;
-  /* Embedded functions extended page 2 registers */
-  lsm6dsv320x_ext_format_t               ext_format;
-  lsm6dsv320x_ext_3byte_sensitivity_l_t  ext_3byte_sensitivity_l;
-  lsm6dsv320x_ext_3byte_sensitivity_h_t  ext_3byte_sensitivity_h;
-  lsm6dsv320x_ext_3byte_offset_xl_t      ext_3byte_offset_xl;
-  lsm6dsv320x_ext_3byte_offset_l_t       ext_3byte_offset_l;
-  lsm6dsv320x_ext_3byte_offset_h_t       ext_3byte_offset_h;
-  /* Sensor HUB registers */
-  lsm6dsv320x_sensor_hub_1_t             sensor_hub_1;
-  lsm6dsv320x_sensor_hub_2_t             sensor_hub_2;
-  lsm6dsv320x_sensor_hub_3_t             sensor_hub_3;
-  lsm6dsv320x_sensor_hub_4_t             sensor_hub_4;
-  lsm6dsv320x_sensor_hub_5_t             sensor_hub_5;
-  lsm6dsv320x_sensor_hub_6_t             sensor_hub_6;
-  lsm6dsv320x_sensor_hub_7_t             sensor_hub_7;
-  lsm6dsv320x_sensor_hub_8_t             sensor_hub_8;
-  lsm6dsv320x_sensor_hub_9_t             sensor_hub_9;
-  lsm6dsv320x_sensor_hub_10_t            sensor_hub_10;
-  lsm6dsv320x_sensor_hub_11_t            sensor_hub_11;
-  lsm6dsv320x_sensor_hub_12_t            sensor_hub_12;
-  lsm6dsv320x_sensor_hub_13_t            sensor_hub_13;
-  lsm6dsv320x_sensor_hub_14_t            sensor_hub_14;
-  lsm6dsv320x_sensor_hub_15_t            sensor_hub_15;
-  lsm6dsv320x_sensor_hub_16_t            sensor_hub_16;
-  lsm6dsv320x_sensor_hub_17_t            sensor_hub_17;
-  lsm6dsv320x_sensor_hub_18_t            sensor_hub_18;
-  lsm6dsv320x_controller_config_t        controller_config;
-  lsm6dsv320x_tgt0_add_t                 tgt0_add;
-  lsm6dsv320x_tgt0_subadd_t              tgt0_subadd;
-  lsm6dsv320x_tgt0_config_t              tgt0_config;
-  lsm6dsv320x_tgt1_add_t                 tgt1_add;
-  lsm6dsv320x_tgt1_subadd_t              tgt1_subadd;
-  lsm6dsv320x_tgt1_config_t              tgt1_config;
-  lsm6dsv320x_tgt2_add_t                 tgt2_add;
-  lsm6dsv320x_tgt2_subadd_t              tgt2_subadd;
-  lsm6dsv320x_tgt2_config_t              tgt2_config;
-  lsm6dsv320x_tgt3_add_t                 tgt3_add;
-  lsm6dsv320x_tgt3_subadd_t              tgt3_subadd;
-  lsm6dsv320x_tgt3_config_t              tgt3_config;
-  lsm6dsv320x_datawrite_tgt0_t           datawrite_tgt0;
-  lsm6dsv320x_status_controller_t        status_controller;
-  bitwise_t                             bitwise;
-  uint8_t                               byte;
-} lsm6dsv320x_reg_t;
-
-/**
   * @}
   *
   */
@@ -4311,8 +3992,8 @@ typedef union
 #endif /* __weak */
 
 /**
-  * @defgroup  LSM6DSV320X LSM6DSV320X
-  * @brief     This file provides a set of functions needed to drive the
+  * @defgroup  LSM6DSV320X_APIs LSM6DSV320X APIs
+  * @brief     This section provides a set of functions needed to drive the
   *            lsm6dsv320x enhanced inertial module.
   * @{
   *
@@ -5084,65 +4765,65 @@ typedef struct
 } lsm6dsv320x_hg_wu_interrupt_cfg_t;
 
 /**
- * @brief   High-g wake-up interrupt configuration[set]
- *
- * @param  ctx    Read / write interface definitions.(ptr)
- * @param  val    lsm6dsv320x_hg_wu_interrupt_cfg_t.
- * @retval        Interface status (MANDATORY: return 0 -> no Error).
- *
- */
+  * @brief   High-g wake-up interrupt configuration[set]
+  *
+  * @param  ctx    Read / write interface definitions.(ptr)
+  * @param  val    lsm6dsv320x_hg_wu_interrupt_cfg_t.
+  * @retval        Interface status (MANDATORY: return 0 -> no Error).
+  *
+  */
 int32_t lsm6dsv320x_hg_wu_interrupt_cfg_set(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_hg_wu_interrupt_cfg_t val);
 
 /**
- * @brief   High-g wake-up interrupt configuration[get]
- *
- * @param  ctx    Read / write interface definitions.(ptr)
- * @param  val    lsm6dsv320x_hg_wu_interrupt_cfg_t.
- * @retval        Interface status (MANDATORY: return 0 -> no Error).
- *
- */
+  * @brief   High-g wake-up interrupt configuration[get]
+  *
+  * @param  ctx    Read / write interface definitions.(ptr)
+  * @param  val    lsm6dsv320x_hg_wu_interrupt_cfg_t.
+  * @retval        Interface status (MANDATORY: return 0 -> no Error).
+  *
+  */
 int32_t lsm6dsv320x_hg_wu_interrupt_cfg_get(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_hg_wu_interrupt_cfg_t *val);
 
 /**
- * @brief   Emable/disable user offset data correction driving to hg embedded functions[set]
- *
- * @param  ctx    Read / write interface definitions.(ptr)
- * @param  val    0: disable, 1: enable
- * @retval        Interface status (MANDATORY: return 0 -> no Error).
- *
- */
+  * @brief   Emable/disable user offset data correction driving to hg embedded functions[set]
+  *
+  * @param  ctx    Read / write interface definitions.(ptr)
+  * @param  val    0: disable, 1: enable
+  * @retval        Interface status (MANDATORY: return 0 -> no Error).
+  *
+  */
 int32_t lsm6dsv320x_hg_emb_usr_off_correction_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
- * @brief   Emable/disable user offset data correction driving to hg embedded functions[get]
- *
- * @param  ctx    Read / write interface definitions.(ptr)
- * @param  val    0: disable, 1: enable
- * @retval        Interface status (MANDATORY: return 0 -> no Error).
- *
- */
+  * @brief   Emable/disable user offset data correction driving to hg embedded functions[get]
+  *
+  * @param  ctx    Read / write interface definitions.(ptr)
+  * @param  val    0: disable, 1: enable
+  * @retval        Interface status (MANDATORY: return 0 -> no Error).
+  *
+  */
 int32_t lsm6dsv320x_hg_emb_usr_off_correction_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
- * @brief   Emable/disable user offset data correction driving to hg wake-up[set]
- *
- * @param  ctx    Read / write interface definitions.(ptr)
- * @param  val    0: disable, 1: enable
- * @retval        Interface status (MANDATORY: return 0 -> no Error).
- *
- */
+  * @brief   Emable/disable user offset data correction driving to hg wake-up[set]
+  *
+  * @param  ctx    Read / write interface definitions.(ptr)
+  * @param  val    0: disable, 1: enable
+  * @retval        Interface status (MANDATORY: return 0 -> no Error).
+  *
+  */
 int32_t lsm6dsv320x_hg_wu_usr_off_correction_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
- * @brief   Emable/disable user offset data correction driving to hg wake-up[get]
- *
- * @param  ctx    Read / write interface definitions.(ptr)
- * @param  val    0: disable, 1: enable
- * @retval        Interface status (MANDATORY: return 0 -> no Error).
- *
- */
+  * @brief   Emable/disable user offset data correction driving to hg wake-up[get]
+  *
+  * @param  ctx    Read / write interface definitions.(ptr)
+  * @param  val    0: disable, 1: enable
+  * @retval        Interface status (MANDATORY: return 0 -> no Error).
+  *
+  */
 int32_t lsm6dsv320x_hg_wu_usr_off_correction_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
@@ -5308,8 +4989,7 @@ int32_t lsm6dsv320x_pin_int1_route_hg_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int1_route_hg_get(const stmdev_ctx_t *ctx,
-                                          lsm6dsv320x_pin_int_route_t *val);
+int32_t lsm6dsv320x_pin_int1_route_hg_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
 
 /**
   * @brief   Select the signals that need to be routed on int2 pad.[set]
@@ -5332,8 +5012,7 @@ int32_t lsm6dsv320x_pin_int2_route_hg_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int2_route_hg_get(const stmdev_ctx_t *ctx,
-                                          lsm6dsv320x_pin_int_route_t *val);
+int32_t lsm6dsv320x_pin_int2_route_hg_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
 
 /**
   * @brief   Select the signals that need to be routed on int1 pad.[set]
@@ -5356,8 +5035,7 @@ int32_t lsm6dsv320x_pin_int1_route_embedded_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int1_route_embedded_get(const stmdev_ctx_t *ctx,
-                                                lsm6dsv320x_pin_int_route_t *val);
+int32_t lsm6dsv320x_pin_int1_route_embedded_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
 
 /**
   * @brief   Select the signals that need to be routed on int2 pad[set]
@@ -5380,8 +5058,7 @@ int32_t lsm6dsv320x_pin_int2_route_embedded_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int2_route_embedded_get(const stmdev_ctx_t *ctx,
-                                                lsm6dsv320x_pin_int_route_t *val);
+int32_t lsm6dsv320x_pin_int2_route_embedded_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
 /**
   * @}
   *
@@ -9238,6 +8915,11 @@ int32_t lsm6dsv320x_act_wkup_time_windows_get(const stmdev_ctx_t *ctx,
 
 /**
   * @}
+  *
+  */
+
+/**
+  * @} closing LSM6DSV320X_sensor
   *
   */
 #ifdef __cplusplus

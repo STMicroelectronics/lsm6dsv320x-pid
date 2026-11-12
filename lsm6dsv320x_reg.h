@@ -54,11 +54,13 @@ extern "C" {
 #define DRV_LITTLE_ENDIAN 1234
 #define DRV_BIG_ENDIAN    4321
 
-/** if _BYTE_ORDER is not defined, choose the endianness of your architecture
-  * by uncommenting the define which fits your platform endianness
-  */
-//#define DRV_BYTE_ORDER    DRV_BIG_ENDIAN
-#define DRV_BYTE_ORDER    DRV_LITTLE_ENDIAN
+/*
+ * If __BYTE_ORDER__ is unavailable, configure DRV_BYTE_ORDER
+ * for the target architecture.
+ * Use DRV_LITTLE_ENDIAN for little-endian targets or
+ * DRV_BIG_ENDIAN for big-endian targets.
+ */
+#define DRV_BYTE_ORDER DRV_LITTLE_ENDIAN
 
 #else /* defined __BYTE_ORDER__ */
 
@@ -3987,9 +3989,16 @@ typedef struct
   *
   */
 
-#ifndef __weak
-#define __weak __attribute__((weak))
-#endif /* __weak */
+/*
+ * MISRA C:2012 Rule 1.2 deviation.
+ *
+ * Weak linkage is required to allow an application-provided strong
+ * implementation to override the driver's default implementation.
+ * This compiler extension is intentionally used on supported toolchains.
+ */
+#ifndef LSM6DSV320X_WEAK
+#define LSM6DSV320X_WEAK __attribute__((weak))
+#endif
 
 /**
   * @defgroup  LSM6DSV320X_APIs LSM6DSV320X APIs
@@ -4043,7 +4052,7 @@ int32_t lsm6dsv320x_read_reg(const stmdev_ctx_t *ctx, uint8_t reg,
   *
   */
 int32_t lsm6dsv320x_write_reg(const stmdev_ctx_t *ctx, uint8_t reg,
-                              uint8_t *data,
+                              const uint8_t *data,
                               uint16_t len);
 /**
   * @}
@@ -4239,7 +4248,7 @@ float_t lsm6dsv320x_from_gbias_lsb_to_mdps(int16_t lsb);
   */
 float_t lsm6dsv320x_from_gravity_lsb_to_mg(int16_t lsb);
 
-float_t lsm6dsv320x_from_quaternion_lsb_to_float(uint16_t lsb);
+float_t lsm6dsv320x_from_quat_lsb_to_float(uint16_t lsb);
 
 /**
   * @brief  Convert from FP16 to FP32 numbers (e.g. quaternions)
@@ -4271,7 +4280,7 @@ uint32_t lsm6dsv320x_from_f16_to_f32(uint16_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_offset_on_out_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_xl_offset_on_out(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enables accelerometer user offset correction block; it is valid for the low-pass path.[get]
@@ -4281,7 +4290,7 @@ int32_t lsm6dsv320x_xl_offset_on_out_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_offset_on_out_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_xl_offset_on_out(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef struct
 {
@@ -4304,7 +4313,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_offset_mg_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_xl_offset_mg(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_xl_offset_mg_t val);
 
 /**
@@ -4315,7 +4324,7 @@ int32_t lsm6dsv320x_xl_offset_mg_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_offset_mg_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_xl_offset_mg(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_xl_offset_mg_t *val);
 
 /**
@@ -4326,7 +4335,7 @@ int32_t lsm6dsv320x_xl_offset_mg_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_hg_xl_offset_mg_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_hg_xl_offset_mg(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_xl_offset_mg_t val);
 
 /**
@@ -4337,7 +4346,7 @@ int32_t lsm6dsv320x_hg_xl_offset_mg_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_hg_xl_offset_mg_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_hg_xl_offset_mg(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_xl_offset_mg_t *val);
 
 /**
@@ -4400,7 +4409,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_mem_bank_set(const stmdev_ctx_t *ctx, lsm6dsv320x_mem_bank_t val);
+int32_t lsm6dsv320x_set_mem_bank(const stmdev_ctx_t *ctx, lsm6dsv320x_mem_bank_t val);
 
 /**
   * @brief  Change memory bank.[get]
@@ -4410,7 +4419,7 @@ int32_t lsm6dsv320x_mem_bank_set(const stmdev_ctx_t *ctx, lsm6dsv320x_mem_bank_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_mem_bank_get(const stmdev_ctx_t *ctx, lsm6dsv320x_mem_bank_t *val);
+int32_t lsm6dsv320x_get_mem_bank(const stmdev_ctx_t *ctx, lsm6dsv320x_mem_bank_t *val);
 
 /**
   * @brief  Device ID.[get]
@@ -4420,7 +4429,7 @@ int32_t lsm6dsv320x_mem_bank_get(const stmdev_ctx_t *ctx, lsm6dsv320x_mem_bank_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_device_id_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_device_id(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
@@ -4478,7 +4487,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_data_rate_set(const stmdev_ctx_t *ctx, lsm6dsv320x_data_rate_t val)
+int32_t lsm6dsv320x_set_xl_data_rate(const stmdev_ctx_t *ctx, lsm6dsv320x_data_rate_t val)
 __attribute__((deprecated("Use xl_setup function")));
 
 /**
@@ -4489,7 +4498,7 @@ __attribute__((deprecated("Use xl_setup function")));
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx, lsm6dsv320x_data_rate_t *val);
+int32_t lsm6dsv320x_get_xl_data_rate(const stmdev_ctx_t *ctx, lsm6dsv320x_data_rate_t *val);
 
 /**
   * @brief  Gyroscope output data rate (ODR) selection.[set]
@@ -4499,7 +4508,7 @@ int32_t lsm6dsv320x_xl_data_rate_get(const stmdev_ctx_t *ctx, lsm6dsv320x_data_r
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_gy_data_rate_set(const stmdev_ctx_t *ctx, lsm6dsv320x_data_rate_t val)
+int32_t lsm6dsv320x_set_gy_data_rate(const stmdev_ctx_t *ctx, lsm6dsv320x_data_rate_t val)
 __attribute__((deprecated("Use gy_setup function")));
 
 /**
@@ -4510,7 +4519,7 @@ __attribute__((deprecated("Use gy_setup function")));
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_gy_data_rate_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_gy_data_rate(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_data_rate_t *val);
 
 typedef enum
@@ -4532,7 +4541,7 @@ typedef enum
   * @retval             interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_hg_xl_data_rate_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_hg_xl_data_rate(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_hg_xl_data_rate_t val,
                                         uint8_t reg_out_en);
 
@@ -4544,7 +4553,7 @@ int32_t lsm6dsv320x_hg_xl_data_rate_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_hg_xl_data_rate_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_hg_xl_data_rate(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_hg_xl_data_rate_t *val,
                                         uint8_t *reg_out_en);
 
@@ -4568,7 +4577,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t val)
+int32_t lsm6dsv320x_set_xl_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t val)
 __attribute__((deprecated("Use xl_setup function")));
 
 /**
@@ -4579,7 +4588,7 @@ __attribute__((deprecated("Use xl_setup function")));
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t *val);
+int32_t lsm6dsv320x_get_xl_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_mode_t *val);
 
 typedef enum
 {
@@ -4599,7 +4608,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_gy_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t val)
+int32_t lsm6dsv320x_set_gy_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t val)
 __attribute__((deprecated("Use gy_setup function")));
 
 /**
@@ -4610,7 +4619,7 @@ __attribute__((deprecated("Use gy_setup function")));
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_gy_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t *val);
+int32_t lsm6dsv320x_get_gy_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t *val);
 
 /**
   * @brief  Register address automatically incremented during a multiple byte access with a serial interface (enable by default).[set]
@@ -4620,7 +4629,7 @@ int32_t lsm6dsv320x_gy_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_gy_mode_t *
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_auto_increment_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_auto_increment(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Register address automatically incremented during a multiple byte access with a serial interface (enable by default).[get]
@@ -4630,7 +4639,7 @@ int32_t lsm6dsv320x_auto_increment_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_auto_increment_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_auto_increment(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Block Data Update (BDU): output registers are not updated until LSB and MSB have been read). [set]
@@ -4640,7 +4649,7 @@ int32_t lsm6dsv320x_auto_increment_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_block_data_update_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_block_data_update(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Block Data Update (BDU): output registers are not updated until LSB and MSB have been read). [get]
@@ -4650,7 +4659,7 @@ int32_t lsm6dsv320x_block_data_update_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_block_data_update_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_block_data_update(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Configure ODR trigger. [set]
@@ -4660,7 +4669,7 @@ int32_t lsm6dsv320x_block_data_update_get(const stmdev_ctx_t *ctx, uint8_t *val)
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_odr_trig_cfg_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_odr_trig_cfg(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Configure ODR trigger. [get]
@@ -4670,7 +4679,7 @@ int32_t lsm6dsv320x_odr_trig_cfg_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_odr_trig_cfg_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_odr_trig_cfg(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
@@ -4686,7 +4695,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_data_ready_mode_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_data_ready_mode(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_data_ready_mode_t val);
 
 /**
@@ -4697,7 +4706,7 @@ int32_t lsm6dsv320x_data_ready_mode_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_data_ready_mode_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_data_ready_mode(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_data_ready_mode_t *val);
 
 /**
@@ -4728,7 +4737,7 @@ typedef struct
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_hg_event_get(const stmdev_ctx_t *ctx, lsm6dsv320x_hg_event_t *val);
+int32_t lsm6dsv320x_get_hg_event(const stmdev_ctx_t *ctx, lsm6dsv320x_hg_event_t *val);
 
 typedef struct
 {
@@ -4744,7 +4753,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_hg_wake_up_cfg_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_hg_wake_up_cfg(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_hg_wake_up_cfg_t val);
 
 /**
@@ -4755,7 +4764,7 @@ int32_t lsm6dsv320x_hg_wake_up_cfg_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_hg_wake_up_cfg_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_hg_wake_up_cfg(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_hg_wake_up_cfg_t *val);
 
 typedef struct
@@ -4772,7 +4781,7 @@ typedef struct
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_hg_wu_interrupt_cfg_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_hg_wu_interrupt_cfg(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_hg_wu_interrupt_cfg_t val);
 
 /**
@@ -4783,7 +4792,7 @@ int32_t lsm6dsv320x_hg_wu_interrupt_cfg_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_hg_wu_interrupt_cfg_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_hg_wu_interrupt_cfg(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_hg_wu_interrupt_cfg_t *val);
 
 /**
@@ -4794,7 +4803,7 @@ int32_t lsm6dsv320x_hg_wu_interrupt_cfg_get(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_hg_emb_usr_off_correction_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_hg_emb_usr_off_correction(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief   Emable/disable user offset data correction driving to hg embedded functions[get]
@@ -4804,7 +4813,7 @@ int32_t lsm6dsv320x_hg_emb_usr_off_correction_set(const stmdev_ctx_t *ctx, uint8
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_hg_emb_usr_off_correction_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_hg_emb_usr_off_correction(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief   Emable/disable user offset data correction driving to hg wake-up[set]
@@ -4814,7 +4823,7 @@ int32_t lsm6dsv320x_hg_emb_usr_off_correction_get(const stmdev_ctx_t *ctx, uint8
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_hg_wu_usr_off_correction_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_hg_wu_usr_off_correction(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief   Emable/disable user offset data correction driving to hg wake-up[get]
@@ -4824,7 +4833,7 @@ int32_t lsm6dsv320x_hg_wu_usr_off_correction_set(const stmdev_ctx_t *ctx, uint8_
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_hg_wu_usr_off_correction_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_hg_wu_usr_off_correction(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  High-g accelerometer peak tracking enable.[set]
@@ -4834,7 +4843,7 @@ int32_t lsm6dsv320x_hg_wu_usr_off_correction_get(const stmdev_ctx_t *ctx, uint8_
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_hg_peak_tracking_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_xl_hg_peak_tracking(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  High-g accelerometer peak tracking enable.[get]
@@ -4844,7 +4853,7 @@ int32_t lsm6dsv320x_xl_hg_peak_tracking_set(const stmdev_ctx_t *ctx, uint8_t val
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_hg_peak_tracking_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_xl_hg_peak_tracking(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Hihg-g accelerometer sensitivity value register for FSM and MLC.[set]
@@ -4854,7 +4863,7 @@ int32_t lsm6dsv320x_xl_hg_peak_tracking_get(const stmdev_ctx_t *ctx, uint8_t *va
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_hg_sensitivity_set(const stmdev_ctx_t *ctx, uint16_t val);
+int32_t lsm6dsv320x_set_xl_hg_sensitivity(const stmdev_ctx_t *ctx, uint16_t val);
 
 /**
   * @brief  Hihg-g accelerometer sensitivity value register for FSM and MLC.[get]
@@ -4864,7 +4873,7 @@ int32_t lsm6dsv320x_xl_hg_sensitivity_set(const stmdev_ctx_t *ctx, uint16_t val)
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_hg_sensitivity_get(const stmdev_ctx_t *ctx, uint16_t *val);
+int32_t lsm6dsv320x_get_xl_hg_sensitivity(const stmdev_ctx_t *ctx, uint16_t *val);
 
 /**
   * @}
@@ -4931,7 +4940,7 @@ typedef struct
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int1_route_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_pin_int1_route(const stmdev_ctx_t *ctx,
                                        const lsm6dsv320x_pin_int_route_t *val);
 
 /**
@@ -4943,7 +4952,7 @@ int32_t lsm6dsv320x_pin_int1_route_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int1_route_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
+int32_t lsm6dsv320x_get_pin_int1_route(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
 
 /**
   * @brief   Select the signals that need to be routed on int2 pad.[set]
@@ -4954,7 +4963,7 @@ int32_t lsm6dsv320x_pin_int1_route_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int2_route_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_pin_int2_route(const stmdev_ctx_t *ctx,
                                        const lsm6dsv320x_pin_int_route_t *val);
 
 /**
@@ -4966,7 +4975,7 @@ int32_t lsm6dsv320x_pin_int2_route_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int2_route_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
+int32_t lsm6dsv320x_get_pin_int2_route(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
 
 /**
   * @brief   Select the signals that need to be routed on int1 pad.[set]
@@ -4977,7 +4986,7 @@ int32_t lsm6dsv320x_pin_int2_route_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int1_route_hg_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_pin_int1_hg_route(const stmdev_ctx_t *ctx,
                                           const lsm6dsv320x_pin_int_route_t *val);
 
 /**
@@ -4989,7 +4998,7 @@ int32_t lsm6dsv320x_pin_int1_route_hg_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int1_route_hg_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
+int32_t lsm6dsv320x_get_pin_int1_hg_route(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
 
 /**
   * @brief   Select the signals that need to be routed on int2 pad.[set]
@@ -5000,7 +5009,7 @@ int32_t lsm6dsv320x_pin_int1_route_hg_get(const stmdev_ctx_t *ctx, lsm6dsv320x_p
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int2_route_hg_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_pin_int2_hg_route(const stmdev_ctx_t *ctx,
                                           const lsm6dsv320x_pin_int_route_t *val);
 
 /**
@@ -5012,7 +5021,7 @@ int32_t lsm6dsv320x_pin_int2_route_hg_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int2_route_hg_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
+int32_t lsm6dsv320x_get_pin_int2_hg_route(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
 
 /**
   * @brief   Select the signals that need to be routed on int1 pad.[set]
@@ -5023,7 +5032,7 @@ int32_t lsm6dsv320x_pin_int2_route_hg_get(const stmdev_ctx_t *ctx, lsm6dsv320x_p
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int1_route_embedded_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_pin_int1_embedded_route(const stmdev_ctx_t *ctx,
                                                 const lsm6dsv320x_pin_int_route_t *val);
 
 /**
@@ -5035,7 +5044,7 @@ int32_t lsm6dsv320x_pin_int1_route_embedded_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int1_route_embedded_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
+int32_t lsm6dsv320x_get_pin_int1_embedded_route(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
 
 /**
   * @brief   Select the signals that need to be routed on int2 pad[set]
@@ -5046,7 +5055,7 @@ int32_t lsm6dsv320x_pin_int1_route_embedded_get(const stmdev_ctx_t *ctx, lsm6dsv
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int2_route_embedded_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_pin_int2_embedded_route(const stmdev_ctx_t *ctx,
                                                 const lsm6dsv320x_pin_int_route_t *val);
 
 /**
@@ -5058,7 +5067,7 @@ int32_t lsm6dsv320x_pin_int2_route_embedded_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lsm6dsv320x_pin_int2_route_embedded_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
+int32_t lsm6dsv320x_get_pin_int2_embedded_route(const stmdev_ctx_t *ctx, lsm6dsv320x_pin_int_route_t *val);
 /**
   * @}
   *
@@ -5078,7 +5087,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_interrupt_enable_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_interrupt_enable(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_interrupt_mode_t val);
 
 /**
@@ -5089,7 +5098,7 @@ int32_t lsm6dsv320x_interrupt_enable_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_interrupt_enable_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_interrupt_enable(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_interrupt_mode_t *val);
 
 typedef enum
@@ -5109,7 +5118,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_gy_full_scale_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_gy_full_scale(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_gy_full_scale_t val);
 
 /**
@@ -5120,7 +5129,7 @@ int32_t lsm6dsv320x_gy_full_scale_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_gy_full_scale_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_gy_full_scale(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_gy_full_scale_t *val);
 
 typedef enum
@@ -5139,7 +5148,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_full_scale_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_xl_full_scale(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_xl_full_scale_t val);
 
 /**
@@ -5150,7 +5159,7 @@ int32_t lsm6dsv320x_xl_full_scale_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_full_scale_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_xl_full_scale(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_xl_full_scale_t *val);
 
 typedef enum
@@ -5170,7 +5179,7 @@ typedef enum
    * @retval          interface status (MANDATORY: return 0 -> no Error)
    *
    */
-int32_t lsm6dsv320x_hg_xl_full_scale_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_hg_xl_full_scale(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_hg_xl_full_scale_t val);
 
 /**
@@ -5181,7 +5190,7 @@ int32_t lsm6dsv320x_hg_xl_full_scale_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_hg_xl_full_scale_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_hg_xl_full_scale(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_hg_xl_full_scale_t *val);
 
 typedef enum
@@ -5199,7 +5208,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t val);
+int32_t lsm6dsv320x_set_xl_self_test(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t val);
 
 /**
   * @brief  Accelerometer self-test selection.[get]
@@ -5209,7 +5218,7 @@ int32_t lsm6dsv320x_xl_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_self_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t *val);
+int32_t lsm6dsv320x_get_xl_self_test(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t *val);
 
 /**
   * @brief  IF2 Accelerometer self-test selection.[set]
@@ -5219,7 +5228,7 @@ int32_t lsm6dsv320x_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_xl_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t val);
+int32_t lsm6dsv320x_set_ois_xl_self_test(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t val);
 
 /**
   * @brief  IF2 Accelerometer self-test selection.[get]
@@ -5229,7 +5238,7 @@ int32_t lsm6dsv320x_ois_xl_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_se
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t *val);
+int32_t lsm6dsv320x_get_ois_xl_self_test(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t *val);
 
 /**
   * @brief  Gyroscope self-test selection.[set]
@@ -5239,7 +5248,7 @@ int32_t lsm6dsv320x_ois_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_se
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_gy_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t val);
+int32_t lsm6dsv320x_set_gy_self_test(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t val);
 
 /**
   * @brief  Gyroscope self-test selection.[get]
@@ -5249,7 +5258,7 @@ int32_t lsm6dsv320x_gy_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_self_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_gy_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t *val);
+int32_t lsm6dsv320x_get_gy_self_test(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t *val);
 
 /**
   * @brief  HG XL self-test selection.[set]
@@ -5259,7 +5268,7 @@ int32_t lsm6dsv320x_gy_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_hg_xl_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t val);
+int32_t lsm6dsv320x_set_hg_xl_self_test(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t val);
 
 /**
   * @brief  HG XL self-test selection.[get]
@@ -5269,7 +5278,7 @@ int32_t lsm6dsv320x_hg_xl_self_test_set(const stmdev_ctx_t *ctx, lsm6dsv320x_sel
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_hg_xl_self_test_get(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t *val);
+int32_t lsm6dsv320x_get_hg_xl_self_test(const stmdev_ctx_t *ctx, lsm6dsv320x_self_test_t *val);
 
 typedef enum
 {
@@ -5289,7 +5298,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_gy_self_test_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_ois_gy_self_test(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_ois_gy_self_test_t val);
 
 /**
@@ -5300,7 +5309,7 @@ int32_t lsm6dsv320x_ois_gy_self_test_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_gy_self_test_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_ois_gy_self_test(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_ois_gy_self_test_t *val);
 
 typedef struct
@@ -5379,7 +5388,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_all_sources_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_all_sources(const stmdev_ctx_t *ctx,
                                     lsm6dsv320x_all_sources_t *val);
 
 
@@ -5399,7 +5408,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_flag_data_ready_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_flag_data_ready(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_data_ready_t *val);
 
 /**
@@ -5410,7 +5419,7 @@ int32_t lsm6dsv320x_flag_data_ready_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_int_ack_mask_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_int_ack_mask(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Mask status bit reset[get]
@@ -5420,7 +5429,7 @@ int32_t lsm6dsv320x_int_ack_mask_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_int_ack_mask_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_int_ack_mask(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Temperature data output register[get]
@@ -5430,7 +5439,7 @@ int32_t lsm6dsv320x_int_ack_mask_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_temperature_raw_get(const stmdev_ctx_t *ctx, int16_t *val);
+int32_t lsm6dsv320x_get_temperature_raw(const stmdev_ctx_t *ctx, int16_t *val);
 
 /**
   * @brief  Angular rate sensor.[get]
@@ -5440,7 +5449,7 @@ int32_t lsm6dsv320x_temperature_raw_get(const stmdev_ctx_t *ctx, int16_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_angular_rate_raw_get(const stmdev_ctx_t *ctx, int16_t *val);
+int32_t lsm6dsv320x_get_angular_rate_raw(const stmdev_ctx_t *ctx, int16_t *val);
 
 /**
   * @brief  Angular rate sensor.[get]
@@ -5450,7 +5459,7 @@ int32_t lsm6dsv320x_angular_rate_raw_get(const stmdev_ctx_t *ctx, int16_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_angular_rate_raw_get(const stmdev_ctx_t *ctx, int16_t *val);
+int32_t lsm6dsv320x_get_ois_angular_rate_raw(const stmdev_ctx_t *ctx, int16_t *val);
 
 /**
   * @brief  Angular rate sensor for OIS gyro or the EIS gyro channel.[get]
@@ -5460,7 +5469,7 @@ int32_t lsm6dsv320x_ois_angular_rate_raw_get(const stmdev_ctx_t *ctx, int16_t *v
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_eis_angular_rate_raw_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_ois_eis_angular_rate_raw(const stmdev_ctx_t *ctx,
                                                  int16_t *val);
 
 /**
@@ -5471,7 +5480,7 @@ int32_t lsm6dsv320x_ois_eis_angular_rate_raw_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_acceleration_raw_get(const stmdev_ctx_t *ctx, int16_t *val);
+int32_t lsm6dsv320x_get_acceleration_raw(const stmdev_ctx_t *ctx, int16_t *val);
 
 /**
   * @brief  Linear acceleration sensor for OIS channel mode.[get]
@@ -5481,7 +5490,7 @@ int32_t lsm6dsv320x_acceleration_raw_get(const stmdev_ctx_t *ctx, int16_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_acceleration_raw_get(const stmdev_ctx_t *ctx, int16_t *val);
+int32_t lsm6dsv320x_get_ois_acceleration_raw(const stmdev_ctx_t *ctx, int16_t *val);
 
 /**
   * @brief  Linear acceleration sensor for hg channel mode.[get]
@@ -5491,7 +5500,7 @@ int32_t lsm6dsv320x_ois_acceleration_raw_get(const stmdev_ctx_t *ctx, int16_t *v
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_hg_acceleration_raw_get(const stmdev_ctx_t *ctx, int16_t *val);
+int32_t lsm6dsv320x_get_hg_acceleration_raw(const stmdev_ctx_t *ctx, int16_t *val);
 
 /**
   * @brief  SFLP gbias.[get]
@@ -5501,7 +5510,7 @@ int32_t lsm6dsv320x_hg_acceleration_raw_get(const stmdev_ctx_t *ctx, int16_t *va
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sflp_gbias_raw_get(const stmdev_ctx_t *ctx, int16_t *val);
+int32_t lsm6dsv320x_get_sflp_gbias_raw(const stmdev_ctx_t *ctx, int16_t *val);
 
 /**
   * @brief  SFLP gravity.[get]
@@ -5511,7 +5520,7 @@ int32_t lsm6dsv320x_sflp_gbias_raw_get(const stmdev_ctx_t *ctx, int16_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sflp_gravity_raw_get(const stmdev_ctx_t *ctx, int16_t *val);
+int32_t lsm6dsv320x_get_sflp_gravity_raw(const stmdev_ctx_t *ctx, int16_t *val);
 
 /**
   * @brief  SFLP raw quaternions.[get]
@@ -5521,7 +5530,7 @@ int32_t lsm6dsv320x_sflp_gravity_raw_get(const stmdev_ctx_t *ctx, int16_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sflp_quaternion_raw_get(const stmdev_ctx_t *ctx, uint16_t *val);
+int32_t lsm6dsv320x_get_sflp_quat_raw(const stmdev_ctx_t *ctx, uint16_t *val);
 
 /**
   * @brief  Difference in percentage of the effective ODR (and timestamp rate) with respect to the typical. Step: 0.13%. 8-bit format, 2's complement.[get]
@@ -5531,7 +5540,7 @@ int32_t lsm6dsv320x_sflp_quaternion_raw_get(const stmdev_ctx_t *ctx, uint16_t *v
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_odr_cal_reg_get(const stmdev_ctx_t *ctx, int8_t *val);
+int32_t lsm6dsv320x_get_odr_cal_reg(const stmdev_ctx_t *ctx, int8_t *val);
 
 /**
   * @defgroup  Common Common Functions
@@ -5548,7 +5557,7 @@ int32_t lsm6dsv320x_odr_cal_reg_get(const stmdev_ctx_t *ctx, int8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_disable_embedded_function_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_disable_embedded_function(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Disable Embedded functions.[get]
@@ -5558,7 +5567,7 @@ int32_t lsm6dsv320x_disable_embedded_function_set(const stmdev_ctx_t *ctx, uint8
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_disable_embedded_function_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_disable_embedded_function(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef struct
 {
@@ -5576,7 +5585,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_emb_func_conv_set(const stmdev_ctx_t *ctx, lsm6dsv320x_emb_func_conv_t val);
+int32_t lsm6dsv320x_set_emb_func_conv(const stmdev_ctx_t *ctx, lsm6dsv320x_emb_func_conv_t val);
 
 /**
   * @brief  Enable/Disable embedded function sensor conversion.[get]
@@ -5586,7 +5595,7 @@ int32_t lsm6dsv320x_emb_func_conv_set(const stmdev_ctx_t *ctx, lsm6dsv320x_emb_f
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_emb_func_conv_get(const stmdev_ctx_t *ctx, lsm6dsv320x_emb_func_conv_t *val);
+int32_t lsm6dsv320x_get_emb_func_conv(const stmdev_ctx_t *ctx, lsm6dsv320x_emb_func_conv_t *val);
 
 /**
   * @brief  Write buffer in a page.[set]
@@ -5597,7 +5606,7 @@ int32_t lsm6dsv320x_emb_func_conv_get(const stmdev_ctx_t *ctx, lsm6dsv320x_emb_f
   *
   */
 int32_t lsm6dsv320x_ln_pg_write(const stmdev_ctx_t *ctx, uint16_t address,
-                                uint8_t *buf, uint8_t len);
+                                const uint8_t *buf, uint8_t len);
 
 /**
   * @brief  Read buffer in a page.[set]
@@ -5618,7 +5627,7 @@ int32_t lsm6dsv320x_ln_pg_read(const stmdev_ctx_t *ctx, uint16_t address, uint8_
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_emb_function_dbg_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_emb_function_dbg(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enable debug mode for embedded functions [get]
@@ -5628,7 +5637,7 @@ int32_t lsm6dsv320x_emb_function_dbg_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_emb_function_dbg_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_emb_function_dbg(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @}
@@ -5657,7 +5666,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_den_polarity_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_den_polarity(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_den_polarity_t val);
 
 /**
@@ -5668,7 +5677,7 @@ int32_t lsm6dsv320x_den_polarity_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_den_polarity_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_den_polarity(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_den_polarity_t *val);
 
 /**
@@ -5700,7 +5709,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_eis_gy_full_scale_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_eis_gy_full_scale(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_eis_gy_full_scale_t val);
 
 /**
@@ -5711,7 +5720,7 @@ int32_t lsm6dsv320x_eis_gy_full_scale_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_eis_gy_full_scale_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_eis_gy_full_scale(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_eis_gy_full_scale_t *val);
 
 /**
@@ -5722,7 +5731,7 @@ int32_t lsm6dsv320x_eis_gy_full_scale_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_eis_gy_on_if2_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_eis_gy_on_if2(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enables routing of gyroscope EIS outputs on IF2 (OIS interface). The gyroscope data on IF2 (OIS interface) cannot be read from User Interface (UI).[get]
@@ -5732,7 +5741,7 @@ int32_t lsm6dsv320x_eis_gy_on_if2_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_eis_gy_on_if2_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_eis_gy_on_if2(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
@@ -5749,7 +5758,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_gy_eis_data_rate_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_gy_eis_data_rate(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_gy_eis_data_rate_t val);
 
 /**
@@ -5760,7 +5769,7 @@ int32_t lsm6dsv320x_gy_eis_data_rate_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_gy_eis_data_rate_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_gy_eis_data_rate(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_gy_eis_data_rate_t *val);
 
 /**
@@ -5781,7 +5790,7 @@ int32_t lsm6dsv320x_gy_eis_data_rate_get(const stmdev_ctx_t *ctx,
   * @param  gy_odr     lsm6dsv320x_data_rate_t
   * @param  gy_mode    lsm6dsv320x_gy_mode_t
   */
-int32_t lsm6dsv320x_haodr_set(
+int32_t lsm6dsv320x_set_haodr(
   const stmdev_ctx_t *ctx,
   lsm6dsv320x_data_rate_t xl_odr,
   lsm6dsv320x_xl_mode_t xl_mode,
@@ -5833,7 +5842,7 @@ int32_t lsm6dsv320x_gy_setup(
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_watermark_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_fifo_watermark(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  FIFO watermark threshold (1 LSb = TAG (1 Byte) + 1 sensor (6 Bytes) written in FIFO).[get]
@@ -5843,7 +5852,7 @@ int32_t lsm6dsv320x_fifo_watermark_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_watermark_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_fifo_watermark(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
@@ -5851,7 +5860,7 @@ typedef enum
   LSM6DSV320X_CMP_8_TO_1  = 0x1,
   LSM6DSV320X_CMP_16_TO_1 = 0x2,
   LSM6DSV320X_CMP_32_TO_1 = 0x3,
-} lsm6dsv320x_fifo_compress_algo_t;
+} lsm6dsv320x_fifo_compress_algo_rate_t;
 
 /**
   * @brief  It configures the compression algorithm to write non-compressed data at each rate.[set]
@@ -5861,8 +5870,8 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_compress_algo_set(const stmdev_ctx_t *ctx,
-                                           lsm6dsv320x_fifo_compress_algo_t val);
+int32_t lsm6dsv320x_set_fifo_compress_algo_rate(const stmdev_ctx_t *ctx,
+                                                lsm6dsv320x_fifo_compress_algo_rate_t val);
 
 /**
   * @brief  It configures the compression algorithm to write non-compressed data at each rate.[get]
@@ -5872,8 +5881,8 @@ int32_t lsm6dsv320x_fifo_compress_algo_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_compress_algo_get(const stmdev_ctx_t *ctx,
-                                           lsm6dsv320x_fifo_compress_algo_t *val);
+int32_t lsm6dsv320x_get_fifo_compress_algo_rate(const stmdev_ctx_t *ctx,
+                                                lsm6dsv320x_fifo_compress_algo_rate_t *val);
 
 /**
   * @brief  Enables ODR CHANGE virtual sensor to be batched in FIFO.[set]
@@ -5883,7 +5892,7 @@ int32_t lsm6dsv320x_fifo_compress_algo_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_virtual_sens_odr_chg_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fifo_virtual_sens_odr_chg(const stmdev_ctx_t *ctx,
                                                   uint8_t val);
 
 /**
@@ -5894,7 +5903,7 @@ int32_t lsm6dsv320x_fifo_virtual_sens_odr_chg_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_virtual_sens_odr_chg_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fifo_virtual_sens_odr_chg(const stmdev_ctx_t *ctx,
                                                   uint8_t *val);
 
 /**
@@ -5905,8 +5914,8 @@ int32_t lsm6dsv320x_fifo_virtual_sens_odr_chg_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_compress_algo_real_time_set(const stmdev_ctx_t *ctx,
-                                                     uint8_t val);
+int32_t lsm6dsv320x_set_fifo_rt_compress_algo_en(const stmdev_ctx_t *ctx,
+                                                 uint8_t val);
 
 /**
   * @brief  Enables/Disables compression algorithm runtime.[get]
@@ -5916,8 +5925,8 @@ int32_t lsm6dsv320x_fifo_compress_algo_real_time_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_compress_algo_real_time_get(const stmdev_ctx_t *ctx,
-                                                     uint8_t *val);
+int32_t lsm6dsv320x_get_fifo_rt_compress_algo_en(const stmdev_ctx_t *ctx,
+                                                 uint8_t *val);
 
 typedef enum
 {
@@ -5933,7 +5942,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_stop_on_wtm_set(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_event_t val);
+int32_t lsm6dsv320x_set_fifo_stop_on_wtm(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_event_t val);
 
 /**
   * @brief  Sensing chain FIFO stop values memorization at threshold level.[get]
@@ -5943,7 +5952,7 @@ int32_t lsm6dsv320x_fifo_stop_on_wtm_set(const stmdev_ctx_t *ctx, lsm6dsv320x_fi
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_stop_on_wtm_get(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_event_t *val);
+int32_t lsm6dsv320x_get_fifo_stop_on_wtm(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_event_t *val);
 
 typedef enum
 {
@@ -5970,7 +5979,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_xl_batch_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fifo_xl_batch(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_fifo_xl_batch_t val);
 
 /**
@@ -5981,7 +5990,7 @@ int32_t lsm6dsv320x_fifo_xl_batch_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_xl_batch_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fifo_xl_batch(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_fifo_xl_batch_t *val);
 
 typedef enum
@@ -6009,7 +6018,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_gy_batch_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fifo_gy_batch(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_fifo_gy_batch_t val);
 
 /**
@@ -6020,7 +6029,7 @@ int32_t lsm6dsv320x_fifo_gy_batch_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_gy_batch_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fifo_gy_batch(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_fifo_gy_batch_t *val);
 
 /**
@@ -6031,7 +6040,7 @@ int32_t lsm6dsv320x_fifo_gy_batch_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_hg_xl_batch_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_fifo_hg_xl_batch(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enable FIFO Batch for hg XL data.[get]
@@ -6041,7 +6050,7 @@ int32_t lsm6dsv320x_fifo_hg_xl_batch_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_hg_xl_batch_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_fifo_hg_xl_batch(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
@@ -6062,7 +6071,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_mode_t val);
+int32_t lsm6dsv320x_set_fifo_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_mode_t val);
 
 /**
   * @brief  FIFO mode selection.[get]
@@ -6072,7 +6081,7 @@ int32_t lsm6dsv320x_fifo_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_fifo_mode
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_mode_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fifo_mode(const stmdev_ctx_t *ctx,
                                   lsm6dsv320x_fifo_mode_t *val);
 
 /**
@@ -6083,7 +6092,7 @@ int32_t lsm6dsv320x_fifo_mode_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_gy_eis_batch_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_fifo_gy_eis_batch(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enables FIFO batching of EIS gyroscope output values.[get]
@@ -6093,7 +6102,7 @@ int32_t lsm6dsv320x_fifo_gy_eis_batch_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_gy_eis_batch_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_fifo_gy_eis_batch(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
@@ -6111,7 +6120,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_temp_batch_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fifo_temp_batch(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_fifo_temp_batch_t val);
 
 /**
@@ -6122,7 +6131,7 @@ int32_t lsm6dsv320x_fifo_temp_batch_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_temp_batch_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fifo_temp_batch(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_fifo_temp_batch_t *val);
 
 typedef enum
@@ -6141,7 +6150,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_timestamp_batch_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fifo_timestamp_batch(const stmdev_ctx_t *ctx,
                                              lsm6dsv320x_fifo_timestamp_batch_t val);
 
 /**
@@ -6152,7 +6161,7 @@ int32_t lsm6dsv320x_fifo_timestamp_batch_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_timestamp_batch_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fifo_timestamp_batch(const stmdev_ctx_t *ctx,
                                              lsm6dsv320x_fifo_timestamp_batch_t *val);
 
 /**
@@ -6163,7 +6172,7 @@ int32_t lsm6dsv320x_fifo_timestamp_batch_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_batch_counter_threshold_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fifo_batch_counter_threshold(const stmdev_ctx_t *ctx,
                                                      uint16_t val);
 
 /**
@@ -6174,7 +6183,7 @@ int32_t lsm6dsv320x_fifo_batch_counter_threshold_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_batch_counter_threshold_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fifo_batch_counter_threshold(const stmdev_ctx_t *ctx,
                                                      uint16_t *val);
 
 typedef enum
@@ -6193,7 +6202,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_batch_cnt_event_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fifo_batch_cnt_event(const stmdev_ctx_t *ctx,
                                              lsm6dsv320x_fifo_batch_cnt_event_t val);
 
 /**
@@ -6204,7 +6213,7 @@ int32_t lsm6dsv320x_fifo_batch_cnt_event_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_batch_cnt_event_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fifo_batch_cnt_event(const stmdev_ctx_t *ctx,
                                              lsm6dsv320x_fifo_batch_cnt_event_t *val);
 
 typedef struct
@@ -6224,7 +6233,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_status_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fifo_status(const stmdev_ctx_t *ctx,
                                     lsm6dsv320x_fifo_status_t *val);
 
 typedef struct
@@ -6274,7 +6283,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_out_raw_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fifo_out_raw(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_fifo_out_raw_t *val);
 
 /**
@@ -6285,7 +6294,7 @@ int32_t lsm6dsv320x_fifo_out_raw_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_stpcnt_batch_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_fifo_stpcnt_batch(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Batching in FIFO buffer of step counter value.[get]
@@ -6295,7 +6304,7 @@ int32_t lsm6dsv320x_fifo_stpcnt_batch_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_stpcnt_batch_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_fifo_stpcnt_batch(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Batching in FIFO buffer of finite state machine results.[set]
@@ -6305,7 +6314,7 @@ int32_t lsm6dsv320x_fifo_stpcnt_batch_get(const stmdev_ctx_t *ctx, uint8_t *val)
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_fsm_batch_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_fifo_fsm_batch(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Batching in FIFO buffer of finite state machine results.[get]
@@ -6315,7 +6324,7 @@ int32_t lsm6dsv320x_fifo_fsm_batch_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_fsm_batch_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_fifo_fsm_batch(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Batching in FIFO buffer of machine learning core results.[set]
@@ -6325,7 +6334,7 @@ int32_t lsm6dsv320x_fifo_fsm_batch_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_mlc_batch_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_fifo_mlc_batch(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Batching in FIFO buffer of machine learning core results.[get]
@@ -6335,7 +6344,7 @@ int32_t lsm6dsv320x_fifo_mlc_batch_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_mlc_batch_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_fifo_mlc_batch(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Enables batching in FIFO buffer of machine learning core filters and features.[set]
@@ -6345,7 +6354,7 @@ int32_t lsm6dsv320x_fifo_mlc_batch_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_mlc_filt_batch_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_fifo_mlc_filt_batch(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enables batching in FIFO buffer of machine learning core filters and features.[get]
@@ -6355,7 +6364,7 @@ int32_t lsm6dsv320x_fifo_mlc_filt_batch_set(const stmdev_ctx_t *ctx, uint8_t val
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_mlc_filt_batch_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_fifo_mlc_filt_batch(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Enable FIFO data batching of target idx.[set]
@@ -6365,7 +6374,7 @@ int32_t lsm6dsv320x_fifo_mlc_filt_batch_get(const stmdev_ctx_t *ctx, uint8_t *va
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_sh_batch_target_set(const stmdev_ctx_t *ctx, uint8_t idx, uint8_t val);
+int32_t lsm6dsv320x_set_fifo_sh_batch_target(const stmdev_ctx_t *ctx, uint8_t idx, uint8_t val);
 
 /**
   * @brief  Enable FIFO data batching of target idx.[get]
@@ -6375,7 +6384,7 @@ int32_t lsm6dsv320x_fifo_sh_batch_target_set(const stmdev_ctx_t *ctx, uint8_t id
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_sh_batch_target_get(const stmdev_ctx_t *ctx, uint8_t idx, uint8_t *val);
+int32_t lsm6dsv320x_get_fifo_sh_batch_target(const stmdev_ctx_t *ctx, uint8_t idx, uint8_t *val);
 
 typedef struct
 {
@@ -6392,7 +6401,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_sflp_batch_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fifo_sflp_batch(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_fifo_sflp_raw_t val);
 
 /**
@@ -6403,7 +6412,7 @@ int32_t lsm6dsv320x_fifo_sflp_batch_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fifo_sflp_batch_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fifo_sflp_batch(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_fifo_sflp_raw_t *val);
 
 /**
@@ -6433,7 +6442,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_anti_spike_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_filt_anti_spike(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_filt_anti_spike_t val);
 
 /**
@@ -6444,7 +6453,7 @@ int32_t lsm6dsv320x_filt_anti_spike_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_anti_spike_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_filt_anti_spike(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_filt_anti_spike_t *val);
 
 typedef struct
@@ -6464,7 +6473,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_settling_mask_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_filt_settling_mask(const stmdev_ctx_t *ctx,
                                            lsm6dsv320x_filt_settling_mask_t val);
 
 /**
@@ -6475,7 +6484,7 @@ int32_t lsm6dsv320x_filt_settling_mask_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_settling_mask_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_filt_settling_mask(const stmdev_ctx_t *ctx,
                                            lsm6dsv320x_filt_settling_mask_t *val);
 
 typedef struct
@@ -6491,7 +6500,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_ois_settling_mask_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_filt_ois_settling_mask(const stmdev_ctx_t *ctx,
                                                lsm6dsv320x_filt_ois_settling_mask_t val);
 
 /**
@@ -6502,7 +6511,7 @@ int32_t lsm6dsv320x_filt_ois_settling_mask_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_ois_settling_mask_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_filt_ois_settling_mask(const stmdev_ctx_t *ctx,
                                                lsm6dsv320x_filt_ois_settling_mask_t *val);
 
 typedef enum
@@ -6525,7 +6534,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_gy_lp1_bandwidth_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_filt_gy_lp1_bandwidth(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_filt_gy_lp1_bandwidth_t val);
 
 /**
@@ -6536,7 +6545,7 @@ int32_t lsm6dsv320x_filt_gy_lp1_bandwidth_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_gy_lp1_bandwidth_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_filt_gy_lp1_bandwidth(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_filt_gy_lp1_bandwidth_t *val);
 
 /**
@@ -6547,7 +6556,7 @@ int32_t lsm6dsv320x_filt_gy_lp1_bandwidth_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_gy_lp1_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_filt_gy_lp1(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  It enables gyroscope digital LPF1 filter.[get]
@@ -6557,7 +6566,7 @@ int32_t lsm6dsv320x_filt_gy_lp1_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_gy_lp1_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_filt_gy_lp1(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
@@ -6579,7 +6588,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_xl_lp2_bandwidth_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_filt_xl_lp2_bandwidth(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_filt_xl_lp2_bandwidth_t val);
 
 /**
@@ -6590,7 +6599,7 @@ int32_t lsm6dsv320x_filt_xl_lp2_bandwidth_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_xl_lp2_bandwidth_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_filt_xl_lp2_bandwidth(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_filt_xl_lp2_bandwidth_t *val);
 typedef enum
 {
@@ -6624,7 +6633,7 @@ int32_t lsm6dsv320x_filt_xl_setup(const stmdev_ctx_t *ctx, lsm6dsv320x_xl_filter
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_xl_lp2_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_filt_xl_lp2(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enable accelerometer LPS2 (Low Pass Filter 2) filtering stage.[get]
@@ -6634,7 +6643,7 @@ int32_t lsm6dsv320x_filt_xl_lp2_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_xl_lp2_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_filt_xl_lp2(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Accelerometer slope filter / high-pass filter selection.[set]
@@ -6644,7 +6653,7 @@ int32_t lsm6dsv320x_filt_xl_lp2_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_xl_hp_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_filt_xl_hp(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Accelerometer slope filter / high-pass filter selection.[get]
@@ -6654,7 +6663,7 @@ int32_t lsm6dsv320x_filt_xl_hp_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_xl_hp_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_filt_xl_hp(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Enables accelerometer LPF2 and HPF fast-settling mode. The filter sets the first sample.[set]
@@ -6664,7 +6673,7 @@ int32_t lsm6dsv320x_filt_xl_hp_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_xl_fast_settling_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_filt_xl_fast_settling(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enables accelerometer LPF2 and HPF fast-settling mode. The filter sets the first sample.[get]
@@ -6674,7 +6683,7 @@ int32_t lsm6dsv320x_filt_xl_fast_settling_set(const stmdev_ctx_t *ctx, uint8_t v
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_xl_fast_settling_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_filt_xl_fast_settling(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
@@ -6691,7 +6700,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_xl_hp_mode_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_filt_xl_hp_mode(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_filt_xl_hp_mode_t val);
 
 /**
@@ -6702,7 +6711,7 @@ int32_t lsm6dsv320x_filt_xl_hp_mode_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_xl_hp_mode_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_filt_xl_hp_mode(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_filt_xl_hp_mode_t *val);
 
 typedef enum
@@ -6720,7 +6729,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_wkup_act_feed_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_filt_wkup_act_feed(const stmdev_ctx_t *ctx,
                                            lsm6dsv320x_filt_wkup_act_feed_t val);
 
 /**
@@ -6731,7 +6740,7 @@ int32_t lsm6dsv320x_filt_wkup_act_feed_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_wkup_act_feed_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_filt_wkup_act_feed(const stmdev_ctx_t *ctx,
                                            lsm6dsv320x_filt_wkup_act_feed_t *val);
 
 /**
@@ -6742,7 +6751,7 @@ int32_t lsm6dsv320x_filt_wkup_act_feed_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_mask_trigger_xl_settl_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_mask_trigger_xl_settl(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Mask hw function triggers when xl is settling.[get]
@@ -6752,7 +6761,7 @@ int32_t lsm6dsv320x_mask_trigger_xl_settl_set(const stmdev_ctx_t *ctx, uint8_t v
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_mask_trigger_xl_settl_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_mask_trigger_xl_settl(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
@@ -6768,7 +6777,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_sixd_feed_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_filt_sixd_feed(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_filt_sixd_feed_t val);
 
 /**
@@ -6779,7 +6788,7 @@ int32_t lsm6dsv320x_filt_sixd_feed_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_sixd_feed_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_filt_sixd_feed(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_filt_sixd_feed_t *val);
 
 typedef enum
@@ -6796,7 +6805,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_gy_eis_lp_bandwidth_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_filt_gy_eis_lp_bandwidth(const stmdev_ctx_t *ctx,
                                                  lsm6dsv320x_filt_gy_eis_lp_bandwidth_t val);
 
 /**
@@ -6807,7 +6816,7 @@ int32_t lsm6dsv320x_filt_gy_eis_lp_bandwidth_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_gy_eis_lp_bandwidth_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_filt_gy_eis_lp_bandwidth(const stmdev_ctx_t *ctx,
                                                  lsm6dsv320x_filt_gy_eis_lp_bandwidth_t *val);
 
 typedef enum
@@ -6826,7 +6835,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_gy_ois_lp_bandwidth_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_filt_gy_ois_lp_bandwidth(const stmdev_ctx_t *ctx,
                                                  lsm6dsv320x_filt_gy_ois_lp_bandwidth_t val);
 
 /**
@@ -6837,7 +6846,7 @@ int32_t lsm6dsv320x_filt_gy_ois_lp_bandwidth_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_gy_ois_lp_bandwidth_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_filt_gy_ois_lp_bandwidth(const stmdev_ctx_t *ctx,
                                                  lsm6dsv320x_filt_gy_ois_lp_bandwidth_t *val);
 
 typedef enum
@@ -6860,7 +6869,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_xl_ois_lp_bandwidth_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_filt_xl_ois_lp_bandwidth(const stmdev_ctx_t *ctx,
                                                  lsm6dsv320x_filt_xl_ois_lp_bandwidth_t val);
 
 /**
@@ -6871,7 +6880,7 @@ int32_t lsm6dsv320x_filt_xl_ois_lp_bandwidth_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_filt_xl_ois_lp_bandwidth_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_filt_xl_ois_lp_bandwidth(const stmdev_ctx_t *ctx,
                                                  lsm6dsv320x_filt_xl_ois_lp_bandwidth_t *val);
 
 /**
@@ -6901,7 +6910,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_permission_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fsm_permission(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_fsm_permission_t val);
 
 /**
@@ -6912,7 +6921,7 @@ int32_t lsm6dsv320x_fsm_permission_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_permission_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fsm_permission(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_fsm_permission_t *val);
 
 /**
@@ -6945,7 +6954,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_fsm_mode_t val);
+int32_t lsm6dsv320x_set_fsm_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_fsm_mode_t val);
 
 /**
   * @brief  Enable Finite State Machine (FSM) feature.[get]
@@ -6955,7 +6964,7 @@ int32_t lsm6dsv320x_fsm_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_fsm_mode_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_fsm_mode_t *val);
+int32_t lsm6dsv320x_get_fsm_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_fsm_mode_t *val);
 
 /**
   * @brief  FSM long counter status register. Long counter value is an unsigned integer value (16-bit format).[set]
@@ -6965,7 +6974,7 @@ int32_t lsm6dsv320x_fsm_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_fsm_mode_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_long_cnt_set(const stmdev_ctx_t *ctx, uint16_t val);
+int32_t lsm6dsv320x_set_fsm_long_cnt(const stmdev_ctx_t *ctx, uint16_t val);
 
 /**
   * @brief  FSM long counter status register. Long counter value is an unsigned integer value (16-bit format).[get]
@@ -6975,7 +6984,7 @@ int32_t lsm6dsv320x_fsm_long_cnt_set(const stmdev_ctx_t *ctx, uint16_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_long_cnt_get(const stmdev_ctx_t *ctx, uint16_t *val);
+int32_t lsm6dsv320x_get_fsm_long_cnt(const stmdev_ctx_t *ctx, uint16_t *val);
 
 
 typedef struct
@@ -6998,7 +7007,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_out_get(const stmdev_ctx_t *ctx, lsm6dsv320x_fsm_out_t *val);
+int32_t lsm6dsv320x_get_fsm_out(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
@@ -7019,7 +7028,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_data_rate_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fsm_data_rate(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_fsm_data_rate_t val);
 
 /**
@@ -7030,7 +7039,7 @@ int32_t lsm6dsv320x_fsm_data_rate_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_data_rate_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fsm_data_rate(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_fsm_data_rate_t *val);
 
 /**
@@ -7041,7 +7050,7 @@ int32_t lsm6dsv320x_fsm_data_rate_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_ext_sens_sensitivity_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fsm_ext_sens_sensitivity(const stmdev_ctx_t *ctx,
                                                  uint16_t val);
 
 /**
@@ -7052,7 +7061,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_sensitivity_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_ext_sens_sensitivity_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fsm_ext_sens_sensitivity(const stmdev_ctx_t *ctx,
                                                  uint16_t *val);
 
 typedef struct
@@ -7070,7 +7079,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_ext_sens_offset_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fsm_ext_sens_offset(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_xl_fsm_ext_sens_offset_t val);
 
 /**
@@ -7081,7 +7090,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_offset_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_ext_sens_offset_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fsm_ext_sens_offset(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_xl_fsm_ext_sens_offset_t *val);
 
 typedef struct
@@ -7102,7 +7111,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_ext_sens_matrix_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fsm_ext_sens_matrix(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_xl_fsm_ext_sens_matrix_t val);
 
 /**
@@ -7113,7 +7122,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_matrix_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_ext_sens_matrix_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fsm_ext_sens_matrix(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_xl_fsm_ext_sens_matrix_t *val);
 
 typedef enum
@@ -7134,7 +7143,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_ext_sens_z_orient_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fsm_ext_sens_z_orient(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_fsm_ext_sens_z_orient_t val);
 
 /**
@@ -7145,7 +7154,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_z_orient_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_ext_sens_z_orient_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fsm_ext_sens_z_orient(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_fsm_ext_sens_z_orient_t *val);
 
 typedef enum
@@ -7166,7 +7175,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_ext_sens_y_orient_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fsm_ext_sens_y_orient(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_fsm_ext_sens_y_orient_t val);
 
 /**
@@ -7177,7 +7186,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_y_orient_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_ext_sens_y_orient_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fsm_ext_sens_y_orient(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_fsm_ext_sens_y_orient_t *val);
 
 typedef enum
@@ -7198,7 +7207,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_ext_sens_x_orient_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_fsm_ext_sens_x_orient(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_fsm_ext_sens_x_orient_t val);
 
 /**
@@ -7209,7 +7218,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_x_orient_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_ext_sens_x_orient_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_fsm_ext_sens_x_orient(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_fsm_ext_sens_x_orient_t *val);
 
 /**
@@ -7220,7 +7229,7 @@ int32_t lsm6dsv320x_fsm_ext_sens_x_orient_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_long_cnt_timeout_set(const stmdev_ctx_t *ctx, uint16_t val);
+int32_t lsm6dsv320x_set_fsm_long_cnt_timeout(const stmdev_ctx_t *ctx, uint16_t val);
 
 /**
   * @brief  FSM long counter timeout. The long counter timeout value is an unsigned integer value (16-bit format). When the long counter value reached this value, the FSM generates an interrupt.[get]
@@ -7230,7 +7239,7 @@ int32_t lsm6dsv320x_fsm_long_cnt_timeout_set(const stmdev_ctx_t *ctx, uint16_t v
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_long_cnt_timeout_get(const stmdev_ctx_t *ctx, uint16_t *val);
+int32_t lsm6dsv320x_get_fsm_long_cnt_timeout(const stmdev_ctx_t *ctx, uint16_t *val);
 
 /**
   * @brief  FSM number of programs.[set]
@@ -7240,7 +7249,7 @@ int32_t lsm6dsv320x_fsm_long_cnt_timeout_get(const stmdev_ctx_t *ctx, uint16_t *
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_number_of_programs_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_fsm_number_of_programs(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  FSM number of programs.[get]
@@ -7250,7 +7259,7 @@ int32_t lsm6dsv320x_fsm_number_of_programs_set(const stmdev_ctx_t *ctx, uint8_t 
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_number_of_programs_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_fsm_number_of_programs(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  FSM start address. First available address is 0x35C.[set]
@@ -7260,7 +7269,7 @@ int32_t lsm6dsv320x_fsm_number_of_programs_get(const stmdev_ctx_t *ctx, uint8_t 
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_start_address_set(const stmdev_ctx_t *ctx, uint16_t val);
+int32_t lsm6dsv320x_set_fsm_start_address(const stmdev_ctx_t *ctx, uint16_t val);
 
 /**
   * @brief  FSM start address. First available address is 0x35C.[get]
@@ -7270,7 +7279,7 @@ int32_t lsm6dsv320x_fsm_start_address_set(const stmdev_ctx_t *ctx, uint16_t val)
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_fsm_start_address_get(const stmdev_ctx_t *ctx, uint16_t *val);
+int32_t lsm6dsv320x_get_fsm_start_address(const stmdev_ctx_t *ctx, uint16_t *val);
 
 /**
   * @}
@@ -7293,7 +7302,7 @@ int32_t lsm6dsv320x_fsm_start_address_get(const stmdev_ctx_t *ctx, uint16_t *val
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ff_time_windows_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_ff_time_windows(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Time windows configuration for Free Fall detection 1 LSB = 1/ODR_XL time[get]
@@ -7303,7 +7312,7 @@ int32_t lsm6dsv320x_ff_time_windows_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ff_time_windows_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_ff_time_windows(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
@@ -7325,7 +7334,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ff_thresholds_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_ff_thresholds(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_ff_thresholds_t val);
 
 /**
@@ -7336,7 +7345,7 @@ int32_t lsm6dsv320x_ff_thresholds_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ff_thresholds_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_ff_thresholds(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_ff_thresholds_t *val);
 
 /**
@@ -7367,7 +7376,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_mlc_set(const stmdev_ctx_t *ctx, lsm6dsv320x_mlc_mode_t val);
+int32_t lsm6dsv320x_set_mlc(const stmdev_ctx_t *ctx, lsm6dsv320x_mlc_mode_t val);
 
 /**
   * @brief  It enables Machine Learning Core feature (MLC). When the Machine Learning Core is enabled the Finite State Machine (FSM) programs are executed before executing the MLC algorithms.[get]
@@ -7377,7 +7386,7 @@ int32_t lsm6dsv320x_mlc_set(const stmdev_ctx_t *ctx, lsm6dsv320x_mlc_mode_t val)
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_mlc_get(const stmdev_ctx_t *ctx, lsm6dsv320x_mlc_mode_t *val);
+int32_t lsm6dsv320x_get_mlc(const stmdev_ctx_t *ctx, lsm6dsv320x_mlc_mode_t *val);
 
 typedef enum
 {
@@ -7398,7 +7407,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_mlc_data_rate_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_mlc_data_rate(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_mlc_data_rate_t val);
 
 /**
@@ -7409,7 +7418,7 @@ int32_t lsm6dsv320x_mlc_data_rate_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_mlc_data_rate_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_mlc_data_rate(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_mlc_data_rate_t *val);
 
 typedef struct
@@ -7432,7 +7441,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_mlc_out_get(const stmdev_ctx_t *ctx, lsm6dsv320x_mlc_out_t *val);
+int32_t lsm6dsv320x_get_mlc_out(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  External sensor sensitivity value register for the Machine Learning Core. This register corresponds to the conversion value of the external sensor. The register value is expressed as half-precision floating-point format: SEEEEEFFFFFFFFFF (S: 1 sign bit; E: 5 exponent bits; F: 10 fraction bits).Default value is 0x3C00 (when using an external magnetometer this value corresponds to 1 gauss/LSB).[set]
@@ -7442,7 +7451,7 @@ int32_t lsm6dsv320x_mlc_out_get(const stmdev_ctx_t *ctx, lsm6dsv320x_mlc_out_t *
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_mlc_ext_sens_sensitivity_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_mlc_ext_sens_sensitivity(const stmdev_ctx_t *ctx,
                                                  uint16_t val);
 
 /**
@@ -7453,7 +7462,7 @@ int32_t lsm6dsv320x_mlc_ext_sens_sensitivity_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_mlc_ext_sens_sensitivity_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_mlc_ext_sens_sensitivity(const stmdev_ctx_t *ctx,
                                                  uint16_t *val);
 
 /**
@@ -7483,7 +7492,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_ctrl_mode_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_ois_ctrl_mode(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_ois_ctrl_mode_t val);
 
 /**
@@ -7494,7 +7503,7 @@ int32_t lsm6dsv320x_ois_ctrl_mode_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_ctrl_mode_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_ois_ctrl_mode(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_ois_ctrl_mode_t *val);
 
 /**
@@ -7505,7 +7514,7 @@ int32_t lsm6dsv320x_ois_ctrl_mode_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_reset_set(const stmdev_ctx_t *ctx, int8_t val);
+int32_t lsm6dsv320x_set_ois_reset(const stmdev_ctx_t *ctx, int8_t val);
 
 /**
   * @brief  Resets the control registers of OIS from the UI (User Interface)[get]
@@ -7515,7 +7524,7 @@ int32_t lsm6dsv320x_ois_reset_set(const stmdev_ctx_t *ctx, int8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_reset_get(const stmdev_ctx_t *ctx, int8_t *val);
+int32_t lsm6dsv320x_get_ois_reset(const stmdev_ctx_t *ctx, int8_t *val);
 
 /**
   * @brief  Enable/disable pull up on OIS interface.[set]
@@ -7525,7 +7534,7 @@ int32_t lsm6dsv320x_ois_reset_get(const stmdev_ctx_t *ctx, int8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_interface_pull_up_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_ois_interface_pull_up(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enable/disable pull up on OIS interface.[get]
@@ -7535,7 +7544,7 @@ int32_t lsm6dsv320x_ois_interface_pull_up_set(const stmdev_ctx_t *ctx, uint8_t v
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_interface_pull_up_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_ois_interface_pull_up(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef struct
 {
@@ -7551,8 +7560,8 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_handshake_from_ui_set(const stmdev_ctx_t *ctx,
-                                              lsm6dsv320x_ois_handshake_t val);
+int32_t lsm6dsv320x_set_ois_handshake_ui(const stmdev_ctx_t *ctx,
+                                         lsm6dsv320x_ois_handshake_t val);
 
 /**
   * @brief  Handshake for (User Interface) UI / (OIS interface) IF2 shared registers. ACK: This bit acknowledges the handshake. If the secondary interface is not accessing the shared registers, this bit is set to 1 by the device and the R/W operation on the UI_IF2_SHARED registers is allowed on the primary interface. REQ: This bit is used by the primary interface controller to request access to the UI_IF2_SHARED registers. When the R/W operation is finished, the controller must reset this bit.[get]
@@ -7562,8 +7571,8 @@ int32_t lsm6dsv320x_ois_handshake_from_ui_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_handshake_from_ui_get(const stmdev_ctx_t *ctx,
-                                              lsm6dsv320x_ois_handshake_t *val);
+int32_t lsm6dsv320x_get_ois_handshake_ui(const stmdev_ctx_t *ctx,
+                                         lsm6dsv320x_ois_handshake_t *val);
 
 /**
   * @brief  Handshake for (User Interface) UI / (OIS interface) IF2 shared registers. ACK: This bit acknowledges the handshake. If the secondary interface is not accessing the shared registers, this bit is set to 1 by the device and the R/W operation on the UI_IF2_SHARED registers is allowed on the primary interface. REQ: This bit is used by the primary interface controller to request access to the UI_IF2_SHARED registers. When the R/W operation is finished, the controller must reset this bit.[set]
@@ -7573,8 +7582,8 @@ int32_t lsm6dsv320x_ois_handshake_from_ui_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_handshake_from_ois_set(const stmdev_ctx_t *ctx,
-                                               lsm6dsv320x_ois_handshake_t val);
+int32_t lsm6dsv320x_set_ois_handshake_ois(const stmdev_ctx_t *ctx,
+                                          lsm6dsv320x_ois_handshake_t val);
 
 /**
   * @brief  Handshake for (User Interface) UI / (OIS interface) IF2 shared registers. ACK: This bit acknowledges the handshake. If the secondary interface is not accessing the shared registers, this bit is set to 1 by the device and the R/W operation on the UI_IF2_SHARED registers is allowed on the primary interface. REQ: This bit is used by the primary interface controller to request access to the UI_IF2_SHARED registers. When the R/W operation is finished, the controller must reset this bit.[get]
@@ -7584,8 +7593,8 @@ int32_t lsm6dsv320x_ois_handshake_from_ois_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_handshake_from_ois_get(const stmdev_ctx_t *ctx,
-                                               lsm6dsv320x_ois_handshake_t *val);
+int32_t lsm6dsv320x_get_ois_handshake_ois(const stmdev_ctx_t *ctx,
+                                          lsm6dsv320x_ois_handshake_t *val);
 
 /**
   * @brief  User interface (UI) / IF2 (OIS) shared registers[set]
@@ -7595,7 +7604,7 @@ int32_t lsm6dsv320x_ois_handshake_from_ois_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_shared_set(const stmdev_ctx_t *ctx, uint8_t val[6]);
+int32_t lsm6dsv320x_set_ois_shared(const stmdev_ctx_t *ctx, const uint8_t val[6]);
 
 /**
   * @brief  User interface (UI) / IF2 (OIS) shared registers[get]
@@ -7605,7 +7614,7 @@ int32_t lsm6dsv320x_ois_shared_set(const stmdev_ctx_t *ctx, uint8_t val[6]);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_shared_get(const stmdev_ctx_t *ctx, uint8_t val[6]);
+int32_t lsm6dsv320x_get_ois_shared(const stmdev_ctx_t *ctx, uint8_t val[6]);
 
 /**
   * @brief  In User Interface (UI) full control mode, enables IF2 (OIS Interface) for reading OIS data. This function works also on OIS (UI_CTRL1_OIS = IF2_CTRL1_OIS).[set]
@@ -7615,7 +7624,7 @@ int32_t lsm6dsv320x_ois_shared_get(const stmdev_ctx_t *ctx, uint8_t val[6]);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_on_if2_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_ois_on_if2(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  In User Interface (UI) full control mode, enables IF2 (OIS Interface) for reading OIS data. This function works also on OIS (UI_CTRL1_OIS = IF2_CTRL1_OIS).[get]
@@ -7625,7 +7634,7 @@ int32_t lsm6dsv320x_ois_on_if2_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_on_if2_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_ois_on_if2(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef struct
 {
@@ -7641,7 +7650,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_chain_set(const stmdev_ctx_t *ctx, lsm6dsv320x_ois_chain_t val);
+int32_t lsm6dsv320x_set_ois_chain(const stmdev_ctx_t *ctx, lsm6dsv320x_ois_chain_t val);
 
 /**
   * @brief  Enables gyroscope/accelerometer OIS chain.[get]
@@ -7651,7 +7660,7 @@ int32_t lsm6dsv320x_ois_chain_set(const stmdev_ctx_t *ctx, lsm6dsv320x_ois_chain
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_chain_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_ois_chain(const stmdev_ctx_t *ctx,
                                   lsm6dsv320x_ois_chain_t *val);
 
 typedef enum
@@ -7670,7 +7679,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_gy_full_scale_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_ois_gy_full_scale(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_ois_gy_full_scale_t val);
 
 /**
@@ -7681,7 +7690,7 @@ int32_t lsm6dsv320x_ois_gy_full_scale_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_gy_full_scale_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_ois_gy_full_scale(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_ois_gy_full_scale_t *val);
 
 typedef enum
@@ -7700,7 +7709,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_xl_full_scale_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_ois_xl_full_scale(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_ois_xl_full_scale_t val);
 
 /**
@@ -7711,7 +7720,7 @@ int32_t lsm6dsv320x_ois_xl_full_scale_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ois_xl_full_scale_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_ois_xl_full_scale(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_ois_xl_full_scale_t *val);
 
 /**
@@ -7743,7 +7752,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_6d_threshold_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_6d_threshold(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_6d_threshold_t val);
 
 /**
@@ -7754,7 +7763,7 @@ int32_t lsm6dsv320x_6d_threshold_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_6d_threshold_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_6d_threshold(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_6d_threshold_t *val);
 
 /**
@@ -7765,7 +7774,7 @@ int32_t lsm6dsv320x_6d_threshold_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_4d_mode_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_4d_mode(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  4D orientation detection enable. Z-axis position detection is disabled.[get]
@@ -7775,7 +7784,7 @@ int32_t lsm6dsv320x_4d_mode_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_4d_mode_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_4d_mode(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @}
@@ -7803,7 +7812,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ui_i2c_i3c_mode_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_ui_i2c_i3c_mode(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_ui_i2c_i3c_mode_t val);
 
 /**
@@ -7814,7 +7823,7 @@ int32_t lsm6dsv320x_ui_i2c_i3c_mode_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ui_i2c_i3c_mode_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_ui_i2c_i3c_mode(const stmdev_ctx_t *ctx,
                                         lsm6dsv320x_ui_i2c_i3c_mode_t *val);
 
 typedef struct
@@ -7842,7 +7851,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_i3c_config_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_i3c_config(const stmdev_ctx_t *ctx,
                                    lsm6dsv320x_i3c_config_t val);
 
 /**
@@ -7853,7 +7862,7 @@ int32_t lsm6dsv320x_i3c_config_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_i3c_config_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_i3c_config(const stmdev_ctx_t *ctx,
                                    lsm6dsv320x_i3c_config_t *val);
 
 /**
@@ -7877,7 +7886,7 @@ int32_t lsm6dsv320x_i3c_config_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_controller_interface_pull_up_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_sh_controller_interface_pull_up(const stmdev_ctx_t *ctx,
                                                         uint8_t val);
 
 /**
@@ -7888,7 +7897,7 @@ int32_t lsm6dsv320x_sh_controller_interface_pull_up_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_controller_interface_pull_up_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_sh_controller_interface_pull_up(const stmdev_ctx_t *ctx,
                                                         uint8_t *val);
 
 /**
@@ -7899,7 +7908,7 @@ int32_t lsm6dsv320x_sh_controller_interface_pull_up_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_read_data_raw_get(const stmdev_ctx_t *ctx, uint8_t *val,
+int32_t lsm6dsv320x_get_sh_read_data_raw(const stmdev_ctx_t *ctx, uint8_t *val,
                                          uint8_t len);
 
 typedef enum
@@ -7918,7 +7927,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_target_connected_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_sh_target_connected(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_sh_target_connected_t val);
 
 /**
@@ -7929,7 +7938,7 @@ int32_t lsm6dsv320x_sh_target_connected_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_target_connected_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_sh_target_connected(const stmdev_ctx_t *ctx,
                                             lsm6dsv320x_sh_target_connected_t *val);
 
 /**
@@ -7940,7 +7949,7 @@ int32_t lsm6dsv320x_sh_target_connected_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_controller_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_sh_controller(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Sensor hub I2C controller enable.[get]
@@ -7950,7 +7959,7 @@ int32_t lsm6dsv320x_sh_controller_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_controller_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_sh_controller(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  I2C interface pass-through.[set]
@@ -7960,7 +7969,7 @@ int32_t lsm6dsv320x_sh_controller_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_pass_through_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_sh_pass_through(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  I2C interface pass-through.[get]
@@ -7970,7 +7979,7 @@ int32_t lsm6dsv320x_sh_pass_through_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_pass_through_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_sh_pass_through(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
@@ -7986,7 +7995,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_syncro_mode_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_sh_syncro_mode(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_sh_syncro_mode_t val);
 
 /**
@@ -7997,7 +8006,7 @@ int32_t lsm6dsv320x_sh_syncro_mode_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_syncro_mode_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_sh_syncro_mode(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_sh_syncro_mode_t *val);
 
 typedef enum
@@ -8014,7 +8023,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_write_mode_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_sh_write_mode(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_sh_write_mode_t val);
 
 /**
@@ -8025,7 +8034,7 @@ int32_t lsm6dsv320x_sh_write_mode_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_write_mode_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_sh_write_mode(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_sh_write_mode_t *val);
 
 /**
@@ -8036,7 +8045,7 @@ int32_t lsm6dsv320x_sh_write_mode_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_reset_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_sh_reset(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Reset Controller logic and output registers. Must be set to ‘1’ and then set it to ‘0’.[get]
@@ -8046,7 +8055,7 @@ int32_t lsm6dsv320x_sh_reset_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_reset_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_sh_reset(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef struct
 {
@@ -8067,7 +8076,7 @@ typedef struct
   *
   */
 int32_t lsm6dsv320x_sh_cfg_write(const stmdev_ctx_t *ctx,
-                                 lsm6dsv320x_sh_cfg_write_t *val);
+                                 const lsm6dsv320x_sh_cfg_write_t *val);
 typedef enum
 {
   LSM6DSV320X_SH_1Hz875  = 0x0,
@@ -8087,7 +8096,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_data_rate_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_sh_data_rate(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_sh_data_rate_t val);
 
 /**
@@ -8098,7 +8107,7 @@ int32_t lsm6dsv320x_sh_data_rate_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_data_rate_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_sh_data_rate(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_sh_data_rate_t *val);
 
 typedef struct
@@ -8120,7 +8129,7 @@ typedef struct
   *
   */
 int32_t lsm6dsv320x_sh_tgt_cfg_read(const stmdev_ctx_t *ctx, uint8_t idx,
-                                    lsm6dsv320x_sh_cfg_read_t *val);
+                                    const lsm6dsv320x_sh_cfg_read_t *val);
 
 /**
   * @brief  Sensor hub source register.[get]
@@ -8130,7 +8139,7 @@ int32_t lsm6dsv320x_sh_tgt_cfg_read(const stmdev_ctx_t *ctx, uint8_t idx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sh_status_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_sh_status(const stmdev_ctx_t *ctx,
                                   lsm6dsv320x_status_controller_t *val);
 
 /**
@@ -8154,7 +8163,7 @@ int32_t lsm6dsv320x_sh_status_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ui_sdo_pull_up_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_ui_sdo_pull_up(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enables pull-up on SDO pin of UI (User Interface).[get]
@@ -8164,7 +8173,7 @@ int32_t lsm6dsv320x_ui_sdo_pull_up_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ui_sdo_pull_up_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_ui_sdo_pull_up(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
@@ -8181,7 +8190,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_pad_strength_set(const stmdev_ctx_t *ctx, lsm6dsv320x_pad_strength_t val);
+int32_t lsm6dsv320x_set_pad_strength(const stmdev_ctx_t *ctx, lsm6dsv320x_pad_strength_t val);
 
 /**
   * @brief  Pad strength.[get]
@@ -8191,7 +8200,7 @@ int32_t lsm6dsv320x_pad_strength_set(const stmdev_ctx_t *ctx, lsm6dsv320x_pad_st
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_pad_strength_get(const stmdev_ctx_t *ctx, lsm6dsv320x_pad_strength_t *val);
+int32_t lsm6dsv320x_get_pad_strength(const stmdev_ctx_t *ctx, lsm6dsv320x_pad_strength_t *val);
 
 typedef enum
 {
@@ -8207,7 +8216,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_spi_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t val);
+int32_t lsm6dsv320x_set_spi_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t val);
 
 /**
   * @brief  SPI Serial Interface Mode selection.[get]
@@ -8217,7 +8226,7 @@ int32_t lsm6dsv320x_spi_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_spi_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t *val);
+int32_t lsm6dsv320x_get_spi_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t *val);
 
 /**
   * @brief  Enables pull-up on SDA pin.[set]
@@ -8227,7 +8236,7 @@ int32_t lsm6dsv320x_spi_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ui_sda_pull_up_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_ui_sda_pull_up(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enables pull-up on SDA pin.[get]
@@ -8237,7 +8246,7 @@ int32_t lsm6dsv320x_ui_sda_pull_up_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_ui_sda_pull_up_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_ui_sda_pull_up(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  IF2 (OIS Inteface) Serial Interface Mode selection. This function works also on OIS (UI_CTRL1_OIS = IF2_CTRL1_OIS).[set]
@@ -8247,7 +8256,7 @@ int32_t lsm6dsv320x_ui_sda_pull_up_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_if2_spi_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t val);
+int32_t lsm6dsv320x_set_if2_spi_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mode_t val);
 
 /**
   * @brief  IF2 (OIS Inteface) Serial Interface Mode selection. This function works also on OIS (UI_CTRL1_OIS = IF2_CTRL1_OIS).[get]
@@ -8257,7 +8266,7 @@ int32_t lsm6dsv320x_if2_spi_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_spi_mo
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_if2_spi_mode_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_if2_spi_mode(const stmdev_ctx_t *ctx,
                                      lsm6dsv320x_spi_mode_t *val);
 
 /**
@@ -8281,7 +8290,7 @@ int32_t lsm6dsv320x_if2_spi_mode_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sigmot_mode_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_sigmot_mode(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enables significant motion detection function.[get]
@@ -8291,7 +8300,7 @@ int32_t lsm6dsv320x_sigmot_mode_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sigmot_mode_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_sigmot_mode(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @}
@@ -8319,7 +8328,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_stpcnt_mode_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_stpcnt_mode(const stmdev_ctx_t *ctx,
                                     lsm6dsv320x_stpcnt_mode_t val);
 
 /**
@@ -8330,7 +8339,7 @@ int32_t lsm6dsv320x_stpcnt_mode_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_stpcnt_mode_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_stpcnt_mode(const stmdev_ctx_t *ctx,
                                     lsm6dsv320x_stpcnt_mode_t *val);
 
 /**
@@ -8341,7 +8350,7 @@ int32_t lsm6dsv320x_stpcnt_mode_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_stpcnt_steps_get(const stmdev_ctx_t *ctx, uint16_t *val);
+int32_t lsm6dsv320x_get_stpcnt_steps(const stmdev_ctx_t *ctx, uint16_t *val);
 
 /**
   * @brief  Reset step counter.[set]
@@ -8351,7 +8360,7 @@ int32_t lsm6dsv320x_stpcnt_steps_get(const stmdev_ctx_t *ctx, uint16_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_stpcnt_rst_step_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_stpcnt_rst_step(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Reset step counter.[get]
@@ -8361,7 +8370,7 @@ int32_t lsm6dsv320x_stpcnt_rst_step_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_stpcnt_rst_step_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_stpcnt_rst_step(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Pedometer debounce configuration.[set]
@@ -8371,7 +8380,7 @@ int32_t lsm6dsv320x_stpcnt_rst_step_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_stpcnt_debounce_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_stpcnt_debounce(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Pedometer debounce configuration.[get]
@@ -8381,7 +8390,7 @@ int32_t lsm6dsv320x_stpcnt_debounce_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_stpcnt_debounce_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_stpcnt_debounce(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Time period register for step detection on delta time.[set]
@@ -8391,7 +8400,7 @@ int32_t lsm6dsv320x_stpcnt_debounce_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_stpcnt_period_set(const stmdev_ctx_t *ctx, uint16_t val);
+int32_t lsm6dsv320x_set_stpcnt_period(const stmdev_ctx_t *ctx, uint16_t val);
 
 /**
   * @brief  Time period register for step detection on delta time.[get]
@@ -8401,7 +8410,7 @@ int32_t lsm6dsv320x_stpcnt_period_set(const stmdev_ctx_t *ctx, uint16_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_stpcnt_period_get(const stmdev_ctx_t *ctx, uint16_t *val);
+int32_t lsm6dsv320x_get_stpcnt_period(const stmdev_ctx_t *ctx, uint16_t *val);
 
 /**
   * @}
@@ -8423,7 +8432,7 @@ int32_t lsm6dsv320x_stpcnt_period_get(const stmdev_ctx_t *ctx, uint16_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sflp_game_rotation_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_sflp_game_rotation(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enable SFLP Game Rotation Vector (6x).[get]
@@ -8433,7 +8442,7 @@ int32_t lsm6dsv320x_sflp_game_rotation_set(const stmdev_ctx_t *ctx, uint8_t val)
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sflp_game_rotation_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_sflp_game_rotation(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Reset SFLP Game Rotation Vector logic (6x).
@@ -8462,7 +8471,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sflp_game_gbias_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_sflp_game_gbias(const stmdev_ctx_t *ctx,
                                         const lsm6dsv320x_sflp_gbias_t *val);
 
 typedef struct
@@ -8471,7 +8480,7 @@ typedef struct
   float_t quat_x;
   float_t quat_y;
   float_t quat_z;
-} lsm6dsv320x_quaternion_t;
+} lsm6dsv320x_quat_t;
 
 /**
   * @brief  SFLP quaternions.[get]
@@ -8481,7 +8490,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sflp_quaternion_get(const stmdev_ctx_t *ctx, lsm6dsv320x_quaternion_t *quat);
+int32_t lsm6dsv320x_get_sflp_quat(const stmdev_ctx_t *ctx, lsm6dsv320x_quat_t *quat);
 
 typedef enum
 {
@@ -8501,7 +8510,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sflp_data_rate_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_sflp_data_rate(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_sflp_data_rate_t val);
 
 /**
@@ -8512,7 +8521,7 @@ int32_t lsm6dsv320x_sflp_data_rate_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_sflp_data_rate_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_sflp_data_rate(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_sflp_data_rate_t *val);
 
 /**
@@ -8543,7 +8552,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_tap_detection_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_tap_detection(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_tap_detection_t val);
 
 /**
@@ -8554,7 +8563,7 @@ int32_t lsm6dsv320x_tap_detection_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_tap_detection_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_tap_detection(const stmdev_ctx_t *ctx,
                                       lsm6dsv320x_tap_detection_t *val);
 
 typedef struct
@@ -8572,7 +8581,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_tap_thresholds_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_tap_thresholds(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_tap_thresholds_t val);
 
 /**
@@ -8583,7 +8592,7 @@ int32_t lsm6dsv320x_tap_thresholds_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_tap_thresholds_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_tap_thresholds(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_tap_thresholds_t *val);
 
 typedef enum
@@ -8604,7 +8613,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_tap_axis_priority_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_tap_axis_priority(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_tap_axis_priority_t val);
 
 /**
@@ -8615,7 +8624,7 @@ int32_t lsm6dsv320x_tap_axis_priority_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_tap_axis_priority_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_tap_axis_priority(const stmdev_ctx_t *ctx,
                                           lsm6dsv320x_tap_axis_priority_t *val);
 
 typedef struct
@@ -8633,7 +8642,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_tap_time_windows_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_tap_time_windows(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_tap_time_windows_t val);
 
 /**
@@ -8644,7 +8653,7 @@ int32_t lsm6dsv320x_tap_time_windows_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_tap_time_windows_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_tap_time_windows(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_tap_time_windows_t *val);
 
 typedef enum
@@ -8661,7 +8670,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_tap_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_tap_mode_t val);
+int32_t lsm6dsv320x_set_tap_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_tap_mode_t val);
 
 /**
   * @brief  Single/double-tap event enable.[get]
@@ -8671,7 +8680,7 @@ int32_t lsm6dsv320x_tap_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_tap_mode_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_tap_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_tap_mode_t *val);
+int32_t lsm6dsv320x_get_tap_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_tap_mode_t *val);
 
 /**
   * @}
@@ -8694,7 +8703,7 @@ int32_t lsm6dsv320x_tap_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_tap_mode_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_tilt_mode_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_tilt_mode(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Tilt calculation.[get]
@@ -8704,7 +8713,7 @@ int32_t lsm6dsv320x_tilt_mode_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_tilt_mode_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_tilt_mode(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @}
@@ -8727,7 +8736,7 @@ int32_t lsm6dsv320x_tilt_mode_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_timestamp_raw_get(const stmdev_ctx_t *ctx, uint32_t *val);
+int32_t lsm6dsv320x_get_timestamp_raw(const stmdev_ctx_t *ctx, uint32_t *val);
 
 /**
   * @brief  Enables timestamp counter.[set]
@@ -8737,7 +8746,7 @@ int32_t lsm6dsv320x_timestamp_raw_get(const stmdev_ctx_t *ctx, uint32_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_timestamp_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lsm6dsv320x_set_timestamp(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enables timestamp counter.[get]
@@ -8747,7 +8756,7 @@ int32_t lsm6dsv320x_timestamp_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_timestamp_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lsm6dsv320x_get_timestamp(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @}
@@ -8778,7 +8787,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_act_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_act_mode_t val);
+int32_t lsm6dsv320x_set_act_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_act_mode_t val);
 
 /**
   * @brief  Enable activity/inactivity (sleep) function.[get]
@@ -8788,7 +8797,7 @@ int32_t lsm6dsv320x_act_mode_set(const stmdev_ctx_t *ctx, lsm6dsv320x_act_mode_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_act_mode_get(const stmdev_ctx_t *ctx, lsm6dsv320x_act_mode_t *val);
+int32_t lsm6dsv320x_get_act_mode(const stmdev_ctx_t *ctx, lsm6dsv320x_act_mode_t *val);
 
 typedef enum
 {
@@ -8806,7 +8815,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_act_from_sleep_to_act_dur_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_act_from_sleep_to_act_dur(const stmdev_ctx_t *ctx,
                                                   lsm6dsv320x_act_from_sleep_to_act_dur_t val);
 
 /**
@@ -8817,7 +8826,7 @@ int32_t lsm6dsv320x_act_from_sleep_to_act_dur_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_act_from_sleep_to_act_dur_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_act_from_sleep_to_act_dur(const stmdev_ctx_t *ctx,
                                                   lsm6dsv320x_act_from_sleep_to_act_dur_t *val);
 
 typedef enum
@@ -8836,7 +8845,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_act_sleep_xl_odr_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_act_sleep_xl_odr(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_act_sleep_xl_odr_t val);
 
 /**
@@ -8847,7 +8856,7 @@ int32_t lsm6dsv320x_act_sleep_xl_odr_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_act_sleep_xl_odr_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_act_sleep_xl_odr(const stmdev_ctx_t *ctx,
                                          lsm6dsv320x_act_sleep_xl_odr_t *val);
 
 typedef struct
@@ -8866,7 +8875,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_act_thresholds_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_act_thresholds(const stmdev_ctx_t *ctx,
                                        const lsm6dsv320x_act_thresholds_t *val);
 
 /**
@@ -8877,7 +8886,7 @@ int32_t lsm6dsv320x_act_thresholds_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_act_thresholds_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_act_thresholds(const stmdev_ctx_t *ctx,
                                        lsm6dsv320x_act_thresholds_t *val);
 
 typedef struct
@@ -8894,7 +8903,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_act_wkup_time_windows_set(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_set_act_wkup_time_windows(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_act_wkup_time_windows_t val);
 
 /**
@@ -8905,7 +8914,7 @@ int32_t lsm6dsv320x_act_wkup_time_windows_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lsm6dsv320x_act_wkup_time_windows_get(const stmdev_ctx_t *ctx,
+int32_t lsm6dsv320x_get_act_wkup_time_windows(const stmdev_ctx_t *ctx,
                                               lsm6dsv320x_act_wkup_time_windows_t *val);
 
 /**
